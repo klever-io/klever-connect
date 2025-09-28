@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;transaction";
+
+// Transfer contract
+message TransferContract {
+    bytes  ToAddress   = 1 [json_name = "toAddress"];
+    int64  Amount      = 2 [json_name = "amount"];
+    bytes  AssetID     = 3 [json_name = "assetId,omitempty"];
+}
+
+// Freeze contract
+message FreezeContract {
+    int64  Amount      = 1 [json_name = "amount"];
+    bytes  AssetID     = 2 [json_name = "assetId,omitempty"];
+}
+
+// Unfreeze contract
+message UnfreezeContract {
+    bytes  AssetID     = 1 [json_name = "assetId,omitempty"];
+    bytes  BucketID    = 2 [json_name = "bucketId"];
+}
+
+// Delegate contract
+message DelegateContract {
+    bytes  ToAddress   = 1 [json_name = "toAddress"];
+    bytes  BucketID    = 2 [json_name = "bucketId"];
+}
+
+// Undelegate contract
+message UndelegateContract {
+    bytes  BucketID    = 1 [json_name = "bucketId"];
+}
+
+// Withdraw contract
+message WithdrawContract {
+    enum WithdrawType {
+        StakingReward    = 0;
+        KDAPool          = 1;
+        KDAFeePool       = 2;
+        MarketOrderIDXIN = 3;
+        MarketOrderIDXOUT= 4;
+    }
+    WithdrawType Type  = 1 [json_name = "withdrawType"];
+    bytes  AssetID     = 2 [json_name = "assetId,omitempty"];
+    int64  Amount      = 3 [json_name = "amount,omitempty"];
+    bytes  CurrencyID  = 4 [json_name = "currencyID,omitempty"];
+}
+
+// Claim contract
+message ClaimContract {
+    enum ClaimType {
+        StakingClaim   = 0;
+        AllowanceClaim = 1;
+        MarketClaim    = 2;
+    }
+    ClaimType Type   = 1 [json_name = "claimType"];
+    bytes ID         = 2 [json_name = "id,omitempty"];
+}
+
+// Vote contract
+message VoteContract {
+    enum VoteType {
+        Yes      = 0;
+        No       = 1;
+        Abstain  = 2;
+    }
+    uint64 ProposalID = 1 [json_name = "proposalId"];
+    VoteType Type     = 2 [json_name = "type"];
+    int64 Amount      = 3 [json_name = "amount,omitempty"];
+}
+
+// CreateAsset contract
+message CreateAssetContract {
+    enum AssetType {
+        Fungible    = 0;
+        NonFungible = 1;
+        SemiFungible = 2;
+    }
+    
+    message AssetProperties {
+        bool CanFreeze      = 1 [json_name = "canFreeze"];
+        bool CanWipe        = 2 [json_name = "canWipe"];
+        bool CanPause       = 3 [json_name = "canPause"];
+        bool CanMint        = 4 [json_name = "canMint"];
+        bool CanBurn        = 5 [json_name = "canBurn"];
+        bool CanChangeOwner = 6 [json_name = "canChangeOwner"];
+        bool CanAddRoles    = 7 [json_name = "canAddRoles"];
+    }
+
+    message AssetAttributes {
+        bool IsPaused       = 1 [json_name = "isPaused"];
+        bool IsNFTMintStopped = 2 [json_name = "isNFTMintStopped"];
+    }
+
+    AssetType Type         = 1 [json_name = "type"];
+    string Name            = 2 [json_name = "name"];
+    string Ticker          = 3 [json_name = "ticker"];
+    bytes OwnerAddress     = 4 [json_name = "ownerAddress,omitempty"];
+    string Logo            = 5 [json_name = "logo,omitempty"];
+    repeated string URIs   = 6 [json_name = "uris,omitempty"];
+    uint32 Precision       = 7 [json_name = "precision"];
+    int64 InitialSupply    = 8 [json_name = "initialSupply,omitempty"];
+    int64 MaxSupply        = 9 [json_name = "maxSupply,omitempty"];
+    AssetProperties Properties  = 10 [json_name = "properties,omitempty"];
+    AssetAttributes Attributes  = 11 [json_name = "attributes,omitempty"];
+}
+
+// SmartContract
+message SmartContract {
+    enum SCType {
+        SCInvokeType = 0;
+        SCDeployType = 1;
+        SCUpgradeType = 2;
+    }
+    
+    message CallValueData {
+        bytes AssetID = 1 [json_name = "assetId"];
+        int64 Amount  = 2 [json_name = "amount"];
+    }
+
+    SCType Type               = 1 [json_name = "type"];
+    bytes Address             = 2 [json_name = "address,omitempty"];
+    repeated CallValueData CallValue = 3 [json_name = "callValue,omitempty"];
+    bytes Input               = 4 [json_name = "input,omitempty"];
+    string VirtualMachine     = 5 [json_name = "virtualMachine,omitempty"];
+}

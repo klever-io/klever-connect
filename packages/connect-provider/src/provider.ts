@@ -5,9 +5,9 @@ export class KleverProvider {
     this.url = url
   }
 
-  async getBalance(_address: KleverAddress): Promise<bigint> {
-    // Placeholder implementation
+  getBalance(_address: KleverAddress): Promise<bigint> {
+    // Placeholder implementation - will use await when implementing actual API call
     console.log(`Getting balance from ${this.url}`)
-    return 0n
+    return Promise.resolve(0n)
   }
 }

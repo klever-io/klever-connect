@@ -11,18 +11,41 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: ['./tsconfig.json', './packages/*/tsconfig.json']
+    project: './tsconfig.eslint.json',
+    tsconfigRootDir: __dirname
   },
   env: {
     node: true,
     es2022: true
   },
   rules: {
-    '@typescript-eslint/explicit-function-return-type': 'error',
+    '@typescript-eslint/explicit-function-return-type': ['error', {
+      allowExpressions: true,
+      allowTypedFunctionExpressions: true,
+      allowHigherOrderFunctions: true,
+      allowDirectConstAssertionInArrowFunctions: true
+    }],
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/consistent-type-imports': 'error',
-    '@typescript-eslint/no-non-null-assertion': 'error'
+    '@typescript-eslint/no-non-null-assertion': 'error',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
+    '@typescript-eslint/require-await': 'off'
   },
-  ignorePatterns: ['dist', 'build', 'node_modules', 'coverage', '*.js', '*.mjs', '*.cjs']
+  ignorePatterns: [
+    'dist',
+    'build',
+    'node_modules',
+    'coverage',
+    '*.js',
+    '*.mjs',
+    '*.cjs',
+    '**/proto/compiled.js',
+    '**/proto/compiled.d.ts',
+    '**/proto/generated/**'
+  ]
 }

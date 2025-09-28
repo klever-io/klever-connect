@@ -1,3 +1,3 @@
-export function useKlever() {
+export function useKlever(): Record<string, never> {
   return {}
 }

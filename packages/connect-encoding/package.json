@@ -6,16 +6,21 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build:proto": "node scripts/build-proto.js",
+    "build": "pnpm build:proto && tsup",
+    "dev": "pnpm build:proto && tsup --watch",
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
-    "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo"
   },
   "files": [
     "dist"
   ],
-  "keywords": ["klever", "blockchain", "sdk"],
+  "keywords": [
+    "klever",
+    "blockchain",
+    "sdk"
+  ],
   "author": "Klever",
   "license": "MIT",
   "publishConfig": {

@@ -1,4 +1,5 @@
 import { KleverProvider } from '@klever/connect-provider'
+import type { KleverAddress } from '@klever/connect-core'
 
 export class Klever {
   private provider: KleverProvider
@@ -8,6 +9,6 @@ export class Klever {
   }
 
   async getBalance(address: string): Promise<bigint> {
-    return this.provider.getBalance(address as any)
+    return this.provider.getBalance(address as KleverAddress)
   }
 }
