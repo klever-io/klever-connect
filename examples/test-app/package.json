@@ -1,0 +1,17 @@
+{
+  "name": "test-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx index.ts",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*",
+    "@klever/connect-core": "workspace:*",
+    "@klever/connect-helpers": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  }
+}
