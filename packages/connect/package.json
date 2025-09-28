@@ -1,0 +1,35 @@
+{
+  "name": "@klever/connect",
+  "version": "0.0.1",
+  "description": "Unified JavaScript SDK for interacting with Klever blockchain",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist .turbo"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": ["klever", "blockchain", "sdk"],
+  "author": "Klever",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@klever/connect-core": "workspace:*",
+    "@klever/connect-encoding": "workspace:*",
+    "@klever/connect-crypto": "workspace:*",
+    "@klever/connect-provider": "workspace:*",
+    "@klever/connect-transactions": "workspace:*",
+    "@klever/connect-contracts": "workspace:*",
+    "@klever/connect-wallet": "workspace:*",
+    "@klever/connect-helpers": "workspace:*"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@klever/connect": ["packages/connect/src"],
+      "@klever/connect-core": ["packages/connect-core/src"],
+      "@klever/connect-encoding": ["packages/connect-encoding/src"],
+      "@klever/connect-crypto": ["packages/connect-crypto/src"],
+      "@klever/connect-provider": ["packages/connect-provider/src"],
+      "@klever/connect-transactions": ["packages/connect-transactions/src"],
+      "@klever/connect-contracts": ["packages/connect-contracts/src"],
+      "@klever/connect-wallet": ["packages/connect-wallet/src"],
+      "@klever/connect-helpers": ["packages/connect-helpers/src"],
+      "@klever/connect-react": ["packages/connect-react/src"]
+    }
+  },
+  "references": [
+    { "path": "./packages/connect-core" },
+    { "path": "./packages/connect-encoding" },
+    { "path": "./packages/connect-crypto" },
+    { "path": "./packages/connect-provider" },
+    { "path": "./packages/connect-transactions" },
+    { "path": "./packages/connect-contracts" },
+    { "path": "./packages/connect-wallet" },
+    { "path": "./packages/connect-helpers" },
+    { "path": "./packages/connect-react" },
+    { "path": "./packages/connect" }
+  ],
+  "include": [],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}

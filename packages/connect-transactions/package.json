@@ -1,0 +1,30 @@
+{
+  "name": "@klever/connect-transactions",
+  "version": "0.0.1",
+  "description": "Transaction building for Klever Connect SDK",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist .turbo"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": ["klever", "blockchain", "sdk"],
+  "author": "Klever",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@klever/connect-core": "workspace:*",
+    "@klever/connect-encoding": "workspace:*",
+    "@klever/connect-provider": "workspace:*"
+  }
+}
