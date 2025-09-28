@@ -1,10 +1,10 @@
 import type { KleverAddress, TransactionHash, HexString } from './types'
 import { ValidationError } from './errors'
-import { ADDRESS_PREFIX, TESTNET_ADDRESS_PREFIX } from './constants'
+import { ADDRESS_PREFIX } from './constants'
 
 export function isKleverAddress(value: string): value is KleverAddress {
   if (!value || typeof value !== 'string') return false
-  return value.startsWith(ADDRESS_PREFIX) || value.startsWith(TESTNET_ADDRESS_PREFIX)
+  return value.startsWith(ADDRESS_PREFIX)
 }
 
 export function assertKleverAddress(value: string): asserts value is KleverAddress {

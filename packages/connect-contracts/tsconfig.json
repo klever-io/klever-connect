@@ -2,7 +2,16 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@klever/connect-core": ["../connect-core/src"],
+      "@klever/connect-core/*": ["../connect-core/src/*"],
+      "@klever/connect-encoding": ["../connect-encoding/src"],
+      "@klever/connect-encoding/*": ["../connect-encoding/src/*"],
+      "@klever/connect-transactions": ["../connect-transactions/src"],
+      "@klever/connect-transactions/*": ["../connect-transactions/src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

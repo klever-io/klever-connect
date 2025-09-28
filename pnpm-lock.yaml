@@ -51,6 +51,22 @@ importers:
         specifier: ^1.2.2
         version: 1.6.1(@types/node@20.19.17)(@vitest/ui@1.6.1)
 
+  examples/encoding:
+    dependencies:
+      '@klever/connect-core':
+        specifier: workspace:*
+        version: link:../../packages/connect-core
+      '@klever/connect-encoding':
+        specifier: workspace:*
+        version: link:../../packages/connect-encoding
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.17
+      tsx:
+        specifier: ^4.7.0
+        version: 4.20.6
+
   examples/test-app:
     dependencies:
       '@klever/connect':
@@ -106,7 +122,11 @@ importers:
         specifier: workspace:*
         version: link:../connect-transactions
 
-  packages/connect-core: {}
+  packages/connect-core:
+    dependencies:
+      '@klever/connect-encoding':
+        specifier: workspace:*
+        version: link:../connect-encoding
 
   packages/connect-crypto:
     dependencies:
@@ -126,11 +146,7 @@ importers:
         specifier: ^1.2.1
         version: 1.6.0
 
-  packages/connect-encoding:
-    dependencies:
-      '@klever/connect-core':
-        specifier: workspace:*
-        version: link:../connect-core
+  packages/connect-encoding: {}
 
   packages/connect-helpers:
     dependencies:

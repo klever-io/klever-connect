@@ -5,6 +5,14 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest",
@@ -29,7 +37,6 @@
     "@klever/connect-provider": "workspace:*",
     "@klever/connect-transactions": "workspace:*",
     "@klever/connect-contracts": "workspace:*",
-    "@klever/connect-wallet": "workspace:*",
-    "@klever/connect-helpers": "workspace:*"
+    "@klever/connect-wallet": "workspace:*"
   }
 }

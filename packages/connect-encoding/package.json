@@ -5,6 +5,20 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./proto": {
+      "types": "./dist/proto.d.ts",
+      "import": "./dist/proto.mjs",
+      "require": "./dist/proto.js",
+      "default": "./dist/proto.js"
+    }
+  },
   "scripts": {
     "build:proto": "node scripts/build-proto.js",
     "build": "pnpm build:proto && tsup",
@@ -26,8 +40,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects": false,
-  "dependencies": {
-    "@klever/connect-core": "workspace:*"
-  }
+  "sideEffects": false
 }

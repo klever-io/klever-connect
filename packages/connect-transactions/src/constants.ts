@@ -1,1 +1,1 @@
-export { TRANSACTION_TYPES } from '@klever/connect-core'
+export { ContractType } from '@klever/connect-core'
