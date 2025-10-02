@@ -13,3 +13,5 @@ export * from './utils'
 
 // Proto types and interfaces
 export * from './proto'
+
+export * from './encoding'

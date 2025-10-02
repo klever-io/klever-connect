@@ -9,4 +9,15 @@ export default defineConfig({
   minify: false,
   splitting: false,
   treeshake: true,
+  external: [
+    'react',
+    '@klever/connect',
+    '@klever/connect-core',
+    '@klever/connect-provider',
+    '@klever/connect-wallet',
+    '@klever/connect-contracts',
+    '@klever/connect-transactions',
+    '@klever/connect-crypto',
+    '@klever/connect-encoding',
+  ],
 })

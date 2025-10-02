@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
-    "composite": true,
     "declaration": true,
     "declarationMap": true
+    // Note: rootDir is omitted - TypeScript infers it from include patterns
+    // This is necessary for tsup DTS generation to work correctly
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

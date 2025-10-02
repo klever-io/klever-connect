@@ -3,33 +3,15 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@klever/connect": [
-        "packages/connect/src"
-      ],
-      "@klever/connect-core": [
-        "packages/connect-core/src"
-      ],
-      "@klever/connect-encoding": [
-        "packages/connect-encoding/src"
-      ],
-      "@klever/connect-crypto": [
-        "packages/connect-crypto/src"
-      ],
-      "@klever/connect-provider": [
-        "packages/connect-provider/src"
-      ],
-      "@klever/connect-transactions": [
-        "packages/connect-transactions/src"
-      ],
-      "@klever/connect-contracts": [
-        "packages/connect-contracts/src"
-      ],
-      "@klever/connect-wallet": [
-        "packages/connect-wallet/src"
-      ],
-      "@klever/connect-react": [
-        "packages/connect-react/src"
-      ]
+      "@klever/connect": ["packages/connect/src"],
+      "@klever/connect-core": ["packages/connect-core/src"],
+      "@klever/connect-encoding": ["packages/connect-encoding/src"],
+      "@klever/connect-crypto": ["packages/connect-crypto/src"],
+      "@klever/connect-provider": ["packages/connect-provider/src"],
+      "@klever/connect-transactions": ["packages/connect-transactions/src"],
+      "@klever/connect-contracts": ["packages/connect-contracts/src"],
+      "@klever/connect-wallet": ["packages/connect-wallet/src"],
+      "@klever/connect-react": ["packages/connect-react/src"]
     }
   },
   "references": [
@@ -62,10 +44,5 @@
     }
   ],
   "include": [],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage"
-  ]
+  "exclude": ["node_modules", "dist", "build", "coverage"]
 }

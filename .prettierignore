@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+
+# Lock files (don't format these)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Generated files
+CHANGELOG.md
+
+# IDE
+.vscode/
+.idea/
+
+# proto
+**/src/proto/*

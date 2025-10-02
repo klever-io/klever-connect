@@ -9,4 +9,8 @@ export default defineConfig({
   minify: false,
   splitting: false,
   treeshake: true,
+  esbuildOptions(options) {
+    // Suppress eval warning from protobuf.js - it's safe in this context
+    options.legalComments = 'none'
+  },
 })

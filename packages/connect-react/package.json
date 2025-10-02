@@ -23,7 +23,11 @@
   "files": [
     "dist"
   ],
-  "keywords": ["klever", "blockchain", "sdk"],
+  "keywords": [
+    "klever",
+    "blockchain",
+    "sdk"
+  ],
   "author": "Klever",
   "license": "MIT",
   "publishConfig": {
@@ -31,7 +35,12 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@klever/connect": "workspace:*"
+    "@klever/connect": "workspace:*",
+    "@klever/connect-contracts": "workspace:*",
+    "@klever/connect-core": "workspace:*",
+    "@klever/connect-provider": "workspace:*",
+    "@klever/connect-transactions": "workspace:*",
+    "@klever/connect-wallet": "workspace:*"
   },
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0"

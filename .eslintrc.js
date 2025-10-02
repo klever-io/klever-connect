@@ -6,25 +6,28 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'prettier'
+    'prettier',
   ],
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
     project: './tsconfig.eslint.json',
-    tsconfigRootDir: __dirname
+    tsconfigRootDir: __dirname,
   },
   env: {
     node: true,
-    es2022: true
+    es2022: true,
   },
   rules: {
-    '@typescript-eslint/explicit-function-return-type': ['error', {
-      allowExpressions: true,
-      allowTypedFunctionExpressions: true,
-      allowHigherOrderFunctions: true,
-      allowDirectConstAssertionInArrowFunctions: true
-    }],
+    '@typescript-eslint/explicit-function-return-type': [
+      'error',
+      {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+        allowHigherOrderFunctions: true,
+        allowDirectConstAssertionInArrowFunctions: true,
+      },
+    ],
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/consistent-type-imports': 'error',
@@ -34,7 +37,8 @@ module.exports = {
     '@typescript-eslint/no-unsafe-call': 'off',
     '@typescript-eslint/no-unsafe-return': 'off',
     '@typescript-eslint/no-unsafe-argument': 'off',
-    '@typescript-eslint/require-await': 'off'
+    '@typescript-eslint/require-await': 'off',
+    '@typescript-eslint/no-redundant-type-constituents': 'off',
   },
   ignorePatterns: [
     'dist',
@@ -46,6 +50,6 @@ module.exports = {
     '*.cjs',
     '**/proto/compiled.js',
     '**/proto/compiled.d.ts',
-    '**/proto/generated/**'
-  ]
+    '**/proto/generated/**',
+  ],
 }

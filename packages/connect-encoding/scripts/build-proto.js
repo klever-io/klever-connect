@@ -28,7 +28,7 @@ pbjs.main(
     path.join(protoDir, 'transaction.proto'),
     path.join(protoDir, 'contracts.proto'),
   ],
-  err => {
+  (err) => {
     if (err) {
       console.error('Error compiling proto files:', err)
       process.exit(1)
@@ -40,14 +40,14 @@ pbjs.main(
     console.log('Generating TypeScript definitions...')
     pbts.main(
       ['--out', path.join(outDir, 'compiled.d.ts'), path.join(outDir, 'compiled.js')],
-      err => {
+      (err) => {
         if (err) {
           console.error('Error generating TypeScript definitions:', err)
           process.exit(1)
         }
 
         console.log('TypeScript definitions generated successfully!')
-      }
+      },
     )
-  }
+  },
 )

@@ -9,4 +9,5 @@ export default defineConfig({
   minify: false,
   splitting: false,
   treeshake: true,
+  external: ['@klever/connect-encoding'],
 })

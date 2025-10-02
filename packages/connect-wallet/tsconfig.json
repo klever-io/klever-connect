@@ -1,17 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
     "baseUrl": ".",
+    "lib": ["ES2022", "DOM"],
     "paths": {
       "@klever/connect-core": ["../connect-core/src"],
       "@klever/connect-core/*": ["../connect-core/src/*"],
       "@klever/connect-crypto": ["../connect-crypto/src"],
       "@klever/connect-crypto/*": ["../connect-crypto/src/*"],
+      "@klever/connect-encoding": ["../connect-encoding/src"],
+      "@klever/connect-encoding/*": ["../connect-encoding/src/*"],
       "@klever/connect-transactions": ["../connect-transactions/src"],
-      "@klever/connect-transactions/*": ["../connect-transactions/src/*"]
+      "@klever/connect-transactions/*": ["../connect-transactions/src/*"],
+      "@klever/connect-provider": ["../connect-provider/src"],
+      "@klever/connect-provider/*": ["../connect-provider/src/*"]
     }
+    // lib includes DOM for browser APIs (window, navigator, etc.)
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

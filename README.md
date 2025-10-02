@@ -28,7 +28,7 @@ const wallet = new Wallet(privateKey, klever)
 // Send transaction
 const tx = await wallet.sendTransaction({
   to: 'klv1abc...',
-  value: parseKLV('100')
+  value: parseKLV('100'),
 })
 
 console.log('Transaction hash:', tx.hash)
@@ -54,6 +54,7 @@ Built by Web3 developers, for Web3 developers. If you've used ethers.js or web3.
 ### Core Concepts
 
 #### Provider (Read-Only Access)
+
 Connect to Klever blockchain to read data:
 
 ```typescript
@@ -66,6 +67,7 @@ const tx = await provider.getTransaction(txHash)
 ```
 
 #### Wallet/Signer (Write Access)
+
 Sign and send transactions:
 
 ```typescript
@@ -80,6 +82,7 @@ const browserWallet = await BrowserWallet.connect()
 ```
 
 #### Offline Transaction Building
+
 Build transactions without network access:
 
 ```typescript
@@ -89,7 +92,7 @@ const tx = TransactionBuilder.transfer({
   from: 'klv1...',
   to: 'klv1...',
   amount: parseKLV('100'),
-  nonce: 5
+  nonce: 5,
 })
 
 // Sign offline
@@ -133,7 +136,7 @@ function MyDApp() {
   const handleSend = async () => {
     const tx = await sendTransaction({
       to: recipient,
-      value: parseKLV('10')
+      value: parseKLV('10'),
     })
     console.log('Sent:', tx.hash)
   }
@@ -180,7 +183,7 @@ const provider = new ethers.JsonRpcProvider('...')
 const wallet = new ethers.Wallet(privateKey, provider)
 const tx = await wallet.sendTransaction({
   to: address,
-  value: ethers.parseEther('1.0')
+  value: ethers.parseEther('1.0'),
 })
 
 // Klever (similar API)
@@ -188,11 +191,12 @@ const provider = new KleverProvider('mainnet')
 const wallet = new Wallet(privateKey, provider)
 const tx = await wallet.sendTransaction({
   to: address,
-  value: parseKLV('1.0')
+  value: parseKLV('1.0'),
 })
 ```
 
 ### Key Differences from EVM Chains
+
 - **Address Format**: Bech32 format (`klv1...`) instead of hex
 - **No Gas**: Uses bandwidth/kAppFee model
 - **Proto Encoding**: Transactions use Protocol Buffers
@@ -201,6 +205,7 @@ const tx = await wallet.sendTransaction({
 ## 🛠️ Advanced Features
 
 ### Staking Operations
+
 ```typescript
 // Delegate to validator
 await klever.staking.delegate(validatorAddress, parseKLV('1000'))
@@ -213,13 +218,14 @@ await klever.staking.claim()
 ```
 
 ### Asset Management
+
 ```typescript
 // Create custom token
 await klever.assets.create({
   name: 'MyToken',
   ticker: 'MTK',
   precision: 6,
-  maxSupply: 1000000
+  maxSupply: 1000000,
 })
 
 // Freeze/unfreeze assets
@@ -227,6 +233,7 @@ await klever.assets.freeze(assetId, amount)
 ```
 
 ### Transaction Monitoring
+
 ```typescript
 // Watch for events
 provider.on('block', (blockNumber) => {
@@ -309,6 +316,7 @@ MIT License - see [LICENSE](LICENSE) for details
 ## 🙏 Acknowledgments
 
 Inspired by the excellent work of:
+
 - [ethers.js](https://github.com/ethers-io/ethers.js/)
 - [CosmJS](https://github.com/cosmos/cosmjs)
 - [@solana/web3.js](https://github.com/solana-labs/solana-web3.js)

@@ -1,18 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
-    "composite": true,
     "baseUrl": ".",
+    "lib": ["ES2022", "DOM"],
     "paths": {
       "@klever/connect-encoding": ["../connect-encoding/src"],
       "@klever/connect-encoding/*": ["../connect-encoding/src/*"]
     }
+    // TypeScript will infer rootDir from the include patterns
+    // lib includes DOM for browser APIs (window, navigator, etc.)
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
-  "references": [
-    { "path": "../connect-encoding" }
-  ]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

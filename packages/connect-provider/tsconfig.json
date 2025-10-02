@@ -1,12 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
       "@klever/connect-core": ["../connect-core/src"],
-      "@klever/connect-core/*": ["../connect-core/src/*"]
+      "@klever/connect-core/*": ["../connect-core/src/*"],
+      "@klever/connect-crypto": ["../connect-crypto/src"],
+      "@klever/connect-crypto/*": ["../connect-crypto/src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

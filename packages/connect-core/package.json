@@ -23,7 +23,12 @@
   "files": [
     "dist"
   ],
-  "keywords": ["klever", "blockchain", "sdk", "core"],
+  "keywords": [
+    "klever",
+    "blockchain",
+    "sdk",
+    "core"
+  ],
   "author": "Klever",
   "license": "MIT",
   "publishConfig": {

@@ -1,10 +1,26 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
     "jsx": "react",
-    "esModuleInterop": true
+    "lib": ["ES2022", "DOM"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@klever/connect": ["../connect/src"],
+      "@klever/connect/*": ["../connect/src/*"],
+      "@klever/connect-core": ["../connect-core/src"],
+      "@klever/connect-core/*": ["../connect-core/src/*"],
+      "@klever/connect-provider": ["../connect-provider/src"],
+      "@klever/connect-provider/*": ["../connect-provider/src/*"],
+      "@klever/connect-wallet": ["../connect-wallet/src"],
+      "@klever/connect-wallet/*": ["../connect-wallet/src/*"],
+      "@klever/connect-crypto": ["../connect-crypto/src"],
+      "@klever/connect-crypto/*": ["../connect-crypto/src/*"],
+      "@klever/connect-transaction": ["../connect-transaction/src"],
+      "@klever/connect-transaction/*": ["../connect-transaction/src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

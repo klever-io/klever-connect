@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
     "baseUrl": ".",
+    "lib": ["ES2022", "DOM"],
     "paths": {
       "@klever/connect-core": ["../connect-core/src"],
       "@klever/connect-core/*": ["../connect-core/src/*"],
@@ -11,6 +11,6 @@
       "@klever/connect-encoding/*": ["../connect-encoding/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "../connect-encoding/src/encoding.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

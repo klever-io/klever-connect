@@ -23,7 +23,11 @@
   "files": [
     "dist"
   ],
-  "keywords": ["klever", "blockchain", "sdk"],
+  "keywords": [
+    "klever",
+    "blockchain",
+    "sdk"
+  ],
   "author": "Klever",
   "license": "MIT",
   "publishConfig": {
@@ -32,6 +36,7 @@
   "sideEffects": false,
   "dependencies": {
     "@klever/connect-core": "workspace:*",
+    "@klever/connect-crypto": "workspace:*",
     "@klever/connect-encoding": "workspace:*",
     "@klever/connect-provider": "workspace:*"
   }

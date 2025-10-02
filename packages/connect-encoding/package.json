@@ -40,5 +40,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "@scure/base": "^2.0.0"
+  }
 }
