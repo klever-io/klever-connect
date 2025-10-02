@@ -104,11 +104,11 @@ export interface IFees {
 
 export interface IFeesResponse {
   kAppFee: number
-	bandwidthFee: number
-	gasEstimated: number
-	safetyMargin: number
-	gasMultiplier: number
-	returnMessage: string
+  bandwidthFee: number
+  gasEstimated: number
+  safetyMargin: number
+  gasMultiplier: number
+  returnMessage: string
   kdaFee: {
     kda?: Uint8Array
     amount?: number
@@ -236,20 +236,40 @@ export interface IBroadcastResponse {
   message?: string
 }
 
-// Block Response
+// Block Response (from API/Indexer)
 export interface IBlockResponse {
   hash: string
-  height: number
+  nonce: number
+  parentHash: string
   timestamp: number
-  txCount: number
-  proposer: string
+  slot: number
+  epoch: number
+  isEpochStart: boolean
+  prevEpochStartSlot: number
   size: number
-  stateRoot: string
-  payloadHash: string
-  protocolVersion: string
-  chainID: string
+  sizeTxs: number
+  virtualBlockSize: number
+  txRootHash: string
+  trieRoot: string
+  validatorsTrieRoot: string
+  kappsTrieRoot: string
+  producerSignature: string
   signature: string
-  transactions?: ITransactionResponse[]
+  prevRandSeed: string
+  randSeed: string
+  txCount: number
+  blockRewards: number
+  stakingRewards: number
+  txHashes: string[]
+  validators: string[]
+  softwareVersion: string
+  chainID: string
+  reserved: string
+  producerBLS: string
+  transactions: ITransactionResponse[] | null
+  producerName: string
+  producerOwnerAddress: string
+  producerLogo: string
 }
 
 // Asset/Token Response

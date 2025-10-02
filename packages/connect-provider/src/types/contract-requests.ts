@@ -10,6 +10,28 @@
 // Common Types
 // ============================================================================
 
+/**
+ * Amount in smallest units (raw value)
+ * - bigint: Native JavaScript bigint (recommended)
+ * - number: JavaScript number (limited to safe integer range)
+ * - string: String representation of raw value (e.g., "10000000" for 10 KLV)
+ *
+ * Note: All values are treated as raw (smallest units). No automatic conversion.
+ * For human-readable values, use parseKLV() to convert before passing to SDK.
+ *
+ * @example
+ * ```typescript
+ * // All these are 10 KLV (raw value = 10000000):
+ * amount: 10000000n           // bigint (recommended)
+ * amount: 10000000            // number
+ * amount: "10000000"          // string
+ *
+ * // Convert human-readable to raw:
+ * import { parseKLV } from '@klever/connect-core'
+ * amount: parseKLV("10")      // Returns 10000000n (10 KLV)
+ * amount: parseKLV("10.5")    // Returns 10500000n (10.5 KLV)
+ * ```
+ */
 export type AmountLike = number | bigint | string
 
 // ============================================================================
@@ -352,33 +374,30 @@ export interface SmartContractRequest {
  * Matches the Go API structure: { type: number, parameter: <request-data> }
  * A transaction can contain multiple contract requests (e.g., transfer + freeze)
  */
-export interface ContractRequestData {
-  type: number
-  parameter:
-    | TransferRequest
-    | CreateAssetRequest
-    | CreateValidatorRequest
-    | ValidatorConfigRequest
-    | FreezeRequest
-    | UnfreezeRequest
-    | DelegateRequest
-    | UndelegateRequest
-    | WithdrawRequest
-    | ClaimRequest
-    | UnjailRequest
-    | AssetTriggerRequest
-    | SetAccountNameRequest
-    | ProposalRequest
-    | VoteRequest
-    | ConfigITORequest
-    | SetITOPricesRequest
-    | BuyRequest
-    | SellRequest
-    | CancelMarketOrderRequest
-    | CreateMarketplaceRequest
-    | ConfigMarketplaceRequest
-    | UpdateAccountPermissionRequest
-    | DepositRequest
-    | ITOTriggerRequest
-    | SmartContractRequest
-}
+export type ContractRequestData =
+  | ({ contractType: 0 } & TransferRequest)
+  | ({ contractType: 1 } & CreateAssetRequest)
+  | ({ contractType: 2 } & CreateValidatorRequest)
+  | ({ contractType: 3 } & ValidatorConfigRequest)
+  | ({ contractType: 4 } & FreezeRequest)
+  | ({ contractType: 5 } & UnfreezeRequest)
+  | ({ contractType: 6 } & DelegateRequest)
+  | ({ contractType: 7 } & UndelegateRequest)
+  | ({ contractType: 8 } & WithdrawRequest)
+  | ({ contractType: 9 } & ClaimRequest)
+  | ({ contractType: 10 } & UnjailRequest)
+  | ({ contractType: 11 } & AssetTriggerRequest)
+  | ({ contractType: 12 } & SetAccountNameRequest)
+  | ({ contractType: 13 } & ProposalRequest)
+  | ({ contractType: 14 } & VoteRequest)
+  | ({ contractType: 15 } & ConfigITORequest)
+  | ({ contractType: 16 } & SetITOPricesRequest)
+  | ({ contractType: 17 } & BuyRequest)
+  | ({ contractType: 18 } & SellRequest)
+  | ({ contractType: 19 } & CancelMarketOrderRequest)
+  | ({ contractType: 20 } & CreateMarketplaceRequest)
+  | ({ contractType: 21 } & ConfigMarketplaceRequest)
+  | ({ contractType: 22 } & UpdateAccountPermissionRequest)
+  | ({ contractType: 23 } & DepositRequest)
+  | ({ contractType: 24 } & ITOTriggerRequest)
+  | ({ contractType: 63 } & SmartContractRequest)

@@ -278,7 +278,7 @@ describe('KleverProvider', () => {
       expect(result.hash).toBe('0x123abc')
       expect(result.code).toBe(0)
       expect(result.message).toBe('success')
-      expect(mockPost).toHaveBeenCalledWith('/transaction/broadcast', mockTxData)
+      expect(mockPost).toHaveBeenCalledWith('/transaction/broadcast', { tx: mockTxData })
     })
 
     it('should throw error on broadcast failure', async () => {
@@ -402,7 +402,8 @@ describe('KleverProvider', () => {
       const hash = await provider.sendRawTransaction(txData)
 
       expect(hash).toBe(mockHash)
-      expect(mockBroadcast).toHaveBeenCalledWith({ tx: txData })
+      // sendRawTransaction converts hex to Uint8Array before calling broadcastTransaction
+      expect(mockBroadcast).toHaveBeenCalledWith(expect.any(Uint8Array))
     })
 
     it('should send raw transaction as Uint8Array', async () => {
@@ -415,7 +416,7 @@ describe('KleverProvider', () => {
       const hash = await provider.sendRawTransaction(txData)
 
       expect(hash).toBe(mockHash)
-      expect(mockBroadcast).toHaveBeenCalledWith({ tx: 'aabbcc' })
+      expect(mockBroadcast).toHaveBeenCalledWith(txData)
     })
   })
 
@@ -423,6 +424,7 @@ describe('KleverProvider', () => {
     it('should build transaction successfully', async () => {
       const mockRequest = {
         sender: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
+        nonce: 10,
         contracts: [
           {
             type: 0,
@@ -437,11 +439,15 @@ describe('KleverProvider', () => {
       const mockPost = vi.fn().mockResolvedValue({
         error: null,
         data: {
-          sender: mockRequest.sender,
-          nonce: 10,
-          kAppFee: 1000,
-          bandwidthFee: 500,
-          data: 'deadbeef',
+          result: {
+            RawData: {
+              Sender: new Uint8Array(),
+              Nonce: 10,
+              KAppFee: 1000,
+              BandwidthFee: 500,
+            },
+          },
+          txHash: 'mock-tx-hash-123',
         },
       })
       // @ts-expect-error - accessing private property for testing
@@ -449,12 +455,9 @@ describe('KleverProvider', () => {
 
       const result = await provider.buildTransaction(mockRequest)
 
-      expect(result.sender).toBe(mockRequest.sender)
-      expect(result.nonce).toBe(10)
-      expect(result.kAppFee).toBe(1000)
-      expect(result.bandwidthFee).toBe(500)
-      expect(result.data).toBeInstanceOf(Buffer)
-      expect(result.contracts).toEqual(mockRequest.contracts)
+      expect(result.result).toBeDefined()
+      expect(result.txHash).toBe('mock-tx-hash-123')
+      expect(mockPost).toHaveBeenCalledWith('/transaction/send', mockRequest)
     })
 
     it('should throw error when no contracts provided', async () => {
@@ -477,6 +480,7 @@ describe('KleverProvider', () => {
       await expect(
         provider.buildTransaction({
           sender: 'klv1...',
+          nonce: 10,
           contracts: [{ type: 0, parameter: {} }],
         }),
       ).rejects.toThrow('Failed to build transaction: Build failed')
@@ -511,13 +515,196 @@ describe('KleverProvider', () => {
       expect(network).toBe(NETWORKS.testnet)
     })
 
-    it('should get block number (TODO)', async () => {
+    it('should get block number', async () => {
+      const mockNonce = 12345
+      const mockGet = vi.fn().mockResolvedValue({
+        data: {
+          overview: {
+            nonce: mockNonce,
+          },
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.get = mockGet
+
       const blockNumber = await provider.getBlockNumber()
-      expect(blockNumber).toBe(0)
+
+      expect(mockGet).toHaveBeenCalledWith('/node/overview')
+      expect(blockNumber).toBe(mockNonce)
     })
 
-    it('should get block (TODO)', async () => {
+    it('should get block by nonce', async () => {
+      const mockBlock = {
+        hash: '0817c26971c7b66f0e8d9684ea5656fb0966337ec41c18a91ddc51fde93bef49',
+        nonce: 5120071,
+        parentHash: '1e411e7669163f24260e7629f6ac9112024729cd7971497a5c3037ab51498bc1',
+        timestamp: 1759430636,
+        slot: 5135459,
+        epoch: 34236,
+        isEpochStart: false,
+        prevEpochStartSlot: 0,
+        size: 380,
+        sizeTxs: 0,
+        virtualBlockSize: 380,
+        txRootHash: '',
+        trieRoot: '87c4c3ff6bb3b2a0d6e0f814823bdde61edf23b68a08937a2c5826fe45e82deb',
+        validatorsTrieRoot: 'ce2fa348c37af41cc9b4bb96fa4f0e4708a013174f8322ca113ad88a1523df9d',
+        kappsTrieRoot: '66ffc3c177137f0a37de3011f5fdfd86e2edb6887a33274c83fc93df0c5d962b',
+        producerSignature: 'b1084af84373d0022eb9d1080bd27ba3c6ca6036321342c073b1800c2bbbb5aa',
+        signature: 'cc5ea254f001c21fd294ddae0bcd9b1e8bdd65b3d6ed84ba29281b1c8dd297cc',
+        prevRandSeed: 'b25d699746e8a391b2dcfbfef51fed05d7e132a51b568e887a4fd10289970aa2',
+        randSeed: '1ab968ad5be2429268997c1cb1ebf119cec7e2220e2eb46eb20b8a4be263a532',
+        txCount: 0,
+        blockRewards: 15000000,
+        stakingRewards: 15000000,
+        txHashes: [],
+        validators: [],
+        softwareVersion: 'default',
+        chainID: '109',
+        reserved: '',
+        producerBLS: 'test',
+        transactions: null,
+        producerName: 'TestProducer',
+        producerOwnerAddress: 'klv1test',
+        producerLogo: '',
+      }
+      const mockGet = vi.fn().mockResolvedValue({
+        data: {
+          block: mockBlock,
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const block = await provider.getBlock(5120071)
+
+      expect(mockGet).toHaveBeenCalledWith('/block/by-nonce/5120071')
+      expect(block).toEqual(mockBlock)
+    })
+
+    it('should get block by hash', async () => {
+      const mockBlock = {
+        hash: '0817c26971c7b66f0e8d9684ea5656fb0966337ec41c18a91ddc51fde93bef49',
+        nonce: 5120071,
+        parentHash: '1e411e7669163f24260e7629f6ac9112024729cd7971497a5c3037ab51498bc1',
+        timestamp: 1759430636,
+        slot: 5135459,
+        epoch: 34236,
+        isEpochStart: false,
+        prevEpochStartSlot: 0,
+        size: 380,
+        sizeTxs: 0,
+        virtualBlockSize: 380,
+        txRootHash: '',
+        trieRoot: '87c4c3ff6bb3b2a0d6e0f814823bdde61edf23b68a08937a2c5826fe45e82deb',
+        validatorsTrieRoot: 'ce2fa348c37af41cc9b4bb96fa4f0e4708a013174f8322ca113ad88a1523df9d',
+        kappsTrieRoot: '66ffc3c177137f0a37de3011f5fdfd86e2edb6887a33274c83fc93df0c5d962b',
+        producerSignature: 'b1084af84373d0022eb9d1080bd27ba3c6ca6036321342c073b1800c2bbbb5aa',
+        signature: 'cc5ea254f001c21fd294ddae0bcd9b1e8bdd65b3d6ed84ba29281b1c8dd297cc',
+        prevRandSeed: 'b25d699746e8a391b2dcfbfef51fed05d7e132a51b568e887a4fd10289970aa2',
+        randSeed: '1ab968ad5be2429268997c1cb1ebf119cec7e2220e2eb46eb20b8a4be263a532',
+        txCount: 0,
+        blockRewards: 15000000,
+        stakingRewards: 15000000,
+        txHashes: [],
+        validators: [],
+        softwareVersion: 'default',
+        chainID: '109',
+        reserved: '',
+        producerBLS: 'test',
+        transactions: null,
+        producerName: 'TestProducer',
+        producerOwnerAddress: 'klv1test',
+        producerLogo: '',
+      }
+      const mockGet = vi.fn().mockResolvedValue({
+        data: {
+          block: mockBlock,
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const block = await provider.getBlock(
+        '0817c26971c7b66f0e8d9684ea5656fb0966337ec41c18a91ddc51fde93bef49',
+      )
+
+      expect(mockGet).toHaveBeenCalledWith(
+        '/block/by-hash/0817c26971c7b66f0e8d9684ea5656fb0966337ec41c18a91ddc51fde93bef49',
+      )
+      expect(block).toEqual(mockBlock)
+    })
+
+    it('should get latest block', async () => {
+      const mockNonce = 5120071
+      const mockBlock = {
+        hash: '0817c26971c7b66f0e8d9684ea5656fb0966337ec41c18a91ddc51fde93bef49',
+        nonce: mockNonce,
+        parentHash: '1e411e7669163f24260e7629f6ac9112024729cd7971497a5c3037ab51498bc1',
+        timestamp: 1759430636,
+        slot: 5135459,
+        epoch: 34236,
+        isEpochStart: false,
+        prevEpochStartSlot: 0,
+        size: 380,
+        sizeTxs: 0,
+        virtualBlockSize: 380,
+        txRootHash: '',
+        trieRoot: '87c4c3ff6bb3b2a0d6e0f814823bdde61edf23b68a08937a2c5826fe45e82deb',
+        validatorsTrieRoot: 'ce2fa348c37af41cc9b4bb96fa4f0e4708a013174f8322ca113ad88a1523df9d',
+        kappsTrieRoot: '66ffc3c177137f0a37de3011f5fdfd86e2edb6887a33274c83fc93df0c5d962b',
+        producerSignature: 'b1084af84373d0022eb9d1080bd27ba3c6ca6036321342c073b1800c2bbbb5aa',
+        signature: 'cc5ea254f001c21fd294ddae0bcd9b1e8bdd65b3d6ed84ba29281b1c8dd297cc',
+        prevRandSeed: 'b25d699746e8a391b2dcfbfef51fed05d7e132a51b568e887a4fd10289970aa2',
+        randSeed: '1ab968ad5be2429268997c1cb1ebf119cec7e2220e2eb46eb20b8a4be263a532',
+        txCount: 0,
+        blockRewards: 15000000,
+        stakingRewards: 15000000,
+        txHashes: [],
+        validators: [],
+        softwareVersion: 'default',
+        chainID: '109',
+        reserved: '',
+        producerBLS: 'test',
+        transactions: null,
+        producerName: 'TestProducer',
+        producerOwnerAddress: 'klv1test',
+        producerLogo: '',
+      }
+      const mockNodeGet = vi.fn().mockResolvedValue({
+        data: {
+          overview: {
+            nonce: mockNonce,
+          },
+        },
+      })
+      const mockApiGet = vi.fn().mockResolvedValue({
+        data: {
+          block: mockBlock,
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.get = mockNodeGet
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockApiGet
+
       const block = await provider.getBlock('latest')
+
+      expect(mockNodeGet).toHaveBeenCalledWith('/node/overview')
+      expect(mockApiGet).toHaveBeenCalledWith(`/block/by-nonce/${mockNonce}`)
+      expect(block).toEqual(mockBlock)
+    })
+
+    it('should return null when block not found', async () => {
+      const mockGet = vi.fn().mockResolvedValue({
+        data: {},
+        error: 'Block not found',
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const block = await provider.getBlock(999999999)
+
       expect(block).toBeNull()
     })
 
@@ -527,10 +714,23 @@ describe('KleverProvider', () => {
       expect(fee.kAppFee).toBe(0)
     })
 
-    it('should wait for transaction (TODO)', async () => {
+    it('should wait for transaction and timeout', async () => {
+      // Use fake timers for faster test execution
+      vi.useFakeTimers()
+
+      // Mock getTransaction to return null (transaction not found)
+      vi.spyOn(provider, 'getTransaction').mockResolvedValue(null)
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tx = await provider.waitForTransaction('0x123' as any)
+      const promise = provider.waitForTransaction('0x123' as any)
+
+      // Fast-forward through all the polling intervals (40 attempts * 3000ms)
+      await vi.runAllTimersAsync()
+
+      const tx = await promise
       expect(tx).toBeNull()
+
+      vi.useRealTimers()
     })
   })
 

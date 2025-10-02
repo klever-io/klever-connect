@@ -48,15 +48,11 @@ export interface BuildTransactionRequest {
 
 /**
  * Transaction build response from node endpoint
- * Contains the proto-encoded transaction data ready for signing
+ * Contains the proto transaction object and transaction hash
  */
 export interface BuildTransactionResponse {
-  sender: string
-  nonce: number
-  contracts: ContractRequestData[]
-  kAppFee: number
-  bandwidthFee: number
-  data: Uint8Array
+  result: unknown // Proto transaction object (ITransaction)
+  txHash: string
 }
 
 // Provider types (JSON API based, not RPC)
@@ -75,6 +71,16 @@ export interface IProvider {
   waitForTransaction(
     hash: TransactionHash,
     confirmations?: number,
+    onProgress?: (
+      status: 'pending' | 'confirming' | 'failed' | 'timeout',
+      data: {
+        attempts: number
+        maxAttempts: number
+        confirmations?: number
+        required?: number
+        transaction?: ITransactionResponse
+      },
+    ) => void,
   ): Promise<ITransactionResponse | null>
   on(event: ProviderEvent, listener: (...args: unknown[]) => void): void
   off(event: ProviderEvent, listener: (...args: unknown[]) => void): void

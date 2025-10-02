@@ -10,6 +10,7 @@
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:integration": "pnpm --filter '@klever/connect-provider' --filter '@klever/connect-transactions' run test:integration",
     "lint": "turbo run lint",
     "format": "prettier --write .",
     "typecheck": "tsc --build",

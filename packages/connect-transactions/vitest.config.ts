@@ -8,5 +8,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
+    // Exclude testnet integration tests by default
+    exclude: ['**/node_modules/**', '**/dist/**', '**/*.testnet.ts'],
   },
 })

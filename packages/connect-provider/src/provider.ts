@@ -20,6 +20,7 @@ import type {
   IFaucetResponse,
   IFeesResponse,
 } from './types/api-types'
+import { TransactionStatus } from './types/api-types'
 import { NETWORKS, DEFAULT_NETWORK } from './networks'
 import { HttpClient } from './http-client'
 import { SimpleCache } from './cache'
@@ -253,7 +254,9 @@ export class KleverProvider implements IProvider {
    * ```
    */
   async broadcastTransaction(tx: unknown): Promise<IBroadcastResult> {
-    const response = await this.nodeClient.post<IBroadcastResponse>('/transaction/broadcast', tx)
+    const response = await this.nodeClient.post<IBroadcastResponse>('/transaction/broadcast', {
+      tx,
+    })
 
     if (response.error) {
       throw new Error(response.error || 'Broadcast failed')
@@ -369,19 +372,88 @@ export class KleverProvider implements IProvider {
   }
 
   /**
-   * Get the block number
+   * Get the current block number (nonce) from the blockchain
+   * @returns Current block nonce
    */
-  getBlockNumber(): Promise<number> {
-    // TODO:
-    return Promise.resolve(0)
+  async getBlockNumber(): Promise<number> {
+    try {
+      const response = await this.nodeClient.get<{
+        data?: {
+          overview?: {
+            nonce: number
+          }
+        }
+        error?: string
+      }>('/node/overview')
+
+      if (response.error || !response.data?.overview?.nonce) {
+        throw new Error(response.error || 'Failed to fetch block number')
+      }
+
+      return response.data.overview.nonce
+    } catch (error) {
+      throw new Error(
+        `Failed to get block number: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
   }
 
   /**
-   * Get the block by hash or number
+   * Get block by nonce, hash, or "latest"
+   * @param blockHashOrNumber - Block nonce (number), hash (string), or "latest"
+   * @returns Block information
    */
-  getBlock(_blockHashOrNumber: BlockIdentifier): Promise<IBlockResponse | null> {
-    // TODO:
-    return Promise.resolve(null)
+  async getBlock(blockHashOrNumber: BlockIdentifier): Promise<IBlockResponse | null> {
+    try {
+      let endpoint: string
+
+      if (blockHashOrNumber === 'latest') {
+        // First get current nonce, then fetch by nonce
+        const currentNonce = await this.getBlockNumber()
+        endpoint = `/block/by-nonce/${currentNonce}`
+      } else if (typeof blockHashOrNumber === 'number') {
+        // Fetch by nonce
+        endpoint = `/block/by-nonce/${blockHashOrNumber}`
+      } else {
+        // Fetch by hash
+        endpoint = `/block/by-hash/${blockHashOrNumber}`
+      }
+
+      const response = await this.apiClient.get<{
+        data?: {
+          block?: IBlockResponse
+        }
+        error?: string
+        code?: string
+      }>(endpoint)
+
+      if (response.error || !response.data?.block) {
+        if (this.debug) {
+          console.log(`[KleverProvider] Block not found: ${response.error || 'No block data'}`)
+        }
+        return null
+      }
+
+      return response.data.block
+    } catch (error) {
+      // Handle 404 and 500 errors for non-existent blocks gracefully
+      if (
+        error instanceof Error &&
+        (error.message.includes('HTTP 500') || error.message.includes('HTTP 404'))
+      ) {
+        if (this.debug) {
+          console.log(`[KleverProvider] Block not found: ${error.message}`)
+        }
+        return null
+      }
+
+      if (this.debug) {
+        console.error('[KleverProvider] Error fetching block:', error)
+      }
+      throw new Error(
+        `Failed to fetch block: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
   }
 
   /**
@@ -407,29 +479,145 @@ export class KleverProvider implements IProvider {
 
   /**
    * Sends a raw transaction to the network
-   * @param signedTx - The signed transaction data (hex string or bytes)
+   * @param signedTx - The signed transaction data (as hex string or JSON string or Uint8Array or Transaction object)
    * @returns The transaction hash
    */
-  async sendRawTransaction(signedTx: string | Uint8Array): Promise<TransactionHash> {
-    // Convert Uint8Array to hex string if needed
-    const txData = typeof signedTx === 'string' ? signedTx : Buffer.from(signedTx).toString('hex')
-
-    const result = await this.broadcastTransaction({ tx: txData })
+  async sendRawTransaction(signedTx: string | Uint8Array | unknown): Promise<TransactionHash> {
+    let txData: unknown
+    if (typeof signedTx === 'string') {
+      // Try to parse as JSON first
+      try {
+        txData = JSON.parse(signedTx)
+      } catch {
+        // If parsing fails, parse from hex to json
+        const hex = signedTx.startsWith('0x') ? signedTx.slice(2) : signedTx
+        const bytes = new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
+        txData = bytes
+      }
+    } else if (signedTx instanceof Uint8Array) {
+      txData = signedTx
+    } else {
+      // Assume it's already a transaction object
+      txData = signedTx
+    }
+    const result = await this.broadcastTransaction(txData)
     return result.hash as TransactionHash
   }
 
   /**
    * Waits for a transaction to be mined and confirmed
    * @param hash - The transaction hash
-   * @param confirmations - Number of confirmations to wait for
-   * @returns The transaction or null if not found
+   * @param confirmations - Number of confirmations to wait for (default: 1)
+   * @param onProgress - Optional callback for progress updates
+   * @returns The transaction or null if not found/timeout
+   *
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const tx = await provider.waitForTransaction(hash)
+   *
+   * // With progress callback for UI updates
+   * const tx = await provider.waitForTransaction(hash, 3, (status, data) => {
+   *   if (status === 'pending') {
+   *     console.log(`Attempt ${data.attempts}/${data.maxAttempts}`)
+   *   } else if (status === 'confirming') {
+   *     console.log(`Confirmations: ${data.confirmations}/${data.required}`)
+   *   }
+   * })
+   * ```
    */
   waitForTransaction(
-    _hash: TransactionHash,
-    _confirmations?: number,
+    hash: TransactionHash,
+    confirmations?: number,
+    onProgress?: (
+      status: 'pending' | 'confirming' | 'failed' | 'timeout',
+      data: {
+        attempts: number
+        maxAttempts: number
+        confirmations?: number
+        required?: number
+        transaction?: ITransactionResponse
+      },
+    ) => void,
   ): Promise<ITransactionResponse | null> {
-    // TODO:
-    return Promise.resolve(null)
+    const confirmationsToWait = confirmations ?? 1
+    const pollInterval = 3000 // 3 seconds
+    const maxAttempts = 40 // Max 2 minutes
+
+    let attempts = 0
+
+    return new Promise((resolve, reject) => {
+      const checkTransaction = async (): Promise<void> => {
+        attempts++
+        try {
+          const tx = await this.getTransaction(hash)
+
+          // Transaction not found yet
+          if (!tx) {
+            onProgress?.('pending', { attempts, maxAttempts })
+            if (attempts >= maxAttempts) {
+              clearInterval(interval)
+              onProgress?.('timeout', { attempts, maxAttempts })
+              resolve(null) // Timeout - transaction not found
+            }
+            return
+          }
+
+          // Transaction is still pending
+          if (tx.status === TransactionStatus.Pending) {
+            onProgress?.('pending', { attempts, maxAttempts, transaction: tx })
+            if (attempts >= maxAttempts) {
+              clearInterval(interval)
+              onProgress?.('timeout', { attempts, maxAttempts, transaction: tx })
+              resolve(null) // Timeout - still pending
+            }
+            return
+          }
+
+          // Transaction failed - return immediately
+          if (tx.status === TransactionStatus.Failed) {
+            clearInterval(interval)
+            onProgress?.('failed', { attempts, maxAttempts, transaction: tx })
+            resolve(tx)
+            return
+          }
+
+          // Transaction succeeded - check confirmations if needed
+          if (confirmationsToWait > 1 && tx.blockNum) {
+            const currentBlock = await this.getBlockNumber()
+            const currentConfirmations = currentBlock - tx.blockNum + 1
+            onProgress?.('confirming', {
+              attempts,
+              maxAttempts,
+              confirmations: currentConfirmations,
+              required: confirmationsToWait,
+              transaction: tx,
+            })
+            if (currentConfirmations >= confirmationsToWait) {
+              clearInterval(interval)
+              resolve(tx)
+            }
+          } else {
+            // No confirmation requirement or only 1 confirmation needed
+            clearInterval(interval)
+            resolve(tx)
+          }
+        } catch (error) {
+          clearInterval(interval)
+          reject(
+            new Error(
+              `Error while waiting for transaction: ${
+                error instanceof Error ? error.message : 'Unknown error'
+              }`,
+            ),
+          )
+        }
+      }
+
+      const interval = setInterval(() => {
+        void checkTransaction()
+      }, pollInterval)
+    })
   }
 
   on(_event: ProviderEvent, _listener: (...args: unknown[]) => void): void {
@@ -460,10 +648,10 @@ export class KleverProvider implements IProvider {
    * - Fetches nonce if not provided
    * - Calculates kAppFee and bandwidthFee
    * - Encodes transaction to proto format
-   * - Returns ready-to-sign transaction data
+   * - Returns proto transaction object and transaction hash
    *
    * @param request - Transaction build request with contracts and optional sender/nonce
-   * @returns Built transaction with proto bytes ready for signing
+   * @returns Proto transaction object and transaction hash
    *
    * @example
    * ```typescript
@@ -475,7 +663,8 @@ export class KleverProvider implements IProvider {
    *   }]
    * }
    * const tx = await provider.buildTransaction(request)
-   * // tx.data contains proto bytes ready for signing
+   * // tx.result contains proto transaction object (ITransaction)
+   * // tx.txHash contains the transaction hash
    * ```
    */
   async buildTransaction(request: BuildTransactionRequest): Promise<BuildTransactionResponse> {
@@ -484,29 +673,39 @@ export class KleverProvider implements IProvider {
     }
 
     try {
-      // Call node endpoint to build transaction
-      const response = await this.nodeClient.post<{
-        data?: {
-          sender: string
-          nonce: number
-          kAppFee: number
-          bandwidthFee: number
-          data: string // hex-encoded proto bytes
+      // Auto-fetch nonce if not provided
+      if (request.sender && request.nonce === undefined) {
+        const nonceResponse = await this.nodeClient.get<
+          ApiResponse<{
+            result: {
+              nonce: number
+              firstPendingNonce: number
+              txPending: number
+            }
+          }>
+        >(`/address/${request.sender}/nonce`)
+
+        if (nonceResponse.data?.result?.nonce !== undefined) {
+          // Add 1 to the current nonce for the next transaction
+          request.nonce = nonceResponse.data.result.nonce + 1
         }
-        error?: string
-      }>('/transaction/build', request)
+      }
+
+      // Call node endpoint to build transaction
+      const response = await this.nodeClient.post<
+        ApiResponse<{
+          result: unknown // Proto transaction object (ITransaction)
+          txHash: string
+        }>
+      >('/transaction/send', request)
 
       if (response.error || !response.data) {
         throw new Error(response.error || 'Failed to build transaction')
       }
 
       return {
-        sender: response.data.sender,
-        nonce: response.data.nonce,
-        contracts: request.contracts,
-        kAppFee: response.data.kAppFee,
-        bandwidthFee: response.data.bandwidthFee,
-        data: Buffer.from(response.data.data, 'hex'),
+        result: response.data.result,
+        txHash: response.data.txHash,
       }
     } catch (error) {
       throw new Error(

@@ -16,6 +16,7 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "lint": "eslint src --ext .ts,.tsx",
     "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo"

@@ -14,19 +14,28 @@ import type {
   SmartContractRequest,
   ContractRequestData,
 } from '@klever/connect-provider'
-import { isValidAddress, parseKLV, TXType } from '@klever/connect-core'
+import { isValidAddress } from '@klever/connect-core'
 import { Transaction } from './transaction'
+
+import { bech32Decode } from '@klever/connect-encoding'
+import type { AmountLike } from '@klever/connect-provider'
+import type { IKDAFee } from '@klever/connect-encoding'
 
 /**
  * Raw proto build options (offline building)
+ * All fields are optional - will use builder's state if not provided
  */
 export interface BuildProtoOptions {
-  sender: string
-  nonce: number
-  fees: {
+  chainId?: string
+  sender?: string
+  nonce?: number
+  fees?: {
     kAppFee: number
     bandwidthFee: number
   }
+  kdaFee?: { kda: string; amount: AmountLike }
+  permissionId?: number
+  data?: string[]
 }
 
 /**
@@ -58,9 +67,10 @@ export interface BuildProtoOptions {
  */
 export class TransactionBuilder {
   private contracts: ContractRequestData[] = []
+  private _chainId?: string // Default to provider's network if available
   private _sender?: string
   private _nonce?: number
-  private _kdaFee?: string
+  private _kdaFee?: { kda: string; amount: AmountLike }
   private _permissionId?: number
   private _data?: string[]
 
@@ -71,6 +81,22 @@ export class TransactionBuilder {
    */
   getProvider(): IProvider | undefined {
     return this.provider
+  }
+
+  /**
+   * Set the provider instance
+   */
+  setProvider(provider: IProvider): this {
+    this.provider = provider
+    return this
+  }
+
+  /**
+   * Set chain ID (overrides provider's network if set)
+   */
+  setChainId(chainId: string): this {
+    this._chainId = chainId
+    return this
   }
 
   /**
@@ -98,8 +124,20 @@ export class TransactionBuilder {
   /**
    * Set KDA fee
    */
-  kdaFee(fee: string): this {
-    this._kdaFee = fee
+  kdaFee(fee: { kda: string; amount: AmountLike }): this {
+    if (!fee.kda) {
+      throw new Error('KDA fee asset ID is required')
+    }
+    // can`t use KLV as kdaFee (its default if not set)
+    if (fee.kda === 'KLV') {
+      throw new Error('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead')
+    }
+
+    const amount = typeof fee.amount === 'bigint' ? fee.amount : BigInt(fee.amount)
+    if (amount < 0n) {
+      throw new Error('KDA fee amount must be non-negative')
+    }
+    this._kdaFee = { kda: fee.kda, amount }
     return this
   }
 
@@ -127,22 +165,19 @@ export class TransactionBuilder {
       throw new Error(`Invalid recipient address: ${params.receiver}`)
     }
 
-    const amount =
-      typeof params.amount === 'bigint' ? params.amount : parseKLV(params.amount.toString())
+    const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
 
     if (amount <= 0n) {
       throw new Error('Transfer amount must be positive')
     }
 
     this.contracts.push({
-      type: TXType.Transfer,
-      parameter: {
-        receiver: params.receiver,
-        amount: amount,
-        ...(params.kda && { kda: params.kda }),
-        ...(params.kdaRoyalties && { kdaRoyalties: params.kdaRoyalties }),
-        ...(params.klvRoyalties && { klvRoyalties: params.klvRoyalties }),
-      },
+      contractType: 0,
+      receiver: params.receiver,
+      amount: amount,
+      ...(params.kda && { kda: params.kda }),
+      ...(params.kdaRoyalties && { kdaRoyalties: params.kdaRoyalties }),
+      ...(params.klvRoyalties && { klvRoyalties: params.klvRoyalties }),
     })
 
     return this
@@ -152,19 +187,16 @@ export class TransactionBuilder {
    * Add freeze (stake) contract
    */
   freeze(params: FreezeRequest): this {
-    const amount =
-      typeof params.amount === 'bigint' ? params.amount : parseKLV(params.amount.toString())
+    const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
 
     if (amount <= 0n) {
       throw new Error('Freeze amount must be positive')
     }
 
     this.contracts.push({
-      type: TXType.Freeze,
-      parameter: {
-        amount: amount,
-        ...(params.kda && { kda: params.kda }),
-      },
+      contractType: 4,
+      amount: amount,
+      ...(params.kda && { kda: params.kda }),
     })
 
     return this
@@ -179,11 +211,9 @@ export class TransactionBuilder {
     }
 
     this.contracts.push({
-      type: TXType.Unfreeze,
-      parameter: {
-        bucketId: params.bucketId,
-        ...(params.kda && { kda: params.kda }),
-      },
+      contractType: 5,
+      bucketId: params.bucketId,
+      ...(params.kda && { kda: params.kda }),
     })
 
     return this
@@ -198,11 +228,9 @@ export class TransactionBuilder {
     }
 
     this.contracts.push({
-      type: TXType.Delegate,
-      parameter: {
-        receiver: params.receiver,
-        ...(params.bucketId && { bucketId: params.bucketId }),
-      },
+      contractType: 6,
+      receiver: params.receiver,
+      ...(params.bucketId && { bucketId: params.bucketId }),
     })
 
     return this
@@ -217,8 +245,8 @@ export class TransactionBuilder {
     }
 
     this.contracts.push({
-      type: TXType.Undelegate,
-      parameter: params,
+      contractType: 7,
+      ...params,
     })
 
     return this
@@ -229,8 +257,8 @@ export class TransactionBuilder {
    */
   withdraw(params: WithdrawRequest): this {
     this.contracts.push({
-      type: TXType.Withdraw,
-      parameter: params,
+      contractType: 8,
+      ...params,
     })
 
     return this
@@ -241,8 +269,8 @@ export class TransactionBuilder {
    */
   claim(params: ClaimRequest): this {
     this.contracts.push({
-      type: TXType.Claim,
-      parameter: params,
+      contractType: 9,
+      ...params,
     })
 
     return this
@@ -253,8 +281,8 @@ export class TransactionBuilder {
    */
   createAsset(params: CreateAssetRequest): this {
     this.contracts.push({
-      type: TXType.CreateAsset,
-      parameter: params,
+      contractType: 1,
+      ...params,
     })
 
     return this
@@ -265,8 +293,8 @@ export class TransactionBuilder {
    */
   createValidator(params: CreateValidatorRequest): this {
     this.contracts.push({
-      type: TXType.CreateValidator,
-      parameter: params,
+      contractType: 2,
+      ...params,
     })
 
     return this
@@ -277,8 +305,8 @@ export class TransactionBuilder {
    */
   vote(params: VoteRequest): this {
     this.contracts.push({
-      type: TXType.Vote,
-      parameter: params,
+      contractType: 14,
+      ...params,
     })
 
     return this
@@ -293,11 +321,34 @@ export class TransactionBuilder {
     }
 
     this.contracts.push({
-      type: TXType.SmartContract,
-      parameter: params,
+      contractType: 63,
+      ...params,
     })
 
     return this
+  }
+
+  /**
+   * Recursively convert BigInt values to numbers for JSON serialization
+   */
+  private convertBigIntToNumber(obj: unknown): unknown {
+    if (typeof obj === 'bigint') {
+      return Number(obj)
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.convertBigIntToNumber(item))
+    }
+
+    if (obj !== null && typeof obj === 'object') {
+      const converted: Record<string, unknown> = {}
+      for (const [key, value] of Object.entries(obj)) {
+        converted[key] = this.convertBigIntToNumber(value)
+      }
+      return converted
+    }
+
+    return obj
   }
 
   /**
@@ -310,13 +361,13 @@ export class TransactionBuilder {
     }
 
     const request: BuildTransactionRequest = {
-      contracts: this.contracts,
+      contracts: this.convertBigIntToNumber(this.contracts) as ContractRequestData[],
     }
 
     // Only add optional properties if they're defined
     if (this._sender !== undefined) request.sender = this._sender
     if (this._nonce !== undefined) request.nonce = this._nonce
-    if (this._kdaFee !== undefined) request.kdaFee = this._kdaFee
+    if (this._kdaFee !== undefined) request.kdaFee = this._kdaFee.kda
     if (this._permissionId !== undefined) request.permissionId = this._permissionId
     if (this._data !== undefined) request.data = this._data
 
@@ -325,28 +376,105 @@ export class TransactionBuilder {
 
   /**
    * Build proto transaction (client-side, offline)
-   * Requires all params (sender, nonce, fees) to be provided
-   * @param options - Build options including sender, nonce, and fees
+   * Options override builder state if provided, otherwise uses builder's state
+   *
+   * @param options - Optional build options (sender, nonce, fees, etc.)
    * @returns Transaction object with proto bytes
+   *
+   * @example
+   * ```typescript
+   * // Using builder state
+   * const tx = new TransactionBuilder()
+   *   .sender('klv1...')
+   *   .nonce(123)
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .buildProto({ fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   *
+   * // Using options to override
+   * const tx2 = new TransactionBuilder()
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .buildProto({
+   *     sender: 'klv1...',
+   *     nonce: 123,
+   *     fees: { kAppFee: 500000, bandwidthFee: 100000 }
+   *   })
+   * ```
    */
-  buildProto(_options: BuildProtoOptions): Transaction {
+  buildProto(options: BuildProtoOptions = {}): Transaction {
     if (this.contracts.length === 0) {
       throw new Error('At least one contract is required')
     }
 
-    // TODO: Implement proto encoding using @klever/connect-encoding
-    // For now, create a placeholder
-    // const protoBytes = new Uint8Array(0) // Placeholder
+    // Convert string to Uint8Array (UTF-8 encoded)
+    const encoder = new TextEncoder()
 
-    return new Transaction()
-    /*{
-      sender: options.sender,
-      nonce: options.nonce,
-      contracts: this.contracts,
-      kAppFee: options.fees.kAppFee,
-      bandwidthFee: options.fees.bandwidthFee,
-      data: protoBytes,
-    }*/
+    // check chainId
+    const chainId =
+      options.chainId ??
+      this._chainId ??
+      (this.provider ? this.provider.getNetwork().chainId : undefined)
+    if (!chainId) {
+      throw new Error(
+        'Chain ID is required. Set via builder state or provide a provider with network configured.',
+      )
+    }
+
+    const chainIdBytes = encoder.encode(chainId)
+
+    // Merge options with builder state (options take precedence)
+    const sender = options.sender ?? this._sender
+    const nonce = options.nonce ?? this._nonce
+    const kdaFee = options.kdaFee ?? this._kdaFee
+    const permissionId = options.permissionId ?? this._permissionId ?? null
+    const data = options.data ?? this._data
+
+    // Validate required fields
+    if (!sender) {
+      throw new Error('Sender address is required. Set via .sender() or options.sender')
+    }
+    // convert sender from bech32 to bytes
+    const senderBytes = bech32Decode(sender)
+
+    if (nonce === undefined) {
+      throw new Error('Nonce is required. Set via .nonce() or options.nonce')
+    }
+
+    // convert data to Uint8Array[]
+    const dataBytes = data ? data.map((d) => encoder.encode(d)) : null
+
+    // TODO: compute kappFess and bandwidthFees if not provided
+    const kappFess = options.fees?.kAppFee ?? 0
+    const bandwidthFees = options.fees?.bandwidthFee ?? 0
+
+    // encode KDA fee buffer
+    const kdaFeeProto: IKDAFee | null =
+      kdaFee && kdaFee.kda
+        ? {
+            KDA: encoder.encode(kdaFee.kda),
+            Amount: typeof kdaFee.amount === 'bigint' ? kdaFee.amount : BigInt(kdaFee.amount),
+          }
+        : null
+
+    // TODO: Implement contract encoding to proto
+    return new Transaction({
+      RawData: {
+        ChainID: chainIdBytes,
+        Nonce: nonce,
+        Sender: senderBytes.data,
+        /** Raw Contract */
+        Contract: null,
+        /** Raw PermissionID */
+        PermissionID: permissionId,
+
+        /** Raw Data */
+        Data: dataBytes,
+
+        /** TX Fees */
+        KAppFee: kappFess,
+        BandwidthFee: bandwidthFees,
+        KDAFee: kdaFeeProto,
+      },
+    })
   }
 
   /**
@@ -370,10 +498,10 @@ export class TransactionBuilder {
 
     // Send to node endpoint to build
     const nodeResponse = await this.provider.buildTransaction(request)
-    console.log('Node response:', nodeResponse)
 
-    // Return Transaction object
-    return new Transaction(/*nodeResponse*/)
+    // Return Transaction object from proto result
+    // Use fromObject to properly convert base64 strings to Uint8Arrays
+    return Transaction.fromObject(nodeResponse.result as { [k: string]: unknown })
   }
 
   /**

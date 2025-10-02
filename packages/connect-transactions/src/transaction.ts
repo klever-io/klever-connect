@@ -104,4 +104,15 @@ export class Transaction extends ProtoTransaction {
     const decoded = ProtoTransaction.decode(bytes)
     return new Transaction(decoded)
   }
+
+  /**
+   * Create a Transaction from a plain JSON object (from API)
+   * Properly converts base64 strings to Uint8Array
+   * @param obj - Plain object with base64-encoded byte fields
+   * @returns Transaction instance
+   */
+  static override fromObject(obj: { [k: string]: unknown }): Transaction {
+    const decoded = ProtoTransaction.fromObject(obj)
+    return new Transaction(decoded)
+  }
 }
