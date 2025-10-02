@@ -1,7 +1,7 @@
 import { cryptoProvider } from '@klever/connect-crypto'
 import type { PrivateKey } from '@klever/connect-crypto'
 import { Transaction as ProtoTransaction, type ITransaction } from '@klever/connect-encoding'
-import { hexEncode } from '@klever/connect-encoding'
+import { hexEncode, hashBlake2b } from '@klever/connect-encoding'
 
 /**
  * Transaction class representing a Klever blockchain transaction
@@ -82,6 +82,32 @@ export class Transaction extends ProtoTransaction {
     const bandwidthFeeBigInt =
       typeof bandwidthFee === 'bigint' ? bandwidthFee : BigInt(bandwidthFee.toString())
     return kAppFeeBigInt + bandwidthFeeBigInt
+  }
+
+  /**
+   * Get the transaction hash
+   * Computes blake2b hash of the RawData proto bytes
+   * @returns Transaction hash as hex string
+   *
+   * @example
+   * ```typescript
+   * const tx = new Transaction(txData)
+   * const hash = tx.getHash()
+   * // hash: "a3f2e8d9..."
+   * ```
+   */
+  getHash(): string {
+    if (!this.RawData) {
+      throw new Error('Transaction has no RawData')
+    }
+
+    // Encode RawData to proto bytes
+    const rawDataBytes = ProtoTransaction.Raw.encode(this.RawData).finish()
+
+    // Hash using blake2b (32 bytes output)
+    const hashBytes = hashBlake2b(rawDataBytes, 32)
+
+    return hexEncode(hashBytes)
   }
 
   /**
