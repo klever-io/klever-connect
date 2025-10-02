@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { ContractType } from '@klever/connect-encoding'
-import { TXType } from '../constants'
+import { TXType } from '../types/transactions'
 
 describe('Contract Types', () => {
   it('TXType values should match ContractType enum values', () => {
