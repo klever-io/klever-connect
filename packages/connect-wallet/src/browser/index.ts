@@ -1,45 +1,112 @@
 import { isBrowser, TXType, WalletError } from '@klever/connect-core'
+import type { KleverAddress, TransactionHash } from '@klever/connect-core'
 import type {
+  ContractRequestData,
+  TransferRequest,
   TransactionSubmitResult,
-  IBroadcastResponse,
   IProvider,
   NetworkURI,
 } from '@klever/connect-provider'
-import type { KleverWeb, KleverHub } from '../types/browser-types'
-import type { IContractRequest } from '../types/browser-types'
-
-import type {
-  TransferRequest,
-  ExtensionTransactionRequest,
-  ExtensionTransactionPayload,
-} from '../types'
-import { BaseWallet } from '../base'
 import type { Transaction } from '@klever/connect-transactions'
+import type { PrivateKey } from '@klever/connect-crypto'
+import { cryptoProvider } from '@klever/connect-crypto'
+import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-types'
+import type { WalletConfig } from '../types/wallet'
+import { BaseWallet } from '../base'
 
 export class BrowserWallet extends BaseWallet {
   private _kleverWeb?: KleverWeb
   private _kleverHub?: KleverHub
+  private _privateKey?: PrivateKey | undefined
+  private _mode: 'extension' | 'privateKey' = 'extension'
   private _useExtensionBroadcast: boolean = true
   private _lastEmittedAddress?: string | undefined
   private _accountChangeDebounceTimer?: NodeJS.Timeout | undefined
 
-  constructor(provider: IProvider) {
+  constructor(provider: IProvider, config?: WalletConfig) {
     super(provider)
 
     if (!isBrowser()) {
       throw new WalletError('BrowserWallet can only be used in browser environment')
     }
+
+    // Initialize private key mode if provided
+    if (config?.privateKey) {
+      this._mode = 'privateKey'
+      this._privateKey = cryptoProvider.importPrivateKey(config.privateKey)
+    } else if (config?.pemContent) {
+      this._mode = 'privateKey'
+      // Import PEM using crypto package's loader (async, will be done in connect())
+      // Store pemContent temporarily for loading in connect()
+      if (config.pemPassword !== undefined) {
+        this._pendingPemLoad = {
+          content: config.pemContent,
+          password: config.pemPassword,
+        }
+      } else {
+        this._pendingPemLoad = {
+          content: config.pemContent,
+        }
+      }
+    }
   }
+
+  private _pendingPemLoad?: {
+    content: string
+    password?: string
+  } | undefined
 
   async connect(): Promise<void> {
     if (this._connected) {
       return
     }
 
-    // Check for Klever Extension
+    // Private key mode - direct connection without extension
+    if (this._mode === 'privateKey') {
+      try {
+        // Load PEM if pending
+        if (this._pendingPemLoad && !this._privateKey) {
+          const pemResult = await cryptoProvider.importPrivateKeyFromPem(
+            this._pendingPemLoad.content,
+            this._pendingPemLoad.password ? { password: this._pendingPemLoad.password } : undefined,
+          )
+          this._privateKey = pemResult
+          // PEM loader returns PrivateKey with validated address
+          // Get address from public key
+          const publicKey = await cryptoProvider.getPublicKey(pemResult)
+          this._address = publicKey.toAddress()
+          this._pendingPemLoad = undefined // Clear after loading
+        }
+
+        if (!this._privateKey) {
+          throw new WalletError('No private key provided')
+        }
+
+        // Generate address from private key (if not already set from PEM)
+        if (!this._address) {
+          const publicKey = await cryptoProvider.getPublicKey(this._privateKey)
+          this._publicKey = publicKey.toHex()
+          this._address = publicKey.toAddress()
+        } else {
+          // PEM mode - still get public key
+          const publicKey = await cryptoProvider.getPublicKey(this._privateKey)
+          this._publicKey = publicKey.toHex()
+        }
+
+        this._connected = true
+        this.emit('connect', { address: this._address })
+        return
+      } catch (error) {
+        throw new WalletError(
+          `Failed to connect with private key: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      }
+    }
+
+    // Extension mode - check for Klever Extension
     if (!window.kleverWeb) {
       throw new WalletError(
-        'Klever Extension not found. Please install it from https://klever.io/extension',
+        'Klever Extension not found. Please install it from https://klever.io/extension, or provide a private key.',
       )
     }
 
@@ -101,7 +168,13 @@ export class BrowserWallet extends BaseWallet {
     }
   }
 
-  async disconnect(): Promise<void> {
+  /**
+   * Disconnect from the wallet
+   * @param clearPrivateKey - In private key mode, whether to clear the private key from memory (default: false)
+   *                          If false, you can reconnect without providing the key again
+   *                          If true, you'll need to create a new wallet instance to reconnect
+   */
+  async disconnect(clearPrivateKey: boolean = false): Promise<void> {
     if (!this._connected) {
       return
     }
@@ -113,14 +186,22 @@ export class BrowserWallet extends BaseWallet {
         this._accountChangeDebounceTimer = undefined
       }
 
-      if (this._kleverHub) {
+      // Extension mode - disconnect from hub
+      if (this._mode === 'extension' && this._kleverHub) {
         await this._kleverHub.disconnect()
       }
 
+      // Clear connection state
       this._connected = false
       this._address = ''
       this._publicKey = ''
       this._lastEmittedAddress = undefined
+
+      // Private key mode: Optionally clear private key for security
+      if (clearPrivateKey && this._mode === 'privateKey') {
+        this._privateKey = undefined
+        this._pendingPemLoad = undefined
+      }
 
       this.emit('disconnect')
     } catch (error) {
@@ -131,8 +212,30 @@ export class BrowserWallet extends BaseWallet {
   }
 
   async signMessage(message: string | Uint8Array): Promise<string> {
-    if (!this._connected || !this._kleverWeb) {
+    if (!this._connected) {
       throw new WalletError('Wallet not connected')
+    }
+
+    // Private key mode - sign locally
+    if (this._mode === 'privateKey') {
+      if (!this._privateKey) {
+        throw new WalletError('No private key available')
+      }
+
+      try {
+        const messageBytes = typeof message === 'string' ? new TextEncoder().encode(message) : message
+        const signature = await cryptoProvider.signMessage(messageBytes, this._privateKey)
+        return signature.toHex()
+      } catch (error) {
+        throw new WalletError(
+          `Failed to sign message: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      }
+    }
+
+    // Extension mode - use KleverWeb
+    if (!this._kleverWeb) {
+      throw new WalletError('Extension not available')
     }
 
     try {
@@ -149,8 +252,29 @@ export class BrowserWallet extends BaseWallet {
   }
 
   async signTransaction(unsignedTx: Transaction): Promise<Transaction> {
-    if (!this._connected || !this._kleverWeb) {
+    if (!this._connected) {
       throw new WalletError('Wallet not connected')
+    }
+
+    // Private key mode - sign locally using Transaction.sign()
+    if (this._mode === 'privateKey') {
+      if (!this._privateKey) {
+        throw new WalletError('No private key available')
+      }
+
+      try {
+        await unsignedTx.sign(this._privateKey)
+        return unsignedTx
+      } catch (error) {
+        throw new WalletError(
+          `Failed to sign transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      }
+    }
+
+    // Extension mode - use KleverWeb
+    if (!this._kleverWeb) {
+      throw new WalletError('Extension not available')
     }
 
     try {
@@ -164,29 +288,66 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Build a transaction using the KleverWeb extension
-   * @param requests Array of transaction requests
+   * Build a transaction
+   * In extension mode: Uses KleverWeb extension
+   * In private key mode: Uses TransactionBuilder with provider
+   * @param contracts Array of contract requests
    * @param txData Optional transaction data
    * @param options Optional transaction options
    * @returns The built unsigned transaction
    */
   async buildTransaction(
-    requests: ExtensionTransactionRequest[],
+    contracts: ContractRequestData[],
     txData?: string[],
     options?: { nonce?: number; kdaFee?: string },
   ): Promise<Transaction> {
-    if (!this._connected || !this._kleverWeb) {
+    if (!this._connected) {
       throw new WalletError('Wallet not connected')
     }
 
-    try {
-      // Convert ExtensionTransactionRequest to IContractRequest format
-      const contracts: IContractRequest[] = requests.map((req) => ({
-        type: req.type,
-        payload: req.payload,
-      }))
+    // Private key mode - use TransactionBuilder
+    if (this._mode === 'privateKey') {
+      try {
+        const { TransactionBuilder } = await import('@klever/connect-transactions')
+        const builder = new TransactionBuilder(this._provider)
 
-      return await this._kleverWeb.buildTransaction(contracts, txData, options)
+        // Add all contracts
+        for (const contract of contracts) {
+          builder.addContract(contract)
+        }
+
+        // Set sender
+        builder.sender(this._address)
+
+        // Set nonce if provided, otherwise auto-fetch
+        if (options?.nonce !== undefined) {
+          builder.nonce(options.nonce)
+        }
+
+        // Build the transaction
+        return await builder.build()
+      } catch (error) {
+        throw new WalletError(
+          `Failed to build transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      }
+    }
+
+    // Extension mode - use KleverWeb
+    if (!this._kleverWeb) {
+      throw new WalletError('Extension not available')
+    }
+
+    try {
+      // KleverWeb accepts contracts with 'type' field and deconstructs payload internally
+      // Since it converts { type, payload } back to { ...payload, contractType: type },
+      // we can pass ContractRequestData directly by aliasing contractType as type
+      const extensionContracts = contracts.map((contract) => ({
+        type: contract.contractType,
+        payload: contract,
+      })) as IContractRequest[]
+
+      return await this._kleverWeb.buildTransaction(extensionContracts, txData, options)
     } catch (error) {
       throw new WalletError(
         `Failed to build transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -195,18 +356,42 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Broadcast transactions using the KleverWeb extension
+   * Broadcast multiple signed transactions to the network in a single batch
+   * In extension mode: Uses KleverWeb extension
+   * In private key mode: Uses provider.sendRawTransactions
    * @param signedTxs Array of signed transactions
-   * @returns Broadcast response
+   * @returns Array of transaction hashes
    */
-  async broadcastTransactions(signedTxs: Transaction[]): Promise<IBroadcastResponse> {
-    if (!this._connected || !this._kleverWeb) {
+  override async broadcastTransactions(signedTxs: Transaction[]): Promise<TransactionHash[]> {
+    if (!this._connected) {
       throw new WalletError('Wallet not connected')
+    }
+
+    // Private key mode - use provider
+    if (this._mode === 'privateKey') {
+      // Use the base class implementation which calls provider.sendRawTransactions
+      return super.broadcastTransactions(signedTxs)
+    }
+
+    // Extension mode - use KleverWeb
+    if (!this._kleverWeb) {
+      throw new WalletError('Extension not available')
     }
 
     try {
       const response = await this._kleverWeb.broadcastTransactions(signedTxs)
-      return response
+
+      // Extract hashes from extension response
+      if (response.error) {
+        throw new WalletError(response.error)
+      }
+
+      if (response.data?.txsHashes) {
+        return response.data.txsHashes as TransactionHash[]
+      }
+
+      // Fallback: compute hashes locally if extension didn't return them
+      return signedTxs.map((tx) => tx.getHash() as TransactionHash)
     } catch (error) {
       throw new WalletError(
         `Failed to broadcast transactions: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -215,27 +400,34 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Build and sign a transfer transaction using KleverWeb
-   * @param to Recipient address
-   * @param amount Amount to transfer
-   * @param token Optional token ID (defaults to KLV)
+   * Build and sign a transfer transaction
+   * In extension mode: Uses KleverWeb extension
+   * In private key mode: Uses TransactionBuilder + local signing
+   * @param to - Recipient address
+   * @param amount - Amount to transfer
+   * @param token - Optional token ID (defaults to KLV)
    * @returns Signed transaction
    */
   async buildTransfer(to: string, amount: string | number, token?: string): Promise<Transaction> {
-    const request: ExtensionTransactionRequest = {
-      type: TXType.Transfer,
-      payload: {
-        toAddress: to,
-        receiver: to,
-        amount: amount.toString(),
-        ...(token && {
-          kda: token,
-          assetId: token, // Include both for compatibility
-        }),
-      },
+    const contract: ContractRequestData = {
+      contractType: TXType.Transfer,
+      toAddress: to,
+      receiver: to,
+      amount: amount.toString(),
+      ...(token && {
+        kda: token,
+        assetId: token, // Include both for compatibility
+      }),
+    } as ContractRequestData
+
+    const unsignedTx = await this.buildTransaction([contract])
+
+    // Private key mode - sign locally
+    if (this._mode === 'privateKey') {
+      return await this.signTransaction(unsignedTx)
     }
 
-    const unsignedTx = await this.buildTransaction([request])
+    // Extension mode - sign with extension
     if (!this._kleverWeb) {
       throw new WalletError('KleverWeb not available')
     }
@@ -243,7 +435,8 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Get the extension's provider configuration
+   * Get the extension's current provider configuration
+   * @returns Network URI configuration from the extension
    */
   getExtensionProvider(): NetworkURI {
     return this._kleverWeb?.getProvider() ?? {}
@@ -251,7 +444,7 @@ export class BrowserWallet extends BaseWallet {
 
   /**
    * Update the extension's provider for network switching
-   * @param provider The new provider configuration
+   * @param provider - The new provider configuration
    */
   updateProvider(provider: NetworkURI): void {
     if (!this._kleverWeb) {
@@ -263,101 +456,260 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Send a generic transaction using the extension
+   * Create a new account using the extension
+   * Extension mode only
+   * @returns PEM response with private key and address
    */
-  async sendTransaction(
-    type: number,
-    payload: ExtensionTransactionPayload,
-  ): Promise<TransactionSubmitResult> {
-    if (!this._connected || !this._kleverWeb) {
-      throw new WalletError('Wallet not connected')
+  async createAccount(): Promise<{ privateKey: string; address: string }> {
+    if (!this._kleverWeb) {
+      throw new WalletError('KleverWeb extension not available')
     }
 
     try {
-      let txData: string[] | undefined
-      const txPayload = payload
-      /* {
-        function?: string
-        args?: string[]
-        data?: string | string[]
-      }*/
+      return await this._kleverWeb.createAccount()
+    } catch (error) {
+      throw new WalletError(
+        `Failed to create account: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
+  }
 
-      // Handle transaction data
-      if (type === 63) {
-        // SmartContract type
-        // Build call input for smart contract
-        if (txPayload.function && txPayload.args) {
-          // Build the method call data
-          const dataString =
-            txPayload.args.length > 0
-              ? `${txPayload.function}@${txPayload.args.join('@')}`
-              : txPayload.function
+  /**
+   * Get account information
+   * In extension mode: Uses KleverWeb extension
+   * In private key mode: Uses provider
+   * @param address - Optional address to query (defaults to current wallet address)
+   * @returns Account information
+   */
+  async getAccount(address?: string): Promise<{
+    address: string
+    balance?: number
+    nonce?: number
+    allowance?: number
+    permissions?: string[]
+    rootHash?: string
+    txCount?: number
+  }> {
+    const queryAddress = address || this._address
 
-          // Convert to base64
-          const callInput =
-            typeof Buffer !== 'undefined'
-              ? Buffer.from(dataString).toString('base64')
-              : btoa(dataString)
+    if (!queryAddress) {
+      throw new WalletError('No address available')
+    }
 
-          txData = [callInput]
+    // Private key mode - use provider
+    if (this._mode === 'privateKey') {
+      try {
+        const account = await this._provider.getAccount(queryAddress as KleverAddress)
+        return {
+          address: account.address,
+          balance: Number(account.balance),
+          nonce: account.nonce,
+          // Provider may not return all these fields
         }
-      } else if (txPayload.data) {
-        // Handle regular transaction data
-        if (Array.isArray(txPayload.data)) {
-          txData = txPayload.data
-        } else if (typeof txPayload.data === 'string') {
-          txData = [txPayload.data]
+      } catch (error) {
+        throw new WalletError(
+          `Failed to get account: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      }
+    }
+
+    // Extension mode - use KleverWeb
+    if (!this._kleverWeb) {
+      throw new WalletError('KleverWeb extension not available')
+    }
+
+    try {
+      return await this._kleverWeb.getAccount(address)
+    } catch (error) {
+      throw new WalletError(
+        `Failed to get account: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
+  }
+
+  /**
+   * Parse PEM file data using the extension
+   * Extension mode only
+   * @param pemData - PEM file content
+   * @returns Private key and address from PEM
+   */
+  async parsePemFileData(pemData: string): Promise<{ privateKey: string; address: string }> {
+    if (!this._kleverWeb) {
+      throw new WalletError('KleverWeb extension not available')
+    }
+
+    try {
+      return await this._kleverWeb.parsePemFileData(pemData)
+    } catch (error) {
+      throw new WalletError(
+        `Failed to parse PEM data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
+  }
+
+  /**
+   * Set the wallet address in the extension
+   * Extension mode only
+   * @param address - Address to set
+   */
+  async setWalletAddress(address: string): Promise<void> {
+    if (!this._kleverWeb) {
+      throw new WalletError('KleverWeb extension not available')
+    }
+
+    try {
+      await this._kleverWeb.setWalletAddress(address)
+      this._address = address
+    } catch (error) {
+      throw new WalletError(
+        `Failed to set wallet address: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
+  }
+
+  /**
+   * Set a private key in the extension
+   * Extension mode only
+   * @param privateKey - Private key to set
+   */
+  async setPrivateKey(privateKey: string): Promise<void> {
+    if (!this._kleverWeb) {
+      throw new WalletError('KleverWeb extension not available')
+    }
+
+    try {
+      await this._kleverWeb.setPrivateKey(privateKey)
+    } catch (error) {
+      throw new WalletError(
+        `Failed to set private key: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
+  }
+
+  /**
+   * Validate a signature using the extension
+   * Extension mode only
+   * @param payload - Signature payload to validate
+   * @returns Validation result with signer information
+   */
+  async validateSignature(payload: string): Promise<{ isValid: boolean; signer?: string }> {
+    if (!this._kleverWeb) {
+      throw new WalletError('KleverWeb extension not available')
+    }
+
+    try {
+      return await this._kleverWeb.validateSignature(payload)
+    } catch (error) {
+      throw new WalletError(
+        `Failed to validate signature: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    }
+  }
+
+  /**
+   * Extract transaction data from contract payload
+   * Handles smart contract calls and regular transaction data
+   */
+  private extractTxData(contractType: number, payload: Record<string, unknown>): string[] | undefined {
+    if (contractType === 63) {
+      // SmartContract type - build call input
+      const func = payload['function']
+      const args = payload['args']
+      if (func && args && Array.isArray(args)) {
+        const dataString = args.length > 0 ? `${String(func)}@${args.join('@')}` : String(func)
+        const callInput =
+          typeof Buffer !== 'undefined'
+            ? Buffer.from(dataString).toString('base64')
+            : btoa(dataString)
+        return [callInput]
+      }
+    } else {
+      // Regular transaction data
+      const data = payload['data']
+      if (data) {
+        return Array.isArray(data) ? (data as string[]) : [data as string]
+      }
+    }
+    return undefined
+  }
+
+  /**
+   * Build standard payload from contract data
+   * Filters out non-standard fields like function/args/data
+   */
+  private buildStandardPayload(payload: Record<string, unknown>): Record<string, unknown> {
+    const standardFields = [
+      'toAddress',
+      'amount',
+      'kda',
+      'kdaId',
+      'assetId',
+      'ticker',
+      'ownerAddress',
+      'precision',
+      'initialSupply',
+      'maxSupply',
+      'blsPublicKey',
+      'canDelegate',
+      'commission',
+      'rewardAddress',
+      'bucketId',
+      'address',
+      'callValue',
+      'scType',
+      'marketplaceId',
+      'currencyId',
+      'price',
+      'orderType',
+      'message',
+      'receiver',
+    ]
+
+    const standardPayload: Record<string, unknown> = {}
+    for (const field of standardFields) {
+      if (field in payload) {
+        const value = payload[field]
+        if (value !== undefined) {
+          standardPayload[field] = value
         }
       }
+    }
+    return standardPayload
+  }
 
-      // Build the transaction payload (remove non-standard fields)
-      const standardPayload: ExtensionTransactionPayload = {}
+  /**
+   * Send a generic transaction
+   * In extension mode: Uses KleverWeb extension for building and broadcasting
+   * In private key mode: Uses base implementation (local signing + provider broadcast)
+   */
+  override async sendTransaction(contract: ContractRequestData): Promise<TransactionSubmitResult> {
+    if (!this._connected) {
+      throw new WalletError('Wallet not connected')
+    }
 
-      // Copy standard fields
-      const standardFields = [
-        'toAddress',
-        'amount',
-        'kda',
-        'kdaId',
-        'assetId',
-        'ticker',
-        'ownerAddress',
-        'precision',
-        'initialSupply',
-        'maxSupply',
-        'blsPublicKey',
-        'canDelegate',
-        'commission',
-        'rewardAddress',
-        'bucketId',
-        'address',
-        'callValue',
-        'scType',
-        'marketplaceId',
-        'currencyId',
-        'price',
-        'orderType',
-        'message',
-        'receiver',
-      ]
+    // Private key mode - use base implementation (local signing)
+    if (this._mode === 'privateKey') {
+      return super.sendTransaction(contract)
+    }
 
-      for (const field of standardFields) {
-        if (field in txPayload) {
-          const value = (txPayload as Record<string, unknown>)[field]
-          if (value !== undefined) {
-            ;(standardPayload as Record<string, unknown>)[field] = value
-          }
-        }
-      }
+    // Extension mode - use KleverWeb
+    if (!this._kleverWeb) {
+      throw new WalletError('Extension not available')
+    }
 
-      // Build transaction
+    try {
+      const { contractType, ...payload } = contract
+      const txPayload = payload as Record<string, unknown>
+
+      // Extract transaction data
+      const txData = this.extractTxData(contractType, txPayload)
+
+      // Build standard payload
+      const standardPayload = this.buildStandardPayload(txPayload)
+
+      // Build transaction using extension
       const unsignedTx = await this.buildTransaction(
-        [
-          {
-            type,
-            payload: standardPayload,
-          },
-        ],
+        [{ contractType, ...standardPayload } as ContractRequestData],
         txData,
       )
 
@@ -365,22 +717,20 @@ export class BrowserWallet extends BaseWallet {
       const signedTx = await this._kleverWeb.signTransaction(unsignedTx)
 
       // Broadcast transaction
-      const response = await this.broadcastTransactions([signedTx])
+      const hashes = await this.broadcastTransactions([signedTx])
 
-      if (!response) {
-        throw new Error('Failed to broadcast transaction')
+      if (!hashes || hashes.length === 0) {
+        throw new WalletError('Failed to broadcast transaction')
       }
 
-      if (response.error) {
-        throw new Error(response.error)
+      const hash = hashes[0]
+      if (!hash) {
+        throw new WalletError('Invalid transaction hash')
       }
-
-      const txHash = response.data?.hash || response.data?.txsHashes?.[0] || ''
 
       return {
-        hash: txHash,
+        hash,
         status: 'pending',
-        //transaction: unsignedTx,
       }
     } catch (error) {
       throw new WalletError(
@@ -390,10 +740,17 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Override the base transfer method to use extension when available
+   * Transfer tokens to another address
+   * In extension mode: Uses KleverWeb extension
+   * In private key mode: Uses base implementation
    */
   override async transfer(params: TransferRequest): Promise<TransactionSubmitResult> {
-    // If extension supports building transactions and we want to use it
+    // Private key mode - use base implementation
+    if (this._mode === 'privateKey') {
+      return super.transfer(params)
+    }
+
+    // Extension mode with broadcast support
     if (this._useExtensionBroadcast && this._kleverWeb) {
       try {
         // buildTransfer already builds and signs the transaction
@@ -402,18 +759,20 @@ export class BrowserWallet extends BaseWallet {
           params.amount.toString(),
           params.kda,
         )
-        const response = await this.broadcastTransactions([signedTx])
+        const hashes = await this.broadcastTransactions([signedTx])
 
-        if (response.error) {
-          throw new Error(response.error)
+        if (!hashes || hashes.length === 0) {
+          throw new WalletError('Failed to broadcast transaction')
         }
 
-        const txHash = response.data?.hash || response.data?.txsHashes?.[0] || ''
+        const hash = hashes[0]
+        if (!hash) {
+          throw new WalletError('Invalid transaction hash')
+        }
 
         return {
-          hash: txHash,
+          hash,
           status: 'pending',
-          // transaction: signedTx,
         }
       } catch (error) {
         // Fallback to regular provider broadcast

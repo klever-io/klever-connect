@@ -142,23 +142,22 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
           localStorage.setItem('klever-network', newNetwork)
         }
 
-        // Update state
-        dispatch({ type: 'SET_NETWORK', network: newNetwork })
+        // Create new provider first to ensure it's ready
+        const newProvider = createProviderWithNetwork(newNetwork)
 
-        // Update extension provider if using BrowserWallet
+        // Update extension provider if using BrowserWallet (before updating state)
         if (state.wallet && state.wallet instanceof BrowserWallet) {
           const networkConfig = getNetworkConfig(newNetwork)
           // Update the provider object directly on the extension
           state.wallet.updateProvider(networkConfig)
         }
 
-        // Only create new provider if network actually changed
-        const newProvider = createProviderWithNetwork(newNetwork)
-
-        // Update the provider in state
+        // Update state atomically - network and provider together
+        dispatch({ type: 'SET_NETWORK', network: newNetwork })
         dispatch({ type: 'SET_PROVIDER', provider: newProvider })
 
         // No need to disconnect/reconnect - the extension handles the network switch
+        // The wallet instance stays connected but now uses the new network
       } catch (error) {
         dispatch({ type: 'SET_ERROR', error: error as Error })
         console.error('Switch network error:', error)

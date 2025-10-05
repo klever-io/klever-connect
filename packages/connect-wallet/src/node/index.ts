@@ -8,7 +8,7 @@ import type { Transaction } from '@klever/connect-transactions'
 import { BaseWallet } from '../base'
 
 export class NodeWallet extends BaseWallet {
-  private _privateKey?: PrivateKey
+  private _privateKey?: PrivateKey | undefined
 
   constructor(provider: IProvider, privateKey?: string) {
     super(provider)
@@ -60,7 +60,13 @@ export class NodeWallet extends BaseWallet {
     }
   }
 
-  async disconnect(): Promise<void> {
+  /**
+   * Disconnect from the wallet
+   * @param clearPrivateKey - Whether to clear the private key from memory (default: false)
+   *                          If false, you can reconnect without providing the key again
+   *                          If true, you'll need to create a new wallet instance to reconnect
+   */
+  async disconnect(clearPrivateKey: boolean = false): Promise<void> {
     if (!this._connected) {
       return
     }
@@ -68,6 +74,11 @@ export class NodeWallet extends BaseWallet {
     this._connected = false
     this._address = ''
     this._publicKey = ''
+
+    // Optionally clear private key for security
+    if (clearPrivateKey) {
+      this._privateKey = undefined
+    }
     // Note: We keep the private key in memory for potential reconnection
 
     this.emit('disconnect')
@@ -106,7 +117,11 @@ export class NodeWallet extends BaseWallet {
     }
   }
 
-  // Additional method to set/change private key
+  /**
+   * Set or change the private key
+   * Can only be called when wallet is disconnected
+   * @param privateKey - Private key as hex string
+   */
   setPrivateKey(privateKey: string): void {
     if (this._connected) {
       throw new WalletError('Cannot change private key while connected')
@@ -115,7 +130,11 @@ export class NodeWallet extends BaseWallet {
     this.importPrivateKey(privateKey)
   }
 
-  // Method to generate a new wallet
+  /**
+   * Generate a new wallet with random private key
+   * @param provider - Provider instance to use
+   * @returns New NodeWallet instance with generated key pair
+   */
   static async generate(provider: IProvider): Promise<NodeWallet> {
     const keyPair = await cryptoProvider.generateKeyPair()
     const privateKeyHex = hexEncode(keyPair.privateKey.bytes)

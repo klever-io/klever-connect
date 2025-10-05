@@ -1,9 +1,4 @@
-import type {
-  KleverAddress,
-  TransactionHash,
-  BlockHash,
-  AssetID,
-} from '@klever/connect-core'
+import type { KleverAddress, TransactionHash, BlockHash, AssetID } from '@klever/connect-core'
 
 import type { Network } from './network'
 import type {
@@ -67,7 +62,8 @@ export interface IProvider {
   getBalance(address: KleverAddress, assetId?: AssetID): Promise<bigint>
   getAccount(address: KleverAddress): Promise<IAccount>
   estimateFee(_tx: unknown): Promise<IFeesResponse>
-  sendRawTransaction(signedTx: string | Uint8Array): Promise<TransactionHash>
+  sendRawTransaction(signedTx: string | Uint8Array | unknown): Promise<TransactionHash>
+  sendRawTransactions(signedTxs: (string | Uint8Array | unknown)[]): Promise<TransactionHash[]>
   waitForTransaction(
     hash: TransactionHash,
     confirmations?: number,

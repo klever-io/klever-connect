@@ -10,6 +10,7 @@ import type {
   ITransactionResponse,
   IBlockResponse,
   IBroadcastResult,
+  IBulkBroadcastResult,
   IContractQueryParams,
   IContractQueryResult,
   IFaucetResult,
@@ -239,35 +240,89 @@ export class KleverProvider implements IProvider {
   }
 
   /**
-   * Broadcasts a signed transaction to the network
+   * Broadcasts a single signed transaction to the network
    *
-   * @param tx - The signed transaction data (raw encoded transaction)
+   * @param tx - The signed transaction data
    * @returns Broadcast result with transaction hash
    *
    * @example
    * ```typescript
-   * // Send raw hex string
-   * const result = await provider.broadcastTransaction({ tx: '0x...' })
-   *
-   * // Or use sendRawTransaction for convenience
-   * const hash = await provider.sendRawTransaction(encodedTxBytes)
+   * const result = await provider.broadcastTransaction(signedTx)
+   * console.log(result.hash) // Transaction hash
    * ```
    */
   async broadcastTransaction(tx: unknown): Promise<IBroadcastResult> {
     const response = await this.nodeClient.post<IBroadcastResponse>('/transaction/broadcast', {
-      tx,
+      txs: [tx],
     })
 
     if (response.error) {
       throw new Error(response.error || 'Broadcast failed')
     }
 
-    const result: IBroadcastResult = {
-      hash: response.data?.txHash ?? response.data?.hash ?? '',
+    // Extract single hash from response
+    const hash =
+      (response.data?.txsHashes && response.data.txsHashes.length > 0
+        ? response.data.txsHashes[0]
+        : response.data?.txHash) ?? ''
+
+    // Validate that we got a hash
+    if (!hash) {
+      throw new Error(
+        response.message || 'Broadcast succeeded but no transaction hash was returned',
+      )
     }
-    if (response.code !== undefined) result.code = response.code
-    if (response.message !== undefined) result.message = response.message
-    return result
+
+    return {
+      hash,
+      ...(response.code !== undefined && { code: response.code }),
+      ...(response.message !== undefined && { message: response.message }),
+    }
+  }
+
+  /**
+   * Broadcasts multiple signed transactions to the network in a single batch
+   *
+   * @param txs - Array of signed transaction data
+   * @returns Broadcast result with array of transaction hashes
+   *
+   * @example
+   * ```typescript
+   * const result = await provider.broadcastTransactions([tx1, tx2, tx3])
+   * console.log(result.hashes) // ['hash1', 'hash2', 'hash3']
+   * ```
+   */
+  async broadcastTransactions(txs: unknown[]): Promise<IBulkBroadcastResult> {
+    if (txs.length === 0) {
+      throw new Error('At least one transaction is required')
+    }
+
+    const response = await this.nodeClient.post<IBroadcastResponse>('/transaction/broadcast', {
+      txs,
+    })
+
+    if (response.error) {
+      throw new Error(response.error || 'Broadcast failed')
+    }
+
+    const hashes = response.data?.txsHashes ?? []
+    if (hashes.length === 0 && response.data?.txHash) {
+      // Fallback for single transaction response format
+      hashes.push(response.data.txHash)
+    }
+
+    // Validate that we got hashes
+    if (hashes.length === 0) {
+      throw new Error(
+        response.message || 'Broadcast succeeded but no transaction hashes were returned',
+      )
+    }
+
+    return {
+      hashes,
+      ...(response.code !== undefined && { code: response.code }),
+      ...(response.message !== undefined && { message: response.message }),
+    }
   }
 
   /**
@@ -478,30 +533,101 @@ export class KleverProvider implements IProvider {
   }
 
   /**
-   * Sends a raw transaction to the network
-   * @param signedTx - The signed transaction data (as hex string or JSON string or Uint8Array or Transaction object)
-   * @returns The transaction hash
+   * Parse raw transaction data to a format suitable for broadcasting
+   * Supports hex strings, JSON strings, Uint8Arrays, and transaction objects
+   * @private
+   * @throws {Error} If the transaction data is invalid
    */
-  async sendRawTransaction(signedTx: string | Uint8Array | unknown): Promise<TransactionHash> {
-    let txData: unknown
-    if (typeof signedTx === 'string') {
+  private parseRawTransaction(tx: string | Uint8Array | unknown): unknown {
+    if (typeof tx === 'string') {
       // Try to parse as JSON first
       try {
-        txData = JSON.parse(signedTx)
+        return JSON.parse(tx)
       } catch {
-        // If parsing fails, parse from hex to json
-        const hex = signedTx.startsWith('0x') ? signedTx.slice(2) : signedTx
-        const bytes = new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
-        txData = bytes
+        // If parsing fails, parse from hex to bytes
+        const hex = tx.startsWith('0x') ? tx.slice(2) : tx
+
+        // Validate hex string
+        if (!/^[0-9a-fA-F]*$/.test(hex)) {
+          throw new Error('Invalid transaction data: not valid JSON or hex string')
+        }
+
+        const bytes = hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16))
+        if (!bytes || bytes.length === 0) {
+          throw new Error('Invalid transaction data: empty hex string')
+        }
+
+        return new Uint8Array(bytes)
       }
-    } else if (signedTx instanceof Uint8Array) {
-      txData = signedTx
+    } else if (tx instanceof Uint8Array) {
+      if (tx.length === 0) {
+        throw new Error('Invalid transaction data: empty Uint8Array')
+      }
+      return tx
     } else {
       // Assume it's already a transaction object
-      txData = signedTx
+      return tx
     }
+  }
+
+  /**
+   * Sends a single raw transaction to the network
+   * @param signedTx - Signed transaction data (hex string, JSON string, Uint8Array, or Transaction object)
+   * @returns The transaction hash
+   * @throws {Error} If the transaction data is invalid, broadcast fails, or no hash is returned
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const hash = await provider.sendRawTransaction(signedTxHex)
+   *   console.log(hash) // '0x123...'
+   * } catch (error) {
+   *   console.error('Broadcast failed:', error.message)
+   * }
+   * ```
+   */
+  async sendRawTransaction(signedTx: string | Uint8Array | unknown): Promise<TransactionHash> {
+    const txData = this.parseRawTransaction(signedTx)
     const result = await this.broadcastTransaction(txData)
+
+    // Check for error codes even if we got a hash
+    // Some APIs may return partial success with warnings
+    if (result.code && result.code !== '0' && result.code !== 'successful') {
+      throw new Error(result.message || `Transaction broadcast returned error code: ${result.code}`)
+    }
+
     return result.hash as TransactionHash
+  }
+
+  /**
+   * Sends multiple raw transactions to the network in a single batch
+   * @param signedTxs - Array of signed transaction data (hex strings, JSON strings, Uint8Arrays, or Transaction objects)
+   * @returns Array of transaction hashes
+   * @throws {Error} If any transaction data is invalid, broadcast fails, or no hashes are returned
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const hashes = await provider.sendRawTransactions([tx1Hex, tx2Hex, tx3Hex])
+   *   console.log(hashes) // ['0x123...', '0x456...', '0x789...']
+   * } catch (error) {
+   *   console.error('Broadcast failed:', error.message)
+   * }
+   * ```
+   */
+  async sendRawTransactions(
+    signedTxs: (string | Uint8Array | unknown)[],
+  ): Promise<TransactionHash[]> {
+    const txsData = signedTxs.map((tx) => this.parseRawTransaction(tx))
+    const result = await this.broadcastTransactions(txsData)
+
+    // Check for error codes even if we got hashes
+    // Some APIs may return partial success with warnings
+    if (result.code && result.code !== '0' && result.code !== 'successful') {
+      throw new Error(result.message || `Transaction broadcast returned error code: ${result.code}`)
+    }
+
+    return result.hashes as TransactionHash[]
   }
 
   /**
@@ -677,18 +803,13 @@ export class KleverProvider implements IProvider {
       if (request.sender && request.nonce === undefined) {
         const nonceResponse = await this.nodeClient.get<
           ApiResponse<{
-            result: {
-              nonce: number
-              firstPendingNonce: number
-              txPending: number
-            }
+            nonce: number
+            firstPendingNonce: number
+            txPending: number
           }>
         >(`/address/${request.sender}/nonce`)
 
-        if (nonceResponse.data?.result?.nonce !== undefined) {
-          // Add 1 to the current nonce for the next transaction
-          request.nonce = nonceResponse.data.result.nonce + 1
-        }
+        request.nonce = nonceResponse.data?.nonce || 0
       }
 
       // Call node endpoint to build transaction

@@ -23,6 +23,12 @@ export interface IBroadcastResult {
   message?: string
 }
 
+export interface IBulkBroadcastResult {
+  hashes: string[]
+  code?: string
+  message?: string
+}
+
 export interface IContractQueryParams {
   ScAddress: string
   FuncName: string
@@ -225,11 +231,12 @@ export interface ITransactionApiResponse {
 }
 
 // Broadcast Response (Node API)
+// Matches the API response: { data: { txsHashes: [...], count: N }, error: "", code: "" }
 export interface IBroadcastResponse {
   data?: {
-    txHash: string
-    hash?: string
+    txHash?: string
     txsHashes?: string[]
+    count?: number
   }
   error?: string
   code?: string

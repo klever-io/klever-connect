@@ -1,87 +1,40 @@
-import type { TransactionReceipt } from '@klever/connect-provider'
-import type { TXTypeValue } from '@klever/connect-core'
+import type { TransactionReceipt, ContractRequestData } from '@klever/connect-provider'
 import { TXType } from '@klever/connect-core'
 
-import type { TransferRequest } from '@klever/connect-transactions'
+import type {
+  TransferRequest,
+  FreezeRequest,
+  UnfreezeRequest,
+  ClaimRequest,
+} from '@klever/connect-provider'
 import { TransactionBuilder } from '@klever/connect-transactions'
 import { useState, useCallback } from 'react'
 
 import { useKlever } from '../context'
-
-// Helper function to build payload for different transaction types
-function buildPayloadForType(
-  type: TXTypeValue,
-  params: Record<string, unknown>,
-): Record<string, unknown> {
-  switch (type) {
-    case TXType.Transfer: {
-      const payload: Record<string, unknown> = {
-        toAddress: params['to'] as string,
-        receiver: params['to'] as string, // Include both for compatibility
-        amount: params['amount'] as string | number,
-      }
-      if (params['token'] && params['token'] !== 'KLV') {
-        payload['kda'] = params['token'] as string
-        payload['assetId'] = params['token'] as string // Include both for compatibility
-      }
-      return payload
-    }
-    case TXType.Freeze: {
-      const payload: Record<string, unknown> = {
-        amount: params['amount'] as string | number,
-      }
-      if (params['token'] && params['token'] !== 'KLV') {
-        payload['kda'] = params['token'] as string
-        payload['assetId'] = params['token'] as string // Include both for compatibility
-      }
-      return payload
-    }
-    case TXType.Unfreeze: {
-      const payload: Record<string, unknown> = {
-        bucketId: params['bucket'] as string,
-      }
-      if (params['token'] && params['token'] !== 'KLV') {
-        payload['kda'] = params['token'] as string
-        payload['assetId'] = params['token'] as string // Include both for compatibility
-      }
-      return payload
-    }
-    case TXType.Claim: {
-      const payload: Record<string, unknown> = {
-        claimType: params['claimType'] as number,
-      }
-      if (params['token'] && params['token'] !== 'KLV') {
-        payload['kda'] = params['token'] as string
-        payload['assetId'] = params['token'] as string // Include both for compatibility
-      }
-      return payload
-    }
-    default:
-      return params
-  }
-}
 
 export interface TransactionCallbacks {
   onSuccess?: (receipt: TransactionReceipt) => void
   onError?: (error: Error) => void
 }
 
-export function useTransaction(options?: TransactionCallbacks): {
-  sendTransaction: (type: TXTypeValue, params: Record<string, unknown>) => Promise<void>
+export interface UseTransactionReturn {
+  sendTransaction: (contract: ContractRequestData) => Promise<void>
   sendKLV: (to: string, amount: number | string) => Promise<void>
   sendKDA: (to: string, amount: number | string, kdaId: string, precision?: number) => Promise<void>
   isLoading: boolean
   error: Error | null
-  data: TransactionReceipt
+  data: TransactionReceipt | null
   reset: () => void
-} {
+}
+
+export function useTransaction(options?: TransactionCallbacks): UseTransactionReturn {
   const { wallet, provider } = useKlever()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [data, setData] = useState<TransactionReceipt | null>(null)
 
   const sendTransaction = useCallback(
-    async (type: TXTypeValue, params: Record<string, unknown>): Promise<void> => {
+    async (contract: ContractRequestData): Promise<void> => {
       if (!wallet) {
         const err = new Error('Wallet not connected')
         setError(err)
@@ -97,35 +50,21 @@ export function useTransaction(options?: TransactionCallbacks): {
 
         // Check if wallet supports sendTransaction (BrowserWallet with extension)
         if (wallet.sendTransaction) {
-          // Use extension to build and send transaction
-          const payload = buildPayloadForType(type, params)
-          result = await wallet.sendTransaction(type, payload)
+          // Use extension to build and send transaction - it handles field mapping internally
+          result = await wallet.sendTransaction(contract)
         } else {
-          // Fallback to local transaction building
+          // Fallback to local transaction building using TransactionBuilder
           const builder = new TransactionBuilder(provider)
 
-          // Build transaction based on type
-          if (type === TXType.Transfer && params['to'] && params['amount']) {
-            const transferParams: TransferRequest = {
-              receiver: params['to'] as string,
-              amount: params['amount'] as bigint | number | string,
-            }
-            if (params['token']) {
-              transferParams.kda = params['token'] as string
-            }
-            builder.transfer(transferParams)
-          }
-
-          // Set the sender address
-          builder.sender(wallet.address)
+          // Use addContract method to handle any transaction type
+          builder.addContract(contract).sender(wallet.address)
 
           const tx = await builder.build()
           const signedTx = await wallet.signTransaction(tx)
           if (!wallet.broadcastTransaction) {
             throw new Error('Wallet does not support broadcastTransaction')
           }
-          const broadcastResult = await wallet.broadcastTransaction(signedTx)
-          const hash = typeof broadcastResult === 'string' ? broadcastResult : broadcastResult.hash
+          const hash = await wallet.broadcastTransaction(signedTx)
 
           result = {
             hash,
@@ -160,11 +99,11 @@ export function useTransaction(options?: TransactionCallbacks): {
   const sendKLV = useCallback(
     async (to: string, amount: number | string) => {
       const amountInPrecision = typeof amount === 'number' ? amount * 1e6 : amount
-      return sendTransaction(TXType.Transfer, {
-        to,
+      return sendTransaction({
+        contractType: TXType.Transfer,
+        receiver: to,
         amount: amountInPrecision,
-        token: 'KLV',
-      })
+      } as ContractRequestData)
     },
     [sendTransaction],
   )
@@ -182,11 +121,12 @@ export function useTransaction(options?: TransactionCallbacks): {
         amountInPrecision = amount
       }
 
-      return sendTransaction(TXType.Transfer, {
-        to,
+      return sendTransaction({
+        contractType: TXType.Transfer,
+        receiver: to,
         amount: amountInPrecision,
-        token: kdaId,
-      })
+        kda: kdaId,
+      } as ContractRequestData)
     },
     [sendTransaction],
   )
@@ -203,28 +143,29 @@ export function useTransaction(options?: TransactionCallbacks): {
     sendKDA,
     isLoading,
     error,
-    data: data as TransactionReceipt,
+    data,
     reset,
   }
 }
 
 // Convenience hooks for specific transaction types
-export function useTransfer(options?: TransactionCallbacks): {
-  transfer: (params: {
-    to: string
-    amount: bigint | number | string
-    token?: string
-  }) => Promise<void>
+export interface UseTransferReturn {
+  transfer: (params: TransferRequest) => Promise<void>
   isLoading: boolean
   error: Error | null
-  data: TransactionReceipt
+  data: TransactionReceipt | null
   reset: () => void
-} {
+}
+
+export function useTransfer(options?: TransactionCallbacks): UseTransferReturn {
   const { sendTransaction, ...rest } = useTransaction(options)
 
   const transfer = useCallback(
-    async (params: { to: string; amount: bigint | number | string; token?: string }) => {
-      return sendTransaction(TXType.Transfer, params)
+    async (params: TransferRequest) => {
+      return sendTransaction({
+        contractType: TXType.Transfer,
+        ...params,
+      } as ContractRequestData)
     },
     [sendTransaction],
   )
@@ -232,18 +173,23 @@ export function useTransfer(options?: TransactionCallbacks): {
   return { transfer, ...rest }
 }
 
-export function useFreeze(options?: TransactionCallbacks): {
-  freeze: (params: { amount: bigint | number | string; token?: string }) => Promise<void>
+export interface UseFreezeReturn {
+  freeze: (params: FreezeRequest) => Promise<void>
   isLoading: boolean
   error: Error | null
-  data: TransactionReceipt
+  data: TransactionReceipt | null
   reset: () => void
-} {
+}
+
+export function useFreeze(options?: TransactionCallbacks): UseFreezeReturn {
   const { sendTransaction, ...rest } = useTransaction(options)
 
   const freeze = useCallback(
-    async (params: { amount: bigint | number | string; token?: string }) => {
-      return sendTransaction(TXType.Freeze, params)
+    async (params: FreezeRequest) => {
+      return sendTransaction({
+        contractType: TXType.Freeze,
+        ...params,
+      } as ContractRequestData)
     },
     [sendTransaction],
   )
@@ -251,18 +197,23 @@ export function useFreeze(options?: TransactionCallbacks): {
   return { freeze, ...rest }
 }
 
-export function useUnfreeze(options?: TransactionCallbacks): {
-  unfreeze: (params: { bucket: string; token?: string }) => Promise<void>
+export interface UseUnfreezeReturn {
+  unfreeze: (params: UnfreezeRequest) => Promise<void>
   isLoading: boolean
   error: Error | null
-  data: TransactionReceipt
+  data: TransactionReceipt | null
   reset: () => void
-} {
+}
+
+export function useUnfreeze(options?: TransactionCallbacks): UseUnfreezeReturn {
   const { sendTransaction, ...rest } = useTransaction(options)
 
   const unfreeze = useCallback(
-    async (params: { bucket: string; token?: string }) => {
-      return sendTransaction(TXType.Unfreeze, params)
+    async (params: UnfreezeRequest) => {
+      return sendTransaction({
+        contractType: TXType.Unfreeze,
+        ...params,
+      } as ContractRequestData)
     },
     [sendTransaction],
   )
@@ -270,18 +221,23 @@ export function useUnfreeze(options?: TransactionCallbacks): {
   return { unfreeze, ...rest }
 }
 
-export function useClaim(options?: TransactionCallbacks): {
-  claim: (params: { claimType: number; token?: string }) => Promise<void>
+export interface UseClaimReturn {
+  claim: (params: ClaimRequest) => Promise<void>
   isLoading: boolean
   error: Error | null
-  data: TransactionReceipt
+  data: TransactionReceipt | null
   reset: () => void
-} {
+}
+
+export function useClaim(options?: TransactionCallbacks): UseClaimReturn {
   const { sendTransaction, ...rest } = useTransaction(options)
 
   const claim = useCallback(
-    async (params: { claimType: number; token?: string }) => {
-      return sendTransaction(TXType.Claim, params)
+    async (params: ClaimRequest) => {
+      return sendTransaction({
+        contractType: TXType.Claim,
+        ...params,
+      } as ContractRequestData)
     },
     [sendTransaction],
   )

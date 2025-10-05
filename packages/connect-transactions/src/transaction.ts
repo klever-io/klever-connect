@@ -42,6 +42,7 @@ export class Transaction extends ProtoTransaction {
 
   /**
    * Sign the transaction with a private key
+   * Signs the transaction hash (blake2b of RawData)
    * @param privateKey - Private key to sign with
    * @returns This transaction instance with signature added
    *
@@ -53,8 +54,11 @@ export class Transaction extends ProtoTransaction {
    * ```
    */
   async sign(privateKey: PrivateKey): Promise<Transaction> {
-    const txBytes = this.toBytes()
-    const signature = await cryptoProvider.signMessage(txBytes, privateKey)
+    // Get transaction hash bytes (blake2b of RawData)
+    const hashBytes = this.getHashBytes()
+
+    // Sign the hash
+    const signature = await cryptoProvider.signMessage(hashBytes, privateKey)
 
     // Add signature to transaction (proto uses Signature field)
     this.Signature = [signature.bytes]
@@ -85,6 +89,30 @@ export class Transaction extends ProtoTransaction {
   }
 
   /**
+   * Get the transaction hash bytes
+   * Computes blake2b hash of the RawData proto bytes
+   * @returns Transaction hash as Uint8Array
+   *
+   * @example
+   * ```typescript
+   * const tx = new Transaction(txData)
+   * const hashBytes = tx.getHashBytes()
+   * // Use for signing or other operations
+   * ```
+   */
+  getHashBytes(): Uint8Array {
+    if (!this.RawData) {
+      throw new Error('Transaction has no RawData')
+    }
+
+    // Encode RawData to proto bytes
+    const rawDataBytes = ProtoTransaction.Raw.encode(this.RawData).finish()
+
+    // Hash using blake2b (32 bytes output)
+    return hashBlake2b(rawDataBytes, 32)
+  }
+
+  /**
    * Get the transaction hash
    * Computes blake2b hash of the RawData proto bytes
    * @returns Transaction hash as hex string
@@ -97,17 +125,7 @@ export class Transaction extends ProtoTransaction {
    * ```
    */
   getHash(): string {
-    if (!this.RawData) {
-      throw new Error('Transaction has no RawData')
-    }
-
-    // Encode RawData to proto bytes
-    const rawDataBytes = ProtoTransaction.Raw.encode(this.RawData).finish()
-
-    // Hash using blake2b (32 bytes output)
-    const hashBytes = hashBlake2b(rawDataBytes, 32)
-
-    return hexEncode(hashBytes)
+    return hexEncode(this.getHashBytes())
   }
 
   /**

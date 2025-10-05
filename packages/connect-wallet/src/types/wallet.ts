@@ -1,54 +1,20 @@
-import type { TXTypeValue } from '@klever/connect-core'
+import type { TransactionHash } from '@klever/connect-core'
 import type {
   Network,
-  IBroadcastResult,
   IProvider,
   TransactionSubmitResult,
+  ContractRequestData,
+  TransferRequest,
 } from '@klever/connect-provider'
-import type {
-  AmountLike,
-  TransferRequest as TxTransferRequest,
-  Transaction,
-} from '@klever/connect-transactions'
+import type { Transaction } from '@klever/connect-transactions'
 
-// Browser wallet extension API types (for KleverWeb extension communication)
-export interface ExtensionTransactionPayload {
-  // Transfer
-  toAddress?: string
-  amount?: AmountLike
-  kda?: string
-
-  // Asset operations
-  assetId?: string
-  receiver?: string
-
-  // Staking
-  bucketId?: string
-
-  // Smart contract
-  address?: string
-  callValue?: unknown
-  function?: string
-  args?: unknown[]
-  scType?: number
-
-  // data
-  data?: unknown
-
-  // Generic
-  [key: string]: unknown
-}
-
-export interface ExtensionTransactionRequest {
-  type: TXTypeValue
-  payload: ExtensionTransactionPayload
-}
-
-// Re-export transaction types with clear names
-export type TransferRequest = TxTransferRequest
+// Re-export for convenience (single source of truth is @klever/connect-provider)
+export type { TransferRequest }
 
 export interface WalletConfig {
   privateKey?: string
+  pemContent?: string
+  pemPassword?: string
   network?: Network
   provider?: IProvider
 }
@@ -59,7 +25,7 @@ export interface Wallet {
 
   // Connection management
   connect(): Promise<void>
-  disconnect(): Promise<void>
+  disconnect(clearPrivateKey?: boolean): Promise<void>
   isConnected(): boolean
 
   // Signing
@@ -68,12 +34,22 @@ export interface Wallet {
 
   // Transactions
   transfer(params: TransferRequest): Promise<TransactionSubmitResult>
-  sendTransaction?(
-    type: TXTypeValue,
-    payload: Record<string, unknown>,
-  ): Promise<TransactionSubmitResult>
+  /**
+   * Send any transaction type with properly typed parameters
+   * @param contract - Complete contract request with contractType and parameters
+   * @example
+   * ```typescript
+   * await wallet.sendTransaction({
+   *   contractType: 0,  // Transfer
+   *   receiver: 'klv1...',
+   *   amount: 1000000
+   * })
+   * ```
+   */
+  sendTransaction?(contract: ContractRequestData): Promise<TransactionSubmitResult>
 
-  broadcastTransaction?(tx: Transaction): Promise<IBroadcastResult>
+  broadcastTransaction?(tx: Transaction): Promise<TransactionHash>
+  broadcastTransactions?(txs: Transaction[]): Promise<TransactionHash[]>
 
   // Account info
   getBalance(): Promise<bigint>

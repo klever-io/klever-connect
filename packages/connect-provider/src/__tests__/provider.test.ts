@@ -265,10 +265,12 @@ describe('KleverProvider', () => {
       message: 'success',
       data: {
         txHash: '0x123abc',
+        txsHashes: ['0x123abc'],
+        count: 1,
       },
     }
 
-    it('should broadcast transaction successfully', async () => {
+    it('should broadcast single transaction successfully', async () => {
       const mockPost = vi.fn().mockResolvedValue(mockResponse)
       // @ts-expect-error - accessing private property for testing
       provider.nodeClient.post = mockPost
@@ -278,7 +280,7 @@ describe('KleverProvider', () => {
       expect(result.hash).toBe('0x123abc')
       expect(result.code).toBe(0)
       expect(result.message).toBe('success')
-      expect(mockPost).toHaveBeenCalledWith('/transaction/broadcast', { tx: mockTxData })
+      expect(mockPost).toHaveBeenCalledWith('/transaction/broadcast', { txs: [mockTxData] })
     })
 
     it('should throw error on broadcast failure', async () => {
@@ -290,6 +292,97 @@ describe('KleverProvider', () => {
       provider.nodeClient.post = mockPost
 
       await expect(provider.broadcastTransaction(mockTxData)).rejects.toThrow('Broadcast failed')
+    })
+
+    it('should handle fallback to txHash when txsHashes is empty', async () => {
+      const mockPost = vi.fn().mockResolvedValue({
+        error: null,
+        code: 0,
+        data: {
+          txHash: '0x456def',
+          txsHashes: [],
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
+
+      const result = await provider.broadcastTransaction(mockTxData)
+      expect(result.hash).toBe('0x456def')
+    })
+
+    it('should throw error when no hash is returned', async () => {
+      const mockPost = vi.fn().mockResolvedValue({
+        error: null,
+        code: 0,
+        data: {
+          txsHashes: [],
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
+
+      await expect(provider.broadcastTransaction(mockTxData)).rejects.toThrow(
+        'no transaction hash was returned',
+      )
+    })
+  })
+
+  describe('broadcastTransactions', () => {
+    const mockTxs = [{ tx: '0xaabbcc' }, { tx: '0xddeeff' }, { tx: '0x112233' }]
+    const mockResponse = {
+      error: null,
+      code: 0,
+      message: 'success',
+      data: {
+        txsHashes: ['0x123abc', '0x456def', '0x789ghi'],
+        count: 3,
+      },
+    }
+
+    it('should broadcast multiple transactions successfully', async () => {
+      const mockPost = vi.fn().mockResolvedValue(mockResponse)
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
+
+      const result = await provider.broadcastTransactions(mockTxs)
+
+      expect(result.hashes).toEqual(['0x123abc', '0x456def', '0x789ghi'])
+      expect(result.code).toBe(0)
+      expect(result.message).toBe('success')
+      expect(mockPost).toHaveBeenCalledWith('/transaction/broadcast', { txs: mockTxs })
+    })
+
+    it('should throw error when no transactions provided', async () => {
+      await expect(provider.broadcastTransactions([])).rejects.toThrow(
+        'At least one transaction is required',
+      )
+    })
+
+    it('should throw error on broadcast failure', async () => {
+      const mockPost = vi.fn().mockResolvedValue({
+        error: 'Broadcast failed',
+        data: null,
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
+
+      await expect(provider.broadcastTransactions(mockTxs)).rejects.toThrow('Broadcast failed')
+    })
+
+    it('should throw error when no hashes are returned', async () => {
+      const mockPost = vi.fn().mockResolvedValue({
+        error: null,
+        code: 0,
+        data: {
+          txsHashes: [],
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
+
+      await expect(provider.broadcastTransactions(mockTxs)).rejects.toThrow(
+        'no transaction hashes were returned',
+      )
     })
   })
 
@@ -417,6 +510,114 @@ describe('KleverProvider', () => {
 
       expect(hash).toBe(mockHash)
       expect(mockBroadcast).toHaveBeenCalledWith(txData)
+    })
+
+    it('should send raw transaction as JSON string', async () => {
+      const mockHash = '0x123abc' as TransactionHash
+      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
+        hash: mockHash,
+      })
+
+      const txData = JSON.stringify({ tx: 'data' })
+      const hash = await provider.sendRawTransaction(txData)
+
+      expect(hash).toBe(mockHash)
+      expect(mockBroadcast).toHaveBeenCalledWith({ tx: 'data' })
+    })
+
+    it('should throw error for invalid hex string', async () => {
+      const invalidHex = '0xZZZZ' // Invalid hex characters
+
+      await expect(provider.sendRawTransaction(invalidHex)).rejects.toThrow(
+        'not valid JSON or hex string',
+      )
+    })
+
+    it('should throw error for empty hex string', async () => {
+      const emptyHex = '0x'
+
+      await expect(provider.sendRawTransaction(emptyHex)).rejects.toThrow('empty hex string')
+    })
+
+    it('should throw error for empty Uint8Array', async () => {
+      const emptyArray = new Uint8Array([])
+
+      await expect(provider.sendRawTransaction(emptyArray)).rejects.toThrow('empty Uint8Array')
+    })
+
+    it('should throw error when broadcast returns error code', async () => {
+      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
+        hash: '0x123abc',
+        code: 'ERR_INVALID_NONCE',
+        message: 'Invalid nonce',
+      })
+
+      const txData = '0xaabbcc'
+
+      await expect(provider.sendRawTransaction(txData)).rejects.toThrow('Invalid nonce')
+      expect(mockBroadcast).toHaveBeenCalled()
+    })
+
+    it('should not throw error for success code "0"', async () => {
+      const mockHash = '0x123abc' as TransactionHash
+      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
+        hash: mockHash,
+        code: '0',
+        message: 'Success',
+      })
+
+      const txData = '0xaabbcc'
+      const hash = await provider.sendRawTransaction(txData)
+
+      expect(hash).toBe(mockHash)
+      expect(mockBroadcast).toHaveBeenCalled()
+    })
+
+    it('should not throw error for success code "successful"', async () => {
+      const mockHash = '0x123abc' as TransactionHash
+      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
+        hash: mockHash,
+        code: 'successful',
+        message: 'Transaction successful',
+      })
+
+      const txData = '0xaabbcc'
+      const hash = await provider.sendRawTransaction(txData)
+
+      expect(hash).toBe(mockHash)
+      expect(mockBroadcast).toHaveBeenCalled()
+    })
+  })
+
+  describe('sendRawTransactions', () => {
+    it('should send multiple raw transactions', async () => {
+      const mockHashes = ['0x123abc', '0x456def', '0x789ghi'] as TransactionHash[]
+      const mockBroadcast = vi.spyOn(provider, 'broadcastTransactions').mockResolvedValue({
+        hashes: mockHashes,
+      })
+
+      const txsData = ['0xaabbcc', '0xddeeff', '0x112233']
+      const hashes = await provider.sendRawTransactions(txsData)
+
+      expect(hashes).toEqual(mockHashes)
+      expect(mockBroadcast).toHaveBeenCalledWith([
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+      ])
+    })
+
+    it('should send multiple raw transactions as Uint8Array', async () => {
+      const mockHashes = ['0x123abc', '0x456def'] as TransactionHash[]
+      const mockBroadcast = vi.spyOn(provider, 'broadcastTransactions').mockResolvedValue({
+        hashes: mockHashes,
+      })
+
+      const txsData = [new Uint8Array([0xaa, 0xbb]), new Uint8Array([0xcc, 0xdd])]
+      const hashes = await provider.sendRawTransactions(txsData)
+
+      expect(hashes).toEqual(mockHashes)
+      expect(mockBroadcast).toHaveBeenCalledWith(txsData)
     })
   })
 

@@ -27,7 +27,7 @@ export class WalletFactory implements IWalletFactory {
 
     switch (environment) {
       case 'browser':
-        return this.createBrowserWallet()
+        return this.createBrowserWallet(config)
 
       case 'node':
         return this.createNodeWallet(config?.privateKey)
@@ -41,8 +41,8 @@ export class WalletFactory implements IWalletFactory {
     }
   }
 
-  private createBrowserWallet(): BrowserWallet {
-    return new BrowserWallet(this.provider)
+  private createBrowserWallet(config?: WalletConfig): BrowserWallet {
+    return new BrowserWallet(this.provider, config)
   }
 
   private createNodeWallet(privateKey?: string): NodeWallet {

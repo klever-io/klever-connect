@@ -158,6 +158,52 @@ export class TransactionBuilder {
   }
 
   /**
+   * Add a contract using ContractRequestData
+   * Routes to the appropriate builder method based on contractType
+   *
+   * @example
+   * ```typescript
+   * builder.addContract({
+   *   contractType: 0,
+   *   receiver: 'klv1...',
+   *   amount: 1000000
+   * })
+   * ```
+   */
+  addContract(contract: ContractRequestData): this {
+    const { contractType, ...params } = contract
+
+    switch (contractType) {
+      case 0: // Transfer
+        return this.transfer(params as TransferRequest)
+      case 4: // Freeze
+        return this.freeze(params as FreezeRequest)
+      case 5: // Unfreeze
+        return this.unfreeze(params as UnfreezeRequest)
+      case 6: // Delegate
+        return this.delegate(params as DelegateRequest)
+      case 7: // Undelegate
+        return this.undelegate(params as UndelegateRequest)
+      case 8: // Withdraw
+        return this.withdraw(params as WithdrawRequest)
+      case 9: // Claim
+        return this.claim(params as ClaimRequest)
+      case 1: // CreateAsset
+        return this.createAsset(params as CreateAssetRequest)
+      case 2: // CreateValidator
+        return this.createValidator(params as CreateValidatorRequest)
+      case 14: // Vote
+        return this.vote(params as VoteRequest)
+      case 63: // SmartContract
+        return this.smartContract(params as SmartContractRequest)
+      default:
+        // For unsupported types, add directly to contracts array
+        this.contracts.push(contract)
+        return this
+    }
+  }
+
+  /**
    * Add transfer contract
    */
   transfer(params: TransferRequest): this {
