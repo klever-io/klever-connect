@@ -1,3 +1,4 @@
+import { TransactionError } from '@klever/connect-core'
 import { cryptoProvider } from '@klever/connect-crypto'
 import type { PrivateKey } from '@klever/connect-crypto'
 import { Transaction as ProtoTransaction, type ITransaction } from '@klever/connect-encoding'
@@ -102,7 +103,7 @@ export class Transaction extends ProtoTransaction {
    */
   getHashBytes(): Uint8Array {
     if (!this.RawData) {
-      throw new Error('Transaction has no RawData')
+      throw new TransactionError('Transaction has no RawData')
     }
 
     // Encode RawData to proto bytes

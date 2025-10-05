@@ -1,5 +1,5 @@
 import type { KleverAddress, TransactionHash } from '@klever/connect-core'
-import { isValidAddress } from '@klever/connect-core'
+import { isValidAddress, ValidationError, NetworkError, TransactionError } from '@klever/connect-core'
 import type { ProviderConfig } from './types/provider'
 import type { Network, NetworkName } from './types/network'
 import type {
@@ -124,7 +124,7 @@ export class KleverProvider implements IProvider {
    */
   async getAccount(address: KleverAddress, options?: { skipCache?: boolean }): Promise<IAccount> {
     if (!isValidAddress(address)) {
-      throw new Error(`Invalid address: ${address}`)
+      throw new ValidationError(`Invalid address: ${address}`, { address })
     }
 
     const cacheKey = `account:${address}`
@@ -142,12 +142,12 @@ export class KleverProvider implements IProvider {
     )
 
     if (response.error) {
-      throw new Error(response.error)
+      throw new NetworkError(response.error, { address, endpoint: '/v1.0/address' })
     }
 
     const apiAccount = response.data.account
     if (!apiAccount) {
-      throw new Error('Account not found')
+      throw new NetworkError('Account not found', { address })
     }
 
     // Convert API response to IAccount format
@@ -218,7 +218,7 @@ export class KleverProvider implements IProvider {
     )
 
     if (response.error || !response.data?.transaction) {
-      throw new Error(response.error || 'Transaction not found')
+      throw new NetworkError(response.error || 'Transaction not found', { hash })
     }
 
     const transaction = response.data.transaction
@@ -257,7 +257,7 @@ export class KleverProvider implements IProvider {
     })
 
     if (response.error) {
-      throw new Error(response.error || 'Broadcast failed')
+      throw new TransactionError(response.error || 'Broadcast failed', { tx })
     }
 
     // Extract single hash from response
@@ -268,8 +268,9 @@ export class KleverProvider implements IProvider {
 
     // Validate that we got a hash
     if (!hash) {
-      throw new Error(
+      throw new TransactionError(
         response.message || 'Broadcast succeeded but no transaction hash was returned',
+        { response }
       )
     }
 
@@ -294,7 +295,7 @@ export class KleverProvider implements IProvider {
    */
   async broadcastTransactions(txs: unknown[]): Promise<IBulkBroadcastResult> {
     if (txs.length === 0) {
-      throw new Error('At least one transaction is required')
+      throw new ValidationError('At least one transaction is required')
     }
 
     const response = await this.nodeClient.post<IBroadcastResponse>('/transaction/broadcast', {
@@ -302,7 +303,7 @@ export class KleverProvider implements IProvider {
     })
 
     if (response.error) {
-      throw new Error(response.error || 'Broadcast failed')
+      throw new TransactionError(response.error || 'Broadcast failed', { txs })
     }
 
     const hashes = response.data?.txsHashes ?? []
@@ -369,11 +370,11 @@ export class KleverProvider implements IProvider {
    */
   async requestTestKLV(address: KleverAddress, amount?: bigint): Promise<IFaucetResult> {
     if (!isValidAddress(address)) {
-      throw new Error(`Invalid address: ${address}`)
+      throw new ValidationError(`Invalid address: ${address}`, { address })
     }
 
     if (!this.network.isTestnet) {
-      throw new Error('Faucet is not available on mainnet')
+      throw new ValidationError('Faucet is not available on mainnet', { network: this.network.chainId })
     }
 
     const response = await this.apiClient.post<IFaucetResponse>(
@@ -442,13 +443,14 @@ export class KleverProvider implements IProvider {
       }>('/node/overview')
 
       if (response.error || !response.data?.overview?.nonce) {
-        throw new Error(response.error || 'Failed to fetch block number')
+        throw new NetworkError(response.error || 'Failed to fetch block number')
       }
 
       return response.data.overview.nonce
     } catch (error) {
-      throw new Error(
+      throw new NetworkError(
         `Failed to get block number: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { originalError: error }
       )
     }
   }
@@ -505,8 +507,9 @@ export class KleverProvider implements IProvider {
       if (this.debug) {
         console.error('[KleverProvider] Error fetching block:', error)
       }
-      throw new Error(
+      throw new NetworkError(
         `Failed to fetch block: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { blockHashOrNumber, originalError: error }
       )
     }
   }
@@ -549,19 +552,19 @@ export class KleverProvider implements IProvider {
 
         // Validate hex string
         if (!/^[0-9a-fA-F]*$/.test(hex)) {
-          throw new Error('Invalid transaction data: not valid JSON or hex string')
+          throw new ValidationError('Invalid transaction data: not valid JSON or hex string', { tx })
         }
 
         const bytes = hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16))
         if (!bytes || bytes.length === 0) {
-          throw new Error('Invalid transaction data: empty hex string')
+          throw new ValidationError('Invalid transaction data: empty hex string')
         }
 
         return new Uint8Array(bytes)
       }
     } else if (tx instanceof Uint8Array) {
       if (tx.length === 0) {
-        throw new Error('Invalid transaction data: empty Uint8Array')
+        throw new ValidationError('Invalid transaction data: empty Uint8Array')
       }
       return tx
     } else {
@@ -593,7 +596,7 @@ export class KleverProvider implements IProvider {
     // Check for error codes even if we got a hash
     // Some APIs may return partial success with warnings
     if (result.code && result.code !== '0' && result.code !== 'successful') {
-      throw new Error(result.message || `Transaction broadcast returned error code: ${result.code}`)
+      throw new TransactionError(result.message || `Transaction broadcast returned error code: ${result.code}`, { code: result.code, message: result.message })
     }
 
     return result.hash as TransactionHash
@@ -624,7 +627,7 @@ export class KleverProvider implements IProvider {
     // Check for error codes even if we got hashes
     // Some APIs may return partial success with warnings
     if (result.code && result.code !== '0' && result.code !== 'successful') {
-      throw new Error(result.message || `Transaction broadcast returned error code: ${result.code}`)
+      throw new TransactionError(result.message || `Transaction broadcast returned error code: ${result.code}`, { code: result.code, message: result.message })
     }
 
     return result.hashes as TransactionHash[]
@@ -795,7 +798,7 @@ export class KleverProvider implements IProvider {
    */
   async buildTransaction(request: BuildTransactionRequest): Promise<BuildTransactionResponse> {
     if (!request.contracts || request.contracts.length === 0) {
-      throw new Error('At least one contract is required')
+      throw new ValidationError('At least one contract is required')
     }
 
     try {
@@ -821,7 +824,7 @@ export class KleverProvider implements IProvider {
       >('/transaction/send', request)
 
       if (response.error || !response.data) {
-        throw new Error(response.error || 'Failed to build transaction')
+        throw new NetworkError(response.error || 'Failed to build transaction', { request })
       }
 
       return {
@@ -829,8 +832,9 @@ export class KleverProvider implements IProvider {
         txHash: response.data.txHash,
       }
     } catch (error) {
-      throw new Error(
+      throw new TransactionError(
         `Failed to build transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { request, originalError: error }
       )
     }
   }

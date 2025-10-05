@@ -1,3 +1,4 @@
+import { ValidationError } from '@klever/connect-core'
 import type {
   IProvider,
   BuildTransactionRequest,
@@ -104,7 +105,7 @@ export class TransactionBuilder {
    */
   sender(address: string): this {
     if (!isValidAddress(address)) {
-      throw new Error(`Invalid sender address: ${address}`)
+      throw new ValidationError(`Invalid sender address: ${address}`, { address })
     }
     this._sender = address
     return this
@@ -115,7 +116,7 @@ export class TransactionBuilder {
    */
   nonce(nonce: number): this {
     if (nonce < 0) {
-      throw new Error('Nonce must be non-negative')
+      throw new ValidationError('Nonce must be non-negative', { nonce })
     }
     this._nonce = nonce
     return this
@@ -126,16 +127,16 @@ export class TransactionBuilder {
    */
   kdaFee(fee: { kda: string; amount: AmountLike }): this {
     if (!fee.kda) {
-      throw new Error('KDA fee asset ID is required')
+      throw new ValidationError('KDA fee asset ID is required')
     }
     // can`t use KLV as kdaFee (its default if not set)
     if (fee.kda === 'KLV') {
-      throw new Error('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead')
+      throw new ValidationError('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead', { assetId: fee.kda })
     }
 
     const amount = typeof fee.amount === 'bigint' ? fee.amount : BigInt(fee.amount)
     if (amount < 0n) {
-      throw new Error('KDA fee amount must be non-negative')
+      throw new ValidationError('KDA fee amount must be non-negative', { amount })
     }
     this._kdaFee = { kda: fee.kda, amount }
     return this
@@ -208,13 +209,13 @@ export class TransactionBuilder {
    */
   transfer(params: TransferRequest): this {
     if (!isValidAddress(params.receiver)) {
-      throw new Error(`Invalid recipient address: ${params.receiver}`)
+      throw new ValidationError(`Invalid recipient address: ${params.receiver}`, { address: params.receiver })
     }
 
     const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
 
     if (amount <= 0n) {
-      throw new Error('Transfer amount must be positive')
+      throw new ValidationError('Transfer amount must be positive', { amount: params.amount })
     }
 
     this.contracts.push({
@@ -236,7 +237,7 @@ export class TransactionBuilder {
     const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
 
     if (amount <= 0n) {
-      throw new Error('Freeze amount must be positive')
+      throw new ValidationError('Freeze amount must be positive', { amount: params.amount })
     }
 
     this.contracts.push({
@@ -253,7 +254,7 @@ export class TransactionBuilder {
    */
   unfreeze(params: UnfreezeRequest): this {
     if (!params.bucketId) {
-      throw new Error('Bucket ID is required for unfreeze')
+      throw new ValidationError('Bucket ID is required for unfreeze')
     }
 
     this.contracts.push({
@@ -270,7 +271,7 @@ export class TransactionBuilder {
    */
   delegate(params: DelegateRequest): this {
     if (!isValidAddress(params.receiver)) {
-      throw new Error(`Invalid validator address: ${params.receiver}`)
+      throw new ValidationError(`Invalid validator address: ${params.receiver}`, { address: params.receiver })
     }
 
     this.contracts.push({
@@ -287,7 +288,7 @@ export class TransactionBuilder {
    */
   undelegate(params: UndelegateRequest): this {
     if (!params.bucketId) {
-      throw new Error('Bucket ID is required for undelegate')
+      throw new ValidationError('Bucket ID is required for undelegate')
     }
 
     this.contracts.push({
@@ -363,7 +364,7 @@ export class TransactionBuilder {
    */
   smartContract(params: SmartContractRequest): this {
     if (!isValidAddress(params.address)) {
-      throw new Error(`Invalid contract address: ${params.address}`)
+      throw new ValidationError(`Invalid contract address: ${params.address}`, { address: params.address })
     }
 
     this.contracts.push({
@@ -403,7 +404,7 @@ export class TransactionBuilder {
    */
   buildRequest(): BuildTransactionRequest {
     if (this.contracts.length === 0) {
-      throw new Error('At least one contract is required')
+      throw new ValidationError('At least one contract is required')
     }
 
     const request: BuildTransactionRequest = {
@@ -448,7 +449,7 @@ export class TransactionBuilder {
    */
   buildProto(options: BuildProtoOptions = {}): Transaction {
     if (this.contracts.length === 0) {
-      throw new Error('At least one contract is required')
+      throw new ValidationError('At least one contract is required')
     }
 
     // Convert string to Uint8Array (UTF-8 encoded)
@@ -476,13 +477,13 @@ export class TransactionBuilder {
 
     // Validate required fields
     if (!sender) {
-      throw new Error('Sender address is required. Set via .sender() or options.sender')
+      throw new ValidationError('Sender address is required. Set via .sender() or options.sender')
     }
     // convert sender from bech32 to bytes
     const senderBytes = bech32Decode(sender)
 
     if (nonce === undefined) {
-      throw new Error('Nonce is required. Set via .nonce() or options.nonce')
+      throw new ValidationError('Nonce is required. Set via .nonce() or options.nonce')
     }
 
     // convert data to Uint8Array[]
@@ -530,13 +531,13 @@ export class TransactionBuilder {
    */
   async build(): Promise<Transaction> {
     if (!this.provider) {
-      throw new Error(
+      throw new ValidationError(
         'Provider required for node-assisted building. Use buildProto() for offline building.',
       )
     }
 
     if (this.contracts.length === 0) {
-      throw new Error('At least one contract is required')
+      throw new ValidationError('At least one contract is required')
     }
 
     // Build request object
