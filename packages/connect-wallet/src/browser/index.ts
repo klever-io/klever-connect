@@ -8,8 +8,8 @@ import type {
   NetworkURI,
 } from '@klever/connect-provider'
 import type { Transaction } from '@klever/connect-transactions'
-import type { PrivateKey } from '@klever/connect-crypto'
-import { cryptoProvider } from '@klever/connect-crypto'
+import type { PrivateKey, Signature } from '@klever/connect-crypto'
+import { cryptoProvider, SignatureImpl } from '@klever/connect-crypto'
 import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-types'
 import type { WalletConfig } from '../types/wallet'
 import { BaseWallet } from '../base'
@@ -211,7 +211,7 @@ export class BrowserWallet extends BaseWallet {
     }
   }
 
-  async signMessage(message: string | Uint8Array): Promise<string> {
+  async signMessage(message: string | Uint8Array): Promise<Signature> {
     if (!this._connected) {
       throw new WalletError('Wallet not connected')
     }
@@ -225,7 +225,7 @@ export class BrowserWallet extends BaseWallet {
       try {
         const messageBytes = typeof message === 'string' ? new TextEncoder().encode(message) : message
         const signature = await cryptoProvider.signMessage(messageBytes, this._privateKey)
-        return signature.toHex()
+        return signature
       } catch (error) {
         throw new WalletError(
           `Failed to sign message: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -233,7 +233,7 @@ export class BrowserWallet extends BaseWallet {
       }
     }
 
-    // Extension mode - use KleverWeb
+    // Extension mode - use KleverWeb (returns string signature)
     if (!this._kleverWeb) {
       throw new WalletError('Extension not available')
     }
@@ -242,8 +242,13 @@ export class BrowserWallet extends BaseWallet {
       const messageStr =
         typeof message === 'string' ? message : Buffer.from(message).toString('hex')
 
-      const signature = await this._kleverWeb.signMessage(messageStr)
-      return signature
+      const signatureStr = await this._kleverWeb.signMessage(messageStr)
+      // Extension returns hex or base64 - try both
+      try {
+        return SignatureImpl.fromHex(signatureStr)
+      } catch {
+        return SignatureImpl.fromBase64(signatureStr)
+      }
     } catch (error) {
       throw new WalletError(
         `Failed to sign message: ${error instanceof Error ? error.message : 'Unknown error'}`,

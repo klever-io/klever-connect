@@ -1,6 +1,6 @@
 import * as ed from '@noble/ed25519'
 
-import { hexEncode, hexDecode } from '@klever/connect-encoding'
+import { hexEncode, hexDecode, base64Encode, base64Decode } from '@klever/connect-encoding'
 import type { Signature } from './types'
 
 export class SignatureImpl implements Signature {
@@ -18,8 +18,16 @@ export class SignatureImpl implements Signature {
     return hexEncode(this.bytes)
   }
 
+  toBase64(): string {
+    return base64Encode(this.bytes)
+  }
+
   static fromHex(hex: string): SignatureImpl {
     return new SignatureImpl(hexDecode(hex))
+  }
+
+  static fromBase64(base64: string): SignatureImpl {
+    return new SignatureImpl(base64Decode(base64))
   }
 
   static fromBytes(bytes: Uint8Array): SignatureImpl {

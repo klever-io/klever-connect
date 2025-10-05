@@ -1,5 +1,5 @@
 import { WalletError, isNode, isValidAddress } from '@klever/connect-core'
-import type { PrivateKey } from '@klever/connect-crypto'
+import type { PrivateKey, Signature } from '@klever/connect-crypto'
 import { cryptoProvider } from '@klever/connect-crypto'
 import { hexEncode } from '@klever/connect-encoding'
 import type { IProvider } from '@klever/connect-provider'
@@ -84,7 +84,7 @@ export class NodeWallet extends BaseWallet {
     this.emit('disconnect')
   }
 
-  async signMessage(message: string | Uint8Array): Promise<string> {
+  async signMessage(message: string | Uint8Array): Promise<Signature> {
     if (!this._connected || !this._privateKey) {
       throw new WalletError('Wallet not connected')
     }
@@ -93,7 +93,8 @@ export class NodeWallet extends BaseWallet {
       const messageBytes = typeof message === 'string' ? new TextEncoder().encode(message) : message
 
       const signature = await cryptoProvider.signMessage(messageBytes, this._privateKey)
-      return signature.toHex()
+      // Return Signature object - developers can choose .toHex() or .toBase64()
+      return signature
     } catch (error) {
       throw new WalletError(
         `Failed to sign message: ${error instanceof Error ? error.message : 'Unknown error'}`,

@@ -7,6 +7,7 @@ import type {
   TransferRequest,
 } from '@klever/connect-provider'
 import type { Transaction } from '@klever/connect-transactions'
+import type { Signature } from '@klever/connect-crypto'
 
 // Re-export for convenience (single source of truth is @klever/connect-provider)
 export type { TransferRequest }
@@ -29,7 +30,7 @@ export interface Wallet {
   isConnected(): boolean
 
   // Signing
-  signMessage(message: string | Uint8Array): Promise<string>
+  signMessage(message: string | Uint8Array): Promise<Signature>
   signTransaction(tx: Transaction): Promise<Transaction>
 
   // Transactions

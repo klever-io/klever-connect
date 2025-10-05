@@ -8,6 +8,9 @@ import type {
 } from '@klever/connect-provider'
 import type { Transaction } from '@klever/connect-transactions'
 import { TransactionBuilder } from '@klever/connect-transactions'
+import { verifySignature, SignatureImpl } from '@klever/connect-crypto'
+import type { Signature } from '@klever/connect-crypto'
+import { hexDecode } from '@klever/connect-encoding'
 
 import type { Wallet, WalletEvent, WalletEventHandler } from '../types'
 import type { TransactionHash } from '@klever/connect-core'
@@ -44,10 +47,68 @@ export abstract class BaseWallet implements Wallet {
   abstract disconnect(clearPrivateKey?: boolean): Promise<void>
 
   /** Sign a message with the wallet's private key */
-  abstract signMessage(message: string | Uint8Array): Promise<string>
+  abstract signMessage(message: string | Uint8Array): Promise<Signature>
 
   /** Sign a transaction with the wallet's private key */
   abstract signTransaction(unsignedTx: Transaction): Promise<Transaction>
+
+  /**
+   * Verify a message signature
+   * @param message - The message that was signed (string or bytes)
+   * @param signature - The signature to verify (Signature object, hex string, or base64 string)
+   * @returns true if signature is valid, false otherwise
+   *
+   * @example
+   * ```typescript
+   * const message = "Hello, Klever!"
+   * const signature = await wallet.signMessage(message)
+   *
+   * // Verify with Signature object
+   * const isValid = await wallet.verifyMessage(message, signature)
+   *
+   * // Or verify with hex string
+   * const isValidHex = await wallet.verifyMessage(message, signature.toHex())
+   *
+   * // Or verify with base64 string
+   * const isValidBase64 = await wallet.verifyMessage(message, signature.toBase64())
+   * console.log('Signature valid:', isValid)
+   * ```
+   */
+  async verifyMessage(
+    message: string | Uint8Array,
+    signature: Signature | string
+  ): Promise<boolean> {
+    if (!this._publicKey) {
+      throw new WalletError('Wallet not connected or public key not available')
+    }
+
+    try {
+      const messageBytes = typeof message === 'string'
+        ? new TextEncoder().encode(message)
+        : message
+
+      // Handle Signature object or string (hex/base64)
+      let signatureBytes: Uint8Array
+      if (typeof signature === 'string') {
+        // Try hex first, fallback to base64
+        try {
+          signatureBytes = hexDecode(signature)
+        } catch {
+          // If hex fails, try base64
+          signatureBytes = SignatureImpl.fromBase64(signature).bytes
+        }
+      } else {
+        signatureBytes = signature.bytes
+      }
+
+      const publicKeyBytes = hexDecode(this._publicKey)
+
+      return await verifySignature(messageBytes, signatureBytes, publicKeyBytes)
+    } catch (error) {
+      // If there's any error (invalid format, etc.), return false
+      return false
+    }
+  }
 
   /**
    * Check if wallet is connected

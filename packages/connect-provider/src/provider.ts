@@ -838,4 +838,49 @@ export class KleverProvider implements IProvider {
       )
     }
   }
+
+  // ============================================================================
+  // Convenience Methods
+  // ============================================================================
+
+  /**
+   * Execute multiple requests in parallel
+   * Useful for batching multiple API calls for better performance
+   *
+   * @param requests - Array of request functions to execute
+   * @returns Array of results in the same order as requests
+   *
+   * @example
+   * ```typescript
+   * const [account1, account2, balance] = await provider.batch([
+   *   () => provider.getAccount('klv1...'),
+   *   () => provider.getAccount('klv1xxx...'),
+   *   () => provider.getBalance('klv1...')
+   * ])
+   * ```
+   */
+  async batch<T>(requests: (() => Promise<T>)[]): Promise<T[]> {
+    return Promise.all(requests.map(req => req()))
+  }
+
+  // ============================================================================
+  // Web3 Naming Convention Aliases
+  // ============================================================================
+
+  /**
+   * Alias for getAccount() - matches Solana web3.js naming convention
+   * @see getAccount
+   */
+  async getAccountInfo(address: KleverAddress, options?: { skipCache?: boolean }): Promise<IAccount> {
+    return this.getAccount(address, options)
+  }
+
+  /**
+   * Alias for broadcastTransaction() - matches ethers.js and web3.js naming convention
+   * More commonly used in Web3 ecosystems
+   * @see broadcastTransaction
+   */
+  async sendTransaction(tx: unknown): Promise<IBroadcastResult> {
+    return this.broadcastTransaction(tx)
+  }
 }

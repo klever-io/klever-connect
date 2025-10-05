@@ -20,6 +20,7 @@ export interface Signature {
   bytes: Uint8Array
   hex: string
   toHex(): string
+  toBase64(): string
 }
 
 export interface SignableMessage {
