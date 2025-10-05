@@ -18,7 +18,8 @@
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
     "dev": "tsup --watch",
-    "clean": "rm -rf dist .turbo"
+    "clean": "rm -rf dist .turbo",
+    "benchmark": "vitest bench benchmarks"
   },
   "files": [
     "dist"

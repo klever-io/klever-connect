@@ -49,6 +49,15 @@ export interface BuildProtoOptions {
  *
  * @example
  * ```typescript
+ * // Chainable building and signing
+ * const tx = await TransactionBuilder.create(provider)
+ *   .sender('klv1...')
+ *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+ *   .build()
+ *
+ * await tx.sign(privateKey)
+ * const hash = await provider.sendRawTransaction(tx.toHex())
+ *
  * // Node-assisted building
  * const provider = new KleverProvider({ network: 'mainnet' })
  * const tx = await new TransactionBuilder(provider)
@@ -76,6 +85,25 @@ export class TransactionBuilder {
   private _data?: string[]
 
   constructor(private provider?: IProvider) {}
+
+  /**
+   * Create a new TransactionBuilder with provider (static factory)
+   * Provides a cleaner API for chainable transaction building
+   *
+   * @example
+   * ```typescript
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender(address)
+   *   .transfer({ receiver, amount })
+   *   .build()
+   *
+   * await tx.sign(privateKey)
+   * const hash = await provider.sendRawTransaction(tx.toHex())
+   * ```
+   */
+  static create(provider?: IProvider): TransactionBuilder {
+    return new TransactionBuilder(provider)
+  }
 
   /**
    * Get the provider instance

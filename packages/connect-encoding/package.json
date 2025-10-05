@@ -25,7 +25,8 @@
     "dev": "pnpm build:proto && tsup --watch",
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
-    "clean": "rm -rf dist .turbo"
+    "clean": "rm -rf dist .turbo",
+    "benchmark": "vitest bench benchmarks"
   },
   "files": [
     "dist"

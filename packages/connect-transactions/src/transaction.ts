@@ -13,6 +13,9 @@ import { hexEncode, hashBlake2b } from '@klever/connect-encoding'
  * - Serialization to bytes/hex
  * - Fee calculations
  * - Transaction state management
+ *
+ * This is a pure data class - no network dependencies.
+ * Use provider.sendRawTransaction(tx.toHex()) to broadcast.
  */
 export class Transaction extends ProtoTransaction {
   /**

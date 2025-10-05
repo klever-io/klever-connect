@@ -170,7 +170,7 @@ The SDK is organized into focused, modular packages:
 // Import only what you need for smaller bundles
 import { KleverProvider } from '@klever/connect-provider'
 import { Wallet } from '@klever/connect-wallet'
-import { parseKLV } from '@klever/connect-helpers'
+import { parseKLV } from '@klever/connect-core'
 ```
 
 ## 🔄 Migration Guides

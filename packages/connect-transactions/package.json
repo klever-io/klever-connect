@@ -17,6 +17,7 @@
     "build": "tsup",
     "test": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "benchmark": "vitest bench benchmarks",
     "lint": "eslint src --ext .ts,.tsx",
     "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo"
