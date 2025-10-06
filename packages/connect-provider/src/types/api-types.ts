@@ -5,9 +5,75 @@ export interface IAccount {
   assets?: IAssetBalance[]
 }
 
-export interface IAssetBalance {
-  assetId: string
+/** Asset type enum matching KDAData_EnumAssetType from blockchain */
+export enum AssetType {
+  Fungible = 0,
+  NonFungible = 1,
+  SemiFungible = 2,
+}
+
+/** Staking interest type enum matching StakingData_EnumInterestType */
+export enum StakingInterestType {
+  APRI = 0, // Annual Percentage Rate Interest
+  FPRI = 1, // Flexible Percentage Rate Interest
+}
+
+/** User's last claim information for a KDA */
+export interface UserKDALastClaim {
+  timestamp: number
+  epoch: number
+}
+
+/** User's bucket information for staking */
+export interface UserKDABucket {
+  id: string
+  stakedAt: number
+  stakedEpoch: number
+  unstakedEpoch: number
   balance: bigint
+  delegation: string
+  validatorName: string
+}
+
+/**
+ * Complete asset balance information from blockchain
+ * Matches AccountKDA structure from Go backend
+ */
+export interface IAssetBalance {
+  /** Address of the account holding this asset */
+  address: string
+  /** Asset ID (KDA ID) */
+  assetId: string
+  /** Collection ID for NFTs */
+  collection?: string | undefined
+  /** NFT nonce for specific NFT instances */
+  nftNonce?: number | undefined
+  /** Human-readable asset name */
+  assetName: string
+  /** Asset type (Fungible, NonFungible, SemiFungible) */
+  assetType: AssetType
+  /** Total balance in smallest units */
+  balance: bigint
+  /** Number of decimal places for display */
+  precision: number
+  /** Frozen balance (staked) in smallest units */
+  frozenBalance: bigint
+  /** Unfrozen balance (available after unstaking cooldown) */
+  unfrozenBalance: bigint
+  /** Last claim information for rewards */
+  lastClaim: UserKDALastClaim
+  /** Staking buckets for this asset */
+  buckets: UserKDABucket[]
+  /** NFT metadata */
+  metadata?: string | undefined
+  /** MIME type for NFT content */
+  mime?: string | undefined
+  /** Marketplace ID if listed for sale */
+  marketplaceId?: string | undefined
+  /** Order ID if active order exists */
+  orderId?: string | undefined
+  /** Staking interest type (APR or FPR) */
+  stakingType: StakingInterestType
 }
 
 export interface IBalance {
@@ -209,15 +275,39 @@ export interface AddressResponse {
   }
 }
 
+/**
+ * Asset balance as returned by the API
+ * Matches AccountKDA structure from Go backend
+ */
 export interface ApiAssetBalance {
+  address: string
   assetId: string
-  assetName?: string
-  assetType?: string
-  balance: number
-  frozenBalance?: number
-  unfrozenBalance?: number
   collection?: string
-  precision?: number
+  nftNonce?: number
+  assetName: string
+  assetType: number
+  balance: number
+  precision: number
+  frozenBalance: number
+  unfrozenBalance: number
+  lastClaim: {
+    timestamp: number
+    epoch: number
+  }
+  buckets: Array<{
+    id: string
+    stakeAt: number
+    stakedEpoch: number
+    unstakedEpoch: number
+    balance: number
+    delegation: string
+    validatorName: string
+  }>
+  metadata?: string
+  mime?: string
+  marketplaceId?: string
+  orderId?: string
+  stakingType: number
 }
 
 // Transaction Response

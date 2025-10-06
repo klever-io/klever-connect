@@ -25,14 +25,11 @@ describe('Transaction Workflows: Real-world scenarios', () => {
       const sender = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
       const receiver = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
 
-      builder
-        .sender(sender)
-        .nonce(100)
-        .transfer({
-          receiver,
-          amount: 5000000n, // 5 KLV
-          kda: 'KLV',
-        })
+      builder.sender(sender).nonce(100).transfer({
+        receiver,
+        amount: 5000000n, // 5 KLV
+        kda: 'KLV',
+      })
 
       const request = builder.buildRequest()
 
@@ -52,14 +49,11 @@ describe('Transaction Workflows: Real-world scenarios', () => {
       const sender = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
       const receiver = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
 
-      builder
-        .sender(sender)
-        .nonce(50)
-        .transfer({
-          receiver,
-          amount: 10000000n, // 10 USDT (assuming 6 decimals)
-          kda: 'USDT-ABC123',
-        })
+      builder.sender(sender).nonce(50).transfer({
+        receiver,
+        amount: 10000000n, // 10 USDT (assuming 6 decimals)
+        kda: 'USDT-ABC123',
+      })
 
       const request = builder.buildRequest()
 
@@ -144,7 +138,7 @@ describe('Transaction Workflows: Real-world scenarios', () => {
         .sender(sender)
         .nonce(75)
         .undelegate({ bucketId: 'bucket123' }) // Undelegate from validator
-        .unfreeze({ bucketId: 'bucket123' }) // Unfreeze tokens
+        .unfreeze({ kda: 'KLV', bucketId: 'bucket123' }) // Unfreeze tokens
 
       const request = builder.buildRequest()
 
@@ -259,11 +253,14 @@ describe('Transaction Workflows: Real-world scenarios', () => {
       const caller = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
       const contractAddress = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
 
-      builder.sender(caller).nonce(99).smartContract({
-        scType: 0,
-        address: contractAddress,
-        callValue: { KLV: 1000000n }, // Send 1 KLV to contract
-      })
+      builder
+        .sender(caller)
+        .nonce(99)
+        .smartContract({
+          scType: 0,
+          address: contractAddress,
+          callValue: { KLV: 1000000n }, // Send 1 KLV to contract
+        })
 
       const request = builder.buildRequest()
 
@@ -321,6 +318,7 @@ describe('Transaction Workflows: Real-world scenarios', () => {
         bytes: mockSignature,
         hex: '0a141e28',
         toHex: () => '0a141e28',
+        toBase64: () => 'ChQeKA==',
       })
 
       const mockPrivateKey = {

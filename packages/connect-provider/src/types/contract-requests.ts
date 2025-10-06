@@ -186,8 +186,8 @@ export interface FreezeRequest {
 }
 
 export interface UnfreezeRequest {
-  kda?: string
-  bucketId: string
+  kda: string
+  bucketId?: string // Only required for KLV
 }
 
 export interface DelegateRequest {

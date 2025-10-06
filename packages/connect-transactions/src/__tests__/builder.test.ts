@@ -232,10 +232,10 @@ describe('TransactionBuilder', () => {
       })
     })
 
-    it('should throw error when bucket ID is missing', () => {
+    it('should throw error when KDA is missing', () => {
       const builder = new TransactionBuilder()
 
-      expect(() => builder.unfreeze({ bucketId: '' })).toThrow('Bucket ID is required')
+      expect(() => builder.unfreeze({ bucketId: 'bucket123' } as any)).toThrow('KDA is required for unfreeze')
     })
   })
 

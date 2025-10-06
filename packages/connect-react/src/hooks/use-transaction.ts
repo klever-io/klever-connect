@@ -1,4 +1,9 @@
-import type { TransactionReceipt, ContractRequestData } from '@klever/connect-provider'
+import type {
+  TransactionReceipt,
+  ContractRequestData,
+  TransactionSubmitResult,
+  AmountLike,
+} from '@klever/connect-provider'
 import { TXType } from '@klever/connect-core'
 
 import type {
@@ -18,9 +23,9 @@ export interface TransactionCallbacks {
 }
 
 export interface UseTransactionReturn {
-  sendTransaction: (contract: ContractRequestData) => Promise<void>
-  sendKLV: (to: string, amount: number | string) => Promise<void>
-  sendKDA: (to: string, amount: number | string, kdaId: string, precision?: number) => Promise<void>
+  sendTransaction: (contract: ContractRequestData) => Promise<TransactionSubmitResult>
+  sendKLV: (to: string, amount: AmountLike) => Promise<TransactionSubmitResult>
+  sendKDA: (to: string, amount: AmountLike, kdaId: string) => Promise<TransactionSubmitResult>
   isLoading: boolean
   error: Error | null
   data: TransactionReceipt | null
@@ -34,19 +39,19 @@ export function useTransaction(options?: TransactionCallbacks): UseTransactionRe
   const [data, setData] = useState<TransactionReceipt | null>(null)
 
   const sendTransaction = useCallback(
-    async (contract: ContractRequestData): Promise<void> => {
+    async (contract: ContractRequestData): Promise<TransactionSubmitResult> => {
       if (!wallet) {
         const err = new Error('Wallet not connected')
         setError(err)
         options?.onError?.(err)
-        return
+        throw err
       }
 
       setIsLoading(true)
       setError(null)
 
       try {
-        let result: { hash: string; status?: string; blockNumber?: number; timestamp?: number }
+        let result: TransactionSubmitResult
 
         // Check if wallet supports sendTransaction (BrowserWallet with extension)
         if (wallet.sendTransaction) {
@@ -69,21 +74,27 @@ export function useTransaction(options?: TransactionCallbacks): UseTransactionRe
           result = {
             hash,
             status: 'success' as const,
-            blockNumber: 0,
-            timestamp: Date.now(),
+            transaction: signedTx,
+            wait: async () => {
+              const tx = await provider.waitForTransaction(hash)
+              if (!tx) {
+                throw new Error(`Transaction ${String(hash)} not found or timed out`)
+              }
+              return tx
+            },
           }
         }
 
         const receipt: TransactionReceipt = {
           hash: result.hash,
-          status: (result.status || 'success') as 'pending' | 'success' | 'failed',
-          blockNumber: result.blockNumber || 0,
-          timestamp: result.timestamp || Date.now(),
+          status: result.status,
+          blockNumber: 0,
+          timestamp: Date.now(),
         }
         setData(receipt)
         options?.onSuccess?.(receipt)
 
-        // Don't return anything, just update state
+        return result
       } catch (err) {
         const error = err as Error
         setError(error)
@@ -97,34 +108,26 @@ export function useTransaction(options?: TransactionCallbacks): UseTransactionRe
   )
 
   const sendKLV = useCallback(
-    async (to: string, amount: number | string) => {
-      const amountInPrecision = typeof amount === 'number' ? amount * 1e6 : amount
+    async (to: string, amount: AmountLike) => {
+      // No auto-conversion - amount must be in smallest units
+      // Use parseKLV() from @klever/connect-core for human-readable amounts
       return sendTransaction({
         contractType: TXType.Transfer,
         receiver: to,
-        amount: amountInPrecision,
+        amount: amount,
       } as ContractRequestData)
     },
     [sendTransaction],
   )
 
   const sendKDA = useCallback(
-    async (to: string, amount: number | string, kdaId: string, precision?: number) => {
-      let amountInPrecision: number | string
-
-      if (typeof amount === 'number') {
-        // If precision is not provided, default to 6
-        const tokenPrecision = precision ?? 6
-        amountInPrecision = amount * Math.pow(10, tokenPrecision)
-      } else {
-        // If amount is string, assume it's already in the correct precision
-        amountInPrecision = amount
-      }
-
+    async (to: string, amount: AmountLike, kdaId: string) => {
+      // No auto-conversion - amount must be in smallest units
+      // Use parseUnits() from @klever/connect-core for human-readable amounts
       return sendTransaction({
         contractType: TXType.Transfer,
         receiver: to,
-        amount: amountInPrecision,
+        amount: amount,
         kda: kdaId,
       } as ContractRequestData)
     },
@@ -150,7 +153,7 @@ export function useTransaction(options?: TransactionCallbacks): UseTransactionRe
 
 // Convenience hooks for specific transaction types
 export interface UseTransferReturn {
-  transfer: (params: TransferRequest) => Promise<void>
+  transfer: (params: TransferRequest) => Promise<TransactionSubmitResult>
   isLoading: boolean
   error: Error | null
   data: TransactionReceipt | null
@@ -174,7 +177,7 @@ export function useTransfer(options?: TransactionCallbacks): UseTransferReturn {
 }
 
 export interface UseFreezeReturn {
-  freeze: (params: FreezeRequest) => Promise<void>
+  freeze: (params: FreezeRequest) => Promise<TransactionSubmitResult>
   isLoading: boolean
   error: Error | null
   data: TransactionReceipt | null
@@ -198,7 +201,7 @@ export function useFreeze(options?: TransactionCallbacks): UseFreezeReturn {
 }
 
 export interface UseUnfreezeReturn {
-  unfreeze: (params: UnfreezeRequest) => Promise<void>
+  unfreeze: (params: UnfreezeRequest) => Promise<TransactionSubmitResult>
   isLoading: boolean
   error: Error | null
   data: TransactionReceipt | null
@@ -222,7 +225,7 @@ export function useUnfreeze(options?: TransactionCallbacks): UseUnfreezeReturn {
 }
 
 export interface UseClaimReturn {
-  claim: (params: ClaimRequest) => Promise<void>
+  claim: (params: ClaimRequest) => Promise<TransactionSubmitResult>
   isLoading: boolean
   error: Error | null
   data: TransactionReceipt | null

@@ -153,8 +153,31 @@ export class KleverProvider implements IProvider {
     // Convert API response to IAccount format
     const assets: IAssetBalance[] = Object.entries(apiAccount.assets || {}).map(
       ([assetId, assetData]) => ({
+        address: assetData.address,
         assetId,
-        balance: BigInt(assetData.balance),
+        collection: assetData.collection,
+        nftNonce: assetData.nftNonce,
+        assetName: assetData.assetName,
+        assetType: assetData.assetType,
+        balance: BigInt(assetData.balance || 0),
+        precision: assetData.precision,
+        frozenBalance: BigInt(assetData.frozenBalance || 0),
+        unfrozenBalance: BigInt(assetData.unfrozenBalance || 0),
+        lastClaim: assetData.lastClaim,
+        buckets: (assetData.buckets || []).map((bucket) => ({
+          id: bucket.id,
+          stakedAt: bucket.stakeAt,
+          stakedEpoch: bucket.stakedEpoch,
+          unstakedEpoch: bucket.unstakedEpoch,
+          balance: BigInt(bucket.balance || 0),
+          delegation: bucket.delegation,
+          validatorName: bucket.validatorName,
+        })),
+        metadata: assetData.metadata,
+        mime: assetData.mime,
+        marketplaceId: assetData.marketplaceId,
+        orderId: assetData.orderId,
+        stakingType: assetData.stakingType,
       }),
     )
 

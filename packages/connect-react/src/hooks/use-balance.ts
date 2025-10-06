@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { useState, useEffect } from 'react'
 import type { KleverAddress } from '@klever/connect-core'
+import { formatUnits } from '@klever/connect-core'
 
 import { useKlever } from '../context'
 
@@ -51,9 +52,10 @@ export function useBalance(
 
         if (!cancelled) {
           if (assetBalance) {
-            const precision = 6 // Default precision for Klever assets
+            // Get precision from asset metadata, default to 0 if not available
+            const precision = assetBalance.precision ?? 0
             const amount = BigInt(assetBalance.balance)
-            const formatted = formatBalance(amount, precision)
+            const formatted = formatUnits(amount, precision)
 
             setBalance({
               token,
@@ -62,10 +64,11 @@ export function useBalance(
               formatted,
             })
           } else {
+            // For zero balance, use default precision of 0
             setBalance({
               token,
               amount: 0n,
-              precision: 6,
+              precision: 0,
               formatted: '0',
             })
           }
@@ -113,19 +116,4 @@ export function useBalance(
   }, [provider, targetAddress, token, currentNetwork, refreshKey])
 
   return { balance, isLoading, error, refetch }
-}
-
-function formatBalance(amount: bigint, precision: number): string {
-  const divisor = BigInt(10 ** precision)
-  const whole = amount / divisor
-  const fraction = amount % divisor
-
-  if (fraction === 0n) {
-    return whole.toString()
-  }
-
-  const fractionStr = fraction.toString().padStart(precision, '0')
-  const trimmed = fractionStr.replace(/0+$/, '')
-
-  return `${whole}.${trimmed}`
 }

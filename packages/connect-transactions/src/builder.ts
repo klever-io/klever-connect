@@ -279,16 +279,18 @@ export class TransactionBuilder {
 
   /**
    * Add unfreeze (unstake) contract
+   * - kda: Required - the asset to unfreeze
+   * - bucketId: Optional - only required for KLV
    */
   unfreeze(params: UnfreezeRequest): this {
-    if (!params.bucketId) {
-      throw new ValidationError('Bucket ID is required for unfreeze')
+    if (!params.kda) {
+      throw new ValidationError('KDA is required for unfreeze')
     }
 
     this.contracts.push({
       contractType: 5,
-      bucketId: params.bucketId,
-      ...(params.kda && { kda: params.kda }),
+      kda: params.kda,
+      ...(params.bucketId && { bucketId: params.bucketId }),
     })
 
     return this
