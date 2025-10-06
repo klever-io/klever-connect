@@ -1,6 +1,11 @@
 import type { KleverAddress, TransactionHash } from '@klever/connect-core'
-import { isValidAddress, ValidationError, NetworkError, TransactionError } from '@klever/connect-core'
-import type { ProviderConfig } from './types/provider'
+import {
+  isValidAddress,
+  ValidationError,
+  NetworkError,
+  TransactionError,
+} from '@klever/connect-core'
+import type { ProviderConfig, ProviderConfigObject } from './types/provider'
 import type { Network, NetworkName } from './types/network'
 import type {
   IAccount,
@@ -38,27 +43,38 @@ import type {
  *
  * @example
  * ```typescript
- * // Basic usage
+ * // Default mainnet
+ * const provider = new KleverProvider()
+ *
+ * // Named network (simple)
+ * const provider = new KleverProvider('testnet')
+ * const provider = new KleverProvider('mainnet')
+ *
+ * // Named network (config object)
+ * const provider = new KleverProvider({ network: 'testnet' })
+ *
+ * // Custom network (shorthand)
  * const provider = new KleverProvider({
- *   network: NETWORKS.testnet
+ *   url: 'https://custom-node.com',
+ *   chainId: '100'
+ * })
+ *
+ * // Custom network (full)
+ * const provider = new KleverProvider({
+ *   network: createCustomNetwork({
+ *     api: 'https://api.custom.com',
+ *     node: 'https://node.custom.com',
+ *     chainId: '100'
+ *   })
  * })
  *
  * // Advanced usage with caching and retry
  * const provider = new KleverProvider({
- *   network: NETWORKS.mainnet,
- *   cache: {
- *     ttl: 15000, // 15 seconds
- *     maxSize: 100
- *   },
- *   retry: {
- *     maxRetries: 3,
- *     retryDelay: 1000,
- *     backoff: 'exponential'
- *   },
+ *   network: 'mainnet',
+ *   cache: { ttl: 15000, maxSize: 100 },
+ *   retry: { maxRetries: 3, backoff: 'exponential' },
  *   debug: true
  * })
- *
- * const account = await provider.getAccount('klv1...')
  * ```
  */
 export class KleverProvider implements IProvider {
@@ -72,39 +88,107 @@ export class KleverProvider implements IProvider {
    * Creates a new KleverProvider instance
    *
    * @param config - Provider configuration options
+   * Can be:
+   * - undefined: Uses mainnet
+   * - A network name: 'mainnet', 'testnet', 'devnet', 'local'
+   * - A config object with network or custom URL
    */
   constructor(config?: ProviderConfig) {
-    // Resolve network configuration
-    const networkConfig = config?.network ?? NETWORKS[DEFAULT_NETWORK]
-    this.network = networkConfig
+    // Normalize config to ProviderConfigObject
+    const normalizedConfig = this.normalizeConfig(config)
 
-    this.debug = config?.debug ?? false
+    // Resolve network configuration
+    this.network = this.resolveNetwork(normalizedConfig)
+
+    this.debug = normalizedConfig.debug ?? false
 
     // Set up HTTP clients
     const httpClientConfig = {
       baseUrl: this.network.config.api ?? 'http://localhost:8080',
-      ...(config?.timeout !== undefined && { timeout: config.timeout }),
-      ...(config?.headers !== undefined && { headers: config.headers }),
-      retries: config?.retry === false ? 0 : (config?.retry?.maxRetries ?? 3),
+      ...(normalizedConfig.timeout !== undefined && { timeout: normalizedConfig.timeout }),
+      ...(normalizedConfig.headers !== undefined && { headers: normalizedConfig.headers }),
+      retries: normalizedConfig.retry === false ? 0 : (normalizedConfig.retry?.maxRetries ?? 3),
     }
     this.apiClient = new HttpClient(httpClientConfig)
 
     const nodeClientConfig = {
       baseUrl: this.network.config.node ?? this.network.config.api ?? 'http://localhost:8080',
-      ...(config?.timeout !== undefined && { timeout: config.timeout }),
-      ...(config?.headers !== undefined && { headers: config.headers }),
-      retries: config?.retry === false ? 0 : (config?.retry?.maxRetries ?? 3),
+      ...(normalizedConfig.timeout !== undefined && { timeout: normalizedConfig.timeout }),
+      ...(normalizedConfig.headers !== undefined && { headers: normalizedConfig.headers }),
+      retries: normalizedConfig.retry === false ? 0 : (normalizedConfig.retry?.maxRetries ?? 3),
     }
     this.nodeClient = new HttpClient(nodeClientConfig)
 
     // Set up cache if enabled
-    if (config?.cache !== false) {
-      this.cache = new SimpleCache(config?.cache ?? {})
+    if (normalizedConfig.cache !== false) {
+      this.cache = new SimpleCache(normalizedConfig.cache ?? {})
     }
 
     if (this.debug) {
       console.log(`[KleverProvider] Initialized with network: ${this.network.name}`)
     }
+  }
+
+  /**
+   * Normalize config input to ProviderConfigObject
+   */
+  private normalizeConfig(config?: ProviderConfig): ProviderConfigObject {
+    // If undefined, return empty config (will use defaults)
+    if (config === undefined) {
+      return {}
+    }
+
+    // If string, treat as network name
+    if (typeof config === 'string') {
+      return { network: config }
+    }
+
+    // Otherwise, it's already a config object
+    return config
+  }
+
+  /**
+   * Resolve network from config
+   */
+  private resolveNetwork(config: ProviderConfigObject): Network {
+    // If url and chainId provided, create custom network
+    if (config.url && config.chainId) {
+      return {
+        name: 'custom',
+        chainId: config.chainId,
+        config: {
+          api: config.url,
+          node: config.url,
+        },
+        isTestnet: true,
+        nativeCurrency: {
+          name: 'Klever',
+          symbol: 'KLV',
+          decimals: 6,
+        },
+      }
+    }
+
+    // If network is provided, resolve it
+    if (config.network) {
+      // If network is a string (network name)
+      if (typeof config.network === 'string') {
+        const networkName = config.network
+        const network = NETWORKS[networkName]
+        if (!network) {
+          throw new ValidationError(`Unknown network: ${config.network}`, {
+            network: config.network,
+          })
+        }
+        return network
+      }
+
+      // Otherwise, it's a Network object
+      return config.network
+    }
+
+    // Default to mainnet
+    return NETWORKS[DEFAULT_NETWORK]
   }
 
   /**
@@ -293,7 +377,7 @@ export class KleverProvider implements IProvider {
     if (!hash) {
       throw new TransactionError(
         response.message || 'Broadcast succeeded but no transaction hash was returned',
-        { response }
+        { response },
       )
     }
 
@@ -397,7 +481,9 @@ export class KleverProvider implements IProvider {
     }
 
     if (!this.network.isTestnet) {
-      throw new ValidationError('Faucet is not available on mainnet', { network: this.network.chainId })
+      throw new ValidationError('Faucet is not available on mainnet', {
+        network: this.network.chainId,
+      })
     }
 
     const response = await this.apiClient.post<IFaucetResponse>(
@@ -473,7 +559,7 @@ export class KleverProvider implements IProvider {
     } catch (error) {
       throw new NetworkError(
         `Failed to get block number: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { originalError: error }
+        { originalError: error },
       )
     }
   }
@@ -532,7 +618,7 @@ export class KleverProvider implements IProvider {
       }
       throw new NetworkError(
         `Failed to fetch block: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { blockHashOrNumber, originalError: error }
+        { blockHashOrNumber, originalError: error },
       )
     }
   }
@@ -575,7 +661,9 @@ export class KleverProvider implements IProvider {
 
         // Validate hex string
         if (!/^[0-9a-fA-F]*$/.test(hex)) {
-          throw new ValidationError('Invalid transaction data: not valid JSON or hex string', { tx })
+          throw new ValidationError('Invalid transaction data: not valid JSON or hex string', {
+            tx,
+          })
         }
 
         const bytes = hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16))
@@ -619,7 +707,10 @@ export class KleverProvider implements IProvider {
     // Check for error codes even if we got a hash
     // Some APIs may return partial success with warnings
     if (result.code && result.code !== '0' && result.code !== 'successful') {
-      throw new TransactionError(result.message || `Transaction broadcast returned error code: ${result.code}`, { code: result.code, message: result.message })
+      throw new TransactionError(
+        result.message || `Transaction broadcast returned error code: ${result.code}`,
+        { code: result.code, message: result.message },
+      )
     }
 
     return result.hash as TransactionHash
@@ -650,7 +741,10 @@ export class KleverProvider implements IProvider {
     // Check for error codes even if we got hashes
     // Some APIs may return partial success with warnings
     if (result.code && result.code !== '0' && result.code !== 'successful') {
-      throw new TransactionError(result.message || `Transaction broadcast returned error code: ${result.code}`, { code: result.code, message: result.message })
+      throw new TransactionError(
+        result.message || `Transaction broadcast returned error code: ${result.code}`,
+        { code: result.code, message: result.message },
+      )
     }
 
     return result.hashes as TransactionHash[]
@@ -857,7 +951,7 @@ export class KleverProvider implements IProvider {
     } catch (error) {
       throw new TransactionError(
         `Failed to build transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { request, originalError: error }
+        { request, originalError: error },
       )
     }
   }
@@ -883,7 +977,7 @@ export class KleverProvider implements IProvider {
    * ```
    */
   async batch<T>(requests: (() => Promise<T>)[]): Promise<T[]> {
-    return Promise.all(requests.map(req => req()))
+    return Promise.all(requests.map((req) => req()))
   }
 
   // ============================================================================
@@ -894,7 +988,10 @@ export class KleverProvider implements IProvider {
    * Alias for getAccount() - matches Solana web3.js naming convention
    * @see getAccount
    */
-  async getAccountInfo(address: KleverAddress, options?: { skipCache?: boolean }): Promise<IAccount> {
+  async getAccountInfo(
+    address: KleverAddress,
+    options?: { skipCache?: boolean },
+  ): Promise<IAccount> {
     return this.getAccount(address, options)
   }
 

@@ -1,4 +1,4 @@
-import type { Network } from './network'
+import type { Network, NetworkName } from './network'
 
 export interface CacheOptions {
   /** Time to live in milliseconds (default: 15000ms = 15 seconds) */
@@ -20,13 +20,38 @@ export interface RetryOptions {
   retryIf?: (error: Error) => boolean
 }
 
-export interface ProviderConfig {
+/**
+ * Custom network configuration shorthand
+ * Use when you want to connect to a custom Klever node
+ */
+export interface CustomNetworkConfig {
+  /** Custom node URL (required for custom networks) */
+  url: string
+  /** Chain ID of the custom network */
+  chainId: string
+  /** WebSocket URL for subscriptions (optional) */
+  ws?: string
+  /** Explorer URL (optional) */
+  explorer?: string
+  /** Whether this is a testnet (default: true for custom networks) */
+  isTestnet?: boolean
+}
+
+/**
+ * Full provider configuration object
+ */
+export interface ProviderConfigObject {
   /**
    * Network configuration
-   * Provides all necessary endpoints (API, node, WebSocket, explorer)
-   * Use NETWORKS.mainnet, NETWORKS.testnet, or createCustomNetwork()
+   * Can be:
+   * - A network name: 'mainnet', 'testnet', 'devnet', 'local'
+   * - A Network object: NETWORKS.mainnet, NETWORKS.testnet, or createCustomNetwork()
    */
-  network?: Network
+  network?: NetworkName | Network
+  /** Custom network configuration shorthand (alternative to network) */
+  url?: string
+  /** Chain ID when using custom URL */
+  chainId?: string
   /** Request timeout in milliseconds (default: 30000) */
   timeout?: number
   /** Number of retries for failed requests (deprecated, use retry.maxRetries) */
@@ -40,3 +65,11 @@ export interface ProviderConfig {
   /** Enable debug logging (default: false) */
   debug?: boolean
 }
+
+/**
+ * Provider configuration - can be:
+ * - undefined: Uses mainnet
+ * - A network name string: 'mainnet', 'testnet', 'devnet', 'local'
+ * - A configuration object with network or custom URL
+ */
+export type ProviderConfig = NetworkName | ProviderConfigObject
