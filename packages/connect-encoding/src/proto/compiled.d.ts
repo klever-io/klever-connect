@@ -158,13 +158,13 @@ export namespace proto {
         Receipts?: (proto.Transaction.IReceipt[]|null);
 
         /** Transaction Block */
-        Block?: (number|Long|null);
+        Block?: (number|null);
 
         /** Transaction GasLimit */
-        GasLimit?: (number|Long|null);
+        GasLimit?: (number|null);
 
         /** Transaction GasMultiplier */
-        GasMultiplier?: (number|Long|null);
+        GasMultiplier?: (number|null);
     }
 
     /** Represents a Transaction. */
@@ -192,13 +192,13 @@ export namespace proto {
         public Receipts: proto.Transaction.IReceipt[];
 
         /** Transaction Block. */
-        public Block: (number|Long);
+        public Block: number;
 
         /** Transaction GasLimit. */
-        public GasLimit: (number|Long);
+        public GasLimit: number;
 
         /** Transaction GasMultiplier. */
-        public GasMultiplier: (number|Long);
+        public GasMultiplier: number;
 
         /**
          * Creates a new Transaction instance using the specified properties.
@@ -364,7 +364,7 @@ export namespace proto {
             KDA?: (Uint8Array|null);
 
             /** KDAFee Amount */
-            Amount?: (number|Long|null);
+            Amount?: (number|null);
         }
 
         /** Represents a KDAFee. */
@@ -380,7 +380,7 @@ export namespace proto {
             public KDA: Uint8Array;
 
             /** KDAFee Amount. */
-            public Amount: (number|Long);
+            public Amount: number;
 
             /**
              * Creates a new KDAFee instance using the specified properties.
@@ -464,7 +464,7 @@ export namespace proto {
         interface IRaw {
 
             /** Raw Nonce */
-            Nonce?: (number|Long|null);
+            Nonce?: (number|null);
 
             /** Raw Sender */
             Sender?: (Uint8Array|null);
@@ -479,10 +479,10 @@ export namespace proto {
             Data?: (Uint8Array[]|null);
 
             /** Raw KAppFee */
-            KAppFee?: (number|Long|null);
+            KAppFee?: (number|null);
 
             /** Raw BandwidthFee */
-            BandwidthFee?: (number|Long|null);
+            BandwidthFee?: (number|null);
 
             /** Raw Version */
             Version?: (number|null);
@@ -504,7 +504,7 @@ export namespace proto {
             constructor(properties?: proto.Transaction.IRaw);
 
             /** Raw Nonce. */
-            public Nonce: (number|Long);
+            public Nonce: number;
 
             /** Raw Sender. */
             public Sender: Uint8Array;
@@ -519,10 +519,10 @@ export namespace proto {
             public Data: Uint8Array[];
 
             /** Raw KAppFee. */
-            public KAppFee: (number|Long);
+            public KAppFee: number;
 
             /** Raw BandwidthFee. */
-            public BandwidthFee: (number|Long);
+            public BandwidthFee: number;
 
             /** Raw Version. */
             public Version: number;
@@ -716,7 +716,7 @@ export namespace proto {
         ToAddress?: (Uint8Array|null);
 
         /** TransferContract Amount */
-        Amount?: (number|Long|null);
+        Amount?: (number|null);
 
         /** TransferContract AssetID */
         AssetID?: (Uint8Array|null);
@@ -735,7 +735,7 @@ export namespace proto {
         public ToAddress: Uint8Array;
 
         /** TransferContract Amount. */
-        public Amount: (number|Long);
+        public Amount: number;
 
         /** TransferContract AssetID. */
         public AssetID: Uint8Array;
@@ -822,7 +822,7 @@ export namespace proto {
     interface IFreezeContract {
 
         /** FreezeContract Amount */
-        Amount?: (number|Long|null);
+        Amount?: (number|null);
 
         /** FreezeContract AssetID */
         AssetID?: (Uint8Array|null);
@@ -838,7 +838,7 @@ export namespace proto {
         constructor(properties?: proto.IFreezeContract);
 
         /** FreezeContract Amount. */
-        public Amount: (number|Long);
+        public Amount: number;
 
         /** FreezeContract AssetID. */
         public AssetID: Uint8Array;
@@ -1234,7 +1234,7 @@ export namespace proto {
         AssetID?: (Uint8Array|null);
 
         /** WithdrawContract Amount */
-        Amount?: (number|Long|null);
+        Amount?: (number|null);
 
         /** WithdrawContract CurrencyID */
         CurrencyID?: (Uint8Array|null);
@@ -1256,7 +1256,7 @@ export namespace proto {
         public AssetID: Uint8Array;
 
         /** WithdrawContract Amount. */
-        public Amount: (number|Long);
+        public Amount: number;
 
         /** WithdrawContract CurrencyID. */
         public CurrencyID: Uint8Array;
@@ -1468,13 +1468,13 @@ export namespace proto {
     interface IVoteContract {
 
         /** VoteContract ProposalID */
-        ProposalID?: (number|Long|null);
+        ProposalID?: (number|null);
 
         /** VoteContract Type */
         Type?: (proto.VoteContract.VoteType|null);
 
         /** VoteContract Amount */
-        Amount?: (number|Long|null);
+        Amount?: (number|null);
     }
 
     /** Represents a VoteContract. */
@@ -1487,13 +1487,13 @@ export namespace proto {
         constructor(properties?: proto.IVoteContract);
 
         /** VoteContract ProposalID. */
-        public ProposalID: (number|Long);
+        public ProposalID: number;
 
         /** VoteContract Type. */
         public Type: proto.VoteContract.VoteType;
 
         /** VoteContract Amount. */
-        public Amount: (number|Long);
+        public Amount: number;
 
         /**
          * Creates a new VoteContract instance using the specified properties.
@@ -1608,10 +1608,10 @@ export namespace proto {
         Precision?: (number|null);
 
         /** CreateAssetContract InitialSupply */
-        InitialSupply?: (number|Long|null);
+        InitialSupply?: (number|null);
 
         /** CreateAssetContract MaxSupply */
-        MaxSupply?: (number|Long|null);
+        MaxSupply?: (number|null);
 
         /** CreateAssetContract Properties */
         Properties?: (proto.CreateAssetContract.IAssetProperties|null);
@@ -1651,10 +1651,10 @@ export namespace proto {
         public Precision: number;
 
         /** CreateAssetContract InitialSupply. */
-        public InitialSupply: (number|Long);
+        public InitialSupply: number;
 
         /** CreateAssetContract MaxSupply. */
-        public MaxSupply: (number|Long);
+        public MaxSupply: number;
 
         /** CreateAssetContract Properties. */
         public Properties?: (proto.CreateAssetContract.IAssetProperties|null);
@@ -2123,7 +2123,7 @@ export namespace proto {
             AssetID?: (Uint8Array|null);
 
             /** CallValueData Amount */
-            Amount?: (number|Long|null);
+            Amount?: (number|null);
         }
 
         /** Represents a CallValueData. */
@@ -2139,7 +2139,7 @@ export namespace proto {
             public AssetID: Uint8Array;
 
             /** CallValueData Amount. */
-            public Amount: (number|Long);
+            public Amount: number;
 
             /**
              * Creates a new CallValueData instance using the specified properties.

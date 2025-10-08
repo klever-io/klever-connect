@@ -21,6 +21,7 @@ pbjs.main(
     'static-module',
     '--wrap',
     'es6',
+    '--force-number', // Use numbers instead of Long
     '--out',
     path.join(outDir, 'compiled.js'),
     '--path',

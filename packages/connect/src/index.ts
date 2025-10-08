@@ -89,32 +89,19 @@ export {
 // ENCODING - Protocol Buffer Encoding/Decoding
 // =============================================================================
 
-export {
-  KleverEncoder,
-  KleverDecoder,
-} from '@klever/connect-encoding'
+export { KleverEncoder, KleverDecoder } from '@klever/connect-encoding'
 
-export type {
-  ITransaction,
-  IReceipt,
-} from '@klever/connect-encoding'
+export type { ITransaction, IReceipt } from '@klever/connect-encoding'
 
 // =============================================================================
 // CRYPTO - Cryptographic Operations
 // =============================================================================
 
-export {
-  cryptoProvider as crypto,
-} from '@klever/connect-crypto'
+export { cryptoProvider as crypto } from '@klever/connect-crypto'
 
-export type {
-  KeyPair,
-} from '@klever/connect-crypto'
+export type { KeyPair } from '@klever/connect-crypto'
 
-export {
-  generateKeyPair,
-  verifySignature,
-} from '@klever/connect-crypto'
+export { generateKeyPair, verifySignature } from '@klever/connect-crypto'
 
 // =============================================================================
 // PROVIDER - Network Communication
@@ -174,14 +161,9 @@ export type {
 // TRANSACTIONS - Transaction Building
 // =============================================================================
 
-export {
-  Transaction,
-  TransactionBuilder,
-} from '@klever/connect-transactions'
+export { Transaction, TransactionBuilder } from '@klever/connect-transactions'
 
-export type {
-  BuildProtoOptions,
-} from '@klever/connect-transactions'
+export type { BuildCallOptions } from '@klever/connect-transactions'
 
 // =============================================================================
 // WALLET - Wallet Implementations
@@ -199,14 +181,9 @@ export {
 // CONTRACTS - Smart Contract Interactions
 // =============================================================================
 
-export {
-  Contract,
-  ContractFactory,
-} from '@klever/connect-contracts'
+export { Contract, ContractFactory } from '@klever/connect-contracts'
 
-export type {
-  ContractABI,
-} from '@klever/connect-contracts'
+export type { ContractABI } from '@klever/connect-contracts'
 
 // =============================================================================
 // LEGACY COMPATIBILITY - Keep existing exports

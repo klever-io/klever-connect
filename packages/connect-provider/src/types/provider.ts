@@ -1,4 +1,4 @@
-import type { Network, NetworkName } from './network'
+import type { Network, NetworkName } from '@klever/connect-core/src/types/network'
 
 export interface CacheOptions {
   /** Time to live in milliseconds (default: 15000ms = 15 seconds) */

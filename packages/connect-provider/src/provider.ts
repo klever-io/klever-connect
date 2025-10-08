@@ -6,7 +6,7 @@ import {
   TransactionError,
 } from '@klever/connect-core'
 import type { ProviderConfig, ProviderConfigObject } from './types/provider'
-import type { Network, NetworkName } from './types/network'
+import type { Network, NetworkName } from './types'
 import type {
   IAccount,
   IAssetBalance,
@@ -278,6 +278,24 @@ export class KleverProvider implements IProvider {
     }
 
     return account
+  }
+
+  /**
+   * Get the current nonce for an address
+   * Convenience method that extracts nonce from getAccount
+   *
+   * @param address - Klever address
+   * @returns Current nonce value
+   *
+   * @example
+   * ```typescript
+   * const nonce = await provider.getNonce('klv1...')
+   * console.log('Current nonce:', nonce)
+   * ```
+   */
+  async getNonce(address: KleverAddress): Promise<number> {
+    const account = await this.getAccount(address)
+    return account.nonce
   }
 
   /**

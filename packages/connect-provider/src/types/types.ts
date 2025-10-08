@@ -1,17 +1,19 @@
 import type { KleverAddress, TransactionHash, BlockHash, AssetID } from '@klever/connect-core'
 
-import type { Network } from './network'
+import type { Network } from '@klever/connect-core/src/types/network'
 import type {
   IAccount,
   IBlockResponse,
   IReceipt,
   ITransactionResponse,
   IFeesResponse,
+  IContractQueryParams,
+  IContractQueryResult,
 } from './api-types'
 import type { ContractRequestData } from './contract-requests'
 
 export interface TransactionReceipt {
-  hash: string
+  hash: TransactionHash
   status: string
   blockNumber: number
   timestamp: number
@@ -59,9 +61,12 @@ export interface IProvider {
   getBlock(blockHashOrNumber: BlockIdentifier): Promise<IBlockResponse | null>
   getTransaction(hash: TransactionHash): Promise<ITransactionResponse | null>
   getTransactionReceipt(hash: TransactionHash): Promise<IReceipt[] | null>
+  getTransactionUrl(hash: TransactionHash): string
   getBalance(address: KleverAddress, assetId?: AssetID): Promise<bigint>
   getAccount(address: KleverAddress): Promise<IAccount>
+  getNonce(address: KleverAddress): Promise<number>
   estimateFee(_tx: unknown): Promise<IFeesResponse>
+  queryContract(params: IContractQueryParams): Promise<IContractQueryResult>
   sendRawTransaction(signedTx: string | Uint8Array | unknown): Promise<TransactionHash>
   sendRawTransactions(signedTxs: (string | Uint8Array | unknown)[]): Promise<TransactionHash[]>
   waitForTransaction(

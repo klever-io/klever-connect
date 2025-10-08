@@ -3,7 +3,7 @@ export { Transaction } from './transaction'
 
 // Transaction builder
 export { TransactionBuilder } from './builder'
-export type { BuildProtoOptions } from './builder'
+export type { BuildCallOptions } from './builder'
 
 // Re-export contract request types from provider for convenience
 export type {

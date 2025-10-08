@@ -1,7 +1,11 @@
 import { TransactionError } from '@klever/connect-core'
 import { cryptoProvider } from '@klever/connect-crypto'
 import type { PrivateKey } from '@klever/connect-crypto'
-import { Transaction as ProtoTransaction, type ITransaction } from '@klever/connect-encoding'
+import {
+  Transaction as ProtoTransaction,
+  type ITransaction,
+  ContractType,
+} from '@klever/connect-encoding'
 import { hexEncode, hashBlake2b } from '@klever/connect-encoding'
 
 /**
@@ -18,12 +22,18 @@ import { hexEncode, hashBlake2b } from '@klever/connect-encoding'
  * Use provider.sendRawTransaction(tx.toHex()) to broadcast.
  */
 export class Transaction extends ProtoTransaction {
+  private hash?: string // Cached transaction hash
+
   /**
    * Create a Transaction from proto-generated transaction data
    * @param data - Proto transaction data (from node or local build)
    */
   constructor(data?: ITransaction) {
     super(data)
+    // Precompute and cache the transaction hash if RawData is present
+    if (this.RawData) {
+      this.getHash()
+    }
   }
 
   /**
@@ -42,6 +52,51 @@ export class Transaction extends ProtoTransaction {
    */
   toHex(): string {
     return hexEncode(this.toBytes())
+  }
+
+  public override toJSON(): { [k: string]: unknown } {
+    const json = super.toJSON()
+
+    // Convert numeric string fields to actual numbers
+    if (json['RawData'] && typeof json['RawData'] === 'object') {
+      const rawData = json['RawData'] as { [k: string]: unknown }
+
+      // Convert nonce from string to number
+      if (typeof rawData['Nonce'] === 'string') {
+        rawData['Nonce'] = Number(rawData['Nonce'])
+      }
+
+      // Convert other numeric fields
+      const numericFields = ['KAppFee', 'BandwidthFee', 'PermID']
+      for (const field of numericFields) {
+        if (typeof rawData[field] === 'string') {
+          rawData[field] = Number(rawData[field])
+        }
+      }
+
+      // Convert contract types from enum strings to numbers
+      if (Array.isArray(rawData['Contract'])) {
+        rawData['Contract'] = rawData['Contract'].map((contract: unknown) => {
+          if (contract && typeof contract === 'object') {
+            const c = contract as { [k: string]: unknown }
+            // Convert Type enum from string name to numeric value
+            if (typeof c['Type'] === 'string') {
+              // Look up the enum value
+              const enumValue = ContractType[c['Type'] as keyof typeof ContractType]
+              c['Type'] = typeof enumValue === 'number' ? enumValue : c['Type']
+            }
+          }
+          return contract
+        })
+      }
+    }
+
+    // Include additional fields as needed
+    if (this.hash) {
+      json['hash'] = this.hash
+    }
+
+    return json
   }
 
   /**
@@ -129,7 +184,8 @@ export class Transaction extends ProtoTransaction {
    * ```
    */
   getHash(): string {
-    return hexEncode(this.getHashBytes())
+    this.hash = hexEncode(this.getHashBytes())
+    return this.hash
   }
 
   /**
@@ -161,6 +217,11 @@ export class Transaction extends ProtoTransaction {
    */
   static override fromObject(obj: { [k: string]: unknown }): Transaction {
     const decoded = ProtoTransaction.fromObject(obj)
+    return new Transaction(decoded)
+  }
+
+  static fromTransaction(tx: Transaction): Transaction {
+    const decoded = ProtoTransaction.fromObject(tx as unknown as { [k: string]: unknown })
     return new Transaction(decoded)
   }
 }

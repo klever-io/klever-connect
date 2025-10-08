@@ -48,7 +48,7 @@ export interface KleverWeb {
   parsePemFileData(pemData: string): Promise<IPemResponse>
 
   broadcastTransactions(payload: Transaction[]): Promise<IBroadcastResponse>
-  signTransaction(payload: Transaction): Promise<Transaction>
+  signTransaction(payload: Transaction | { [k: string]: unknown }): Promise<Transaction>
 
   setWalletAddress(payload: string): Promise<void>
   setPrivateKey(payload: string): Promise<void>

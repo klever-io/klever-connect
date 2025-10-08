@@ -7,7 +7,7 @@ import type {
   IProvider,
   NetworkURI,
 } from '@klever/connect-provider'
-import type { Transaction } from '@klever/connect-transactions'
+import { Transaction } from '@klever/connect-transactions'
 import type { PrivateKey, Signature } from '@klever/connect-crypto'
 import { cryptoProvider, SignatureImpl } from '@klever/connect-crypto'
 import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-types'
@@ -51,10 +51,12 @@ export class BrowserWallet extends BaseWallet {
     }
   }
 
-  private _pendingPemLoad?: {
-    content: string
-    password?: string
-  } | undefined
+  private _pendingPemLoad?:
+    | {
+        content: string
+        password?: string
+      }
+    | undefined
 
   async connect(): Promise<void> {
     if (this._connected) {
@@ -223,7 +225,8 @@ export class BrowserWallet extends BaseWallet {
       }
 
       try {
-        const messageBytes = typeof message === 'string' ? new TextEncoder().encode(message) : message
+        const messageBytes =
+          typeof message === 'string' ? new TextEncoder().encode(message) : message
         const signature = await cryptoProvider.signMessage(messageBytes, this._privateKey)
         return signature
       } catch (error) {
@@ -284,7 +287,8 @@ export class BrowserWallet extends BaseWallet {
 
     try {
       // Sign transaction via extension
-      return this._kleverWeb.signTransaction(unsignedTx)
+      const result = await this._kleverWeb.signTransaction(unsignedTx.toJSON())
+      return Transaction.fromTransaction(result)
     } catch (error) {
       throw new WalletError(
         `Failed to sign transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -615,7 +619,10 @@ export class BrowserWallet extends BaseWallet {
    * Extract transaction data from contract payload
    * Handles smart contract calls and regular transaction data
    */
-  private extractTxData(contractType: number, payload: Record<string, unknown>): string[] | undefined {
+  private extractTxData(
+    contractType: number,
+    payload: Record<string, unknown>,
+  ): string[] | undefined {
     if (contractType === 63) {
       // SmartContract type - build call input
       const func = payload['function']

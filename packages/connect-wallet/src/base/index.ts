@@ -40,6 +40,11 @@ export abstract class BaseWallet implements Wallet {
     return this._publicKey
   }
 
+  /** Provider instance for blockchain queries */
+  get provider(): IProvider {
+    return this._provider
+  }
+
   /** Connect to the wallet */
   abstract connect(): Promise<void>
 

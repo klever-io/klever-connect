@@ -16,7 +16,7 @@ describe('Address Encoding Performance', () => {
   })
 
   bench('bech32 encode (bytes to address)', () => {
-    bech32Encode('klv', addressBytes)
+    bech32Encode(addressBytes, 'klv')
   })
 })
 

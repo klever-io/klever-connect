@@ -9,6 +9,9 @@ export default defineConfig({
   minify: false,
   splitting: false,
   treeshake: true,
+  outExtension: ({ format }) => ({
+    js: format === 'cjs' ? '.js' : '.mjs',
+  }),
   external: [
     'react',
     '@klever/connect',

@@ -1,4 +1,4 @@
-import type { NetworkName, Network, NetworkURI } from './types/network'
+import type { NetworkName, Network, NetworkURI } from './types'
 
 // Network configurations (similar to ethers.js)
 export const NETWORKS: Record<NetworkName, Network> = {

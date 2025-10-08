@@ -462,9 +462,9 @@ export const proto = $root.proto = (() => {
          * @property {proto.Transaction.TXResult|null} [Result] Transaction Result
          * @property {proto.Transaction.TXResultCode|null} [ResultCode] Transaction ResultCode
          * @property {Array.<proto.Transaction.IReceipt>|null} [Receipts] Transaction Receipts
-         * @property {number|Long|null} [Block] Transaction Block
-         * @property {number|Long|null} [GasLimit] Transaction GasLimit
-         * @property {number|Long|null} [GasMultiplier] Transaction GasMultiplier
+         * @property {number|null} [Block] Transaction Block
+         * @property {number|null} [GasLimit] Transaction GasLimit
+         * @property {number|null} [GasMultiplier] Transaction GasMultiplier
          */
 
         /**
@@ -526,7 +526,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * Transaction Block.
-         * @member {number|Long} Block
+         * @member {number} Block
          * @memberof proto.Transaction
          * @instance
          */
@@ -534,7 +534,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * Transaction GasLimit.
-         * @member {number|Long} GasLimit
+         * @member {number} GasLimit
          * @memberof proto.Transaction
          * @instance
          */
@@ -542,7 +542,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * Transaction GasMultiplier.
-         * @member {number|Long} GasMultiplier
+         * @member {number} GasMultiplier
          * @memberof proto.Transaction
          * @instance
          */
@@ -1432,7 +1432,7 @@ export const proto = $root.proto = (() => {
              * @memberof proto.Transaction
              * @interface IKDAFee
              * @property {Uint8Array|null} [KDA] KDAFee KDA
-             * @property {number|Long|null} [Amount] KDAFee Amount
+             * @property {number|null} [Amount] KDAFee Amount
              */
 
             /**
@@ -1460,7 +1460,7 @@ export const proto = $root.proto = (() => {
 
             /**
              * KDAFee Amount.
-             * @member {number|Long} Amount
+             * @member {number} Amount
              * @memberof proto.Transaction.KDAFee
              * @instance
              */
@@ -1683,13 +1683,13 @@ export const proto = $root.proto = (() => {
              * Properties of a Raw.
              * @memberof proto.Transaction
              * @interface IRaw
-             * @property {number|Long|null} [Nonce] Raw Nonce
+             * @property {number|null} [Nonce] Raw Nonce
              * @property {Uint8Array|null} [Sender] Raw Sender
              * @property {Array.<proto.ITXContract>|null} [Contract] Raw Contract
              * @property {number|null} [PermissionID] Raw PermissionID
              * @property {Array.<Uint8Array>|null} [Data] Raw Data
-             * @property {number|Long|null} [KAppFee] Raw KAppFee
-             * @property {number|Long|null} [BandwidthFee] Raw BandwidthFee
+             * @property {number|null} [KAppFee] Raw KAppFee
+             * @property {number|null} [BandwidthFee] Raw BandwidthFee
              * @property {number|null} [Version] Raw Version
              * @property {Uint8Array|null} [ChainID] Raw ChainID
              * @property {proto.Transaction.IKDAFee|null} [KDAFee] Raw KDAFee
@@ -1714,7 +1714,7 @@ export const proto = $root.proto = (() => {
 
             /**
              * Raw Nonce.
-             * @member {number|Long} Nonce
+             * @member {number} Nonce
              * @memberof proto.Transaction.Raw
              * @instance
              */
@@ -1754,7 +1754,7 @@ export const proto = $root.proto = (() => {
 
             /**
              * Raw KAppFee.
-             * @member {number|Long} KAppFee
+             * @member {number} KAppFee
              * @memberof proto.Transaction.Raw
              * @instance
              */
@@ -1762,7 +1762,7 @@ export const proto = $root.proto = (() => {
 
             /**
              * Raw BandwidthFee.
-             * @member {number|Long} BandwidthFee
+             * @member {number} BandwidthFee
              * @memberof proto.Transaction.Raw
              * @instance
              */
@@ -2431,7 +2431,7 @@ export const proto = $root.proto = (() => {
          * @memberof proto
          * @interface ITransferContract
          * @property {Uint8Array|null} [ToAddress] TransferContract ToAddress
-         * @property {number|Long|null} [Amount] TransferContract Amount
+         * @property {number|null} [Amount] TransferContract Amount
          * @property {Uint8Array|null} [AssetID] TransferContract AssetID
          */
 
@@ -2460,7 +2460,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * TransferContract Amount.
-         * @member {number|Long} Amount
+         * @member {number} Amount
          * @memberof proto.TransferContract
          * @instance
          */
@@ -2714,7 +2714,7 @@ export const proto = $root.proto = (() => {
          * Properties of a FreezeContract.
          * @memberof proto
          * @interface IFreezeContract
-         * @property {number|Long|null} [Amount] FreezeContract Amount
+         * @property {number|null} [Amount] FreezeContract Amount
          * @property {Uint8Array|null} [AssetID] FreezeContract AssetID
          */
 
@@ -2735,7 +2735,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * FreezeContract Amount.
-         * @member {number|Long} Amount
+         * @member {number} Amount
          * @memberof proto.FreezeContract
          * @instance
          */
@@ -3676,7 +3676,7 @@ export const proto = $root.proto = (() => {
          * @interface IWithdrawContract
          * @property {proto.WithdrawContract.WithdrawType|null} [Type] WithdrawContract Type
          * @property {Uint8Array|null} [AssetID] WithdrawContract AssetID
-         * @property {number|Long|null} [Amount] WithdrawContract Amount
+         * @property {number|null} [Amount] WithdrawContract Amount
          * @property {Uint8Array|null} [CurrencyID] WithdrawContract CurrencyID
          */
 
@@ -3713,7 +3713,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * WithdrawContract Amount.
-         * @member {number|Long} Amount
+         * @member {number} Amount
          * @memberof proto.WithdrawContract
          * @instance
          */
@@ -4313,9 +4313,9 @@ export const proto = $root.proto = (() => {
          * Properties of a VoteContract.
          * @memberof proto
          * @interface IVoteContract
-         * @property {number|Long|null} [ProposalID] VoteContract ProposalID
+         * @property {number|null} [ProposalID] VoteContract ProposalID
          * @property {proto.VoteContract.VoteType|null} [Type] VoteContract Type
-         * @property {number|Long|null} [Amount] VoteContract Amount
+         * @property {number|null} [Amount] VoteContract Amount
          */
 
         /**
@@ -4335,7 +4335,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * VoteContract ProposalID.
-         * @member {number|Long} ProposalID
+         * @member {number} ProposalID
          * @memberof proto.VoteContract
          * @instance
          */
@@ -4351,7 +4351,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * VoteContract Amount.
-         * @member {number|Long} Amount
+         * @member {number} Amount
          * @memberof proto.VoteContract
          * @instance
          */
@@ -4640,8 +4640,8 @@ export const proto = $root.proto = (() => {
          * @property {string|null} [Logo] CreateAssetContract Logo
          * @property {Array.<string>|null} [URIs] CreateAssetContract URIs
          * @property {number|null} [Precision] CreateAssetContract Precision
-         * @property {number|Long|null} [InitialSupply] CreateAssetContract InitialSupply
-         * @property {number|Long|null} [MaxSupply] CreateAssetContract MaxSupply
+         * @property {number|null} [InitialSupply] CreateAssetContract InitialSupply
+         * @property {number|null} [MaxSupply] CreateAssetContract MaxSupply
          * @property {proto.CreateAssetContract.IAssetProperties|null} [Properties] CreateAssetContract Properties
          * @property {proto.CreateAssetContract.IAssetAttributes|null} [Attributes] CreateAssetContract Attributes
          */
@@ -4720,7 +4720,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * CreateAssetContract InitialSupply.
-         * @member {number|Long} InitialSupply
+         * @member {number} InitialSupply
          * @memberof proto.CreateAssetContract
          * @instance
          */
@@ -4728,7 +4728,7 @@ export const proto = $root.proto = (() => {
 
         /**
          * CreateAssetContract MaxSupply.
-         * @member {number|Long} MaxSupply
+         * @member {number} MaxSupply
          * @memberof proto.CreateAssetContract
          * @instance
          */
@@ -6122,7 +6122,7 @@ export const proto = $root.proto = (() => {
              * @memberof proto.SmartContract
              * @interface ICallValueData
              * @property {Uint8Array|null} [AssetID] CallValueData AssetID
-             * @property {number|Long|null} [Amount] CallValueData Amount
+             * @property {number|null} [Amount] CallValueData Amount
              */
 
             /**
@@ -6150,7 +6150,7 @@ export const proto = $root.proto = (() => {
 
             /**
              * CallValueData Amount.
-             * @member {number|Long} Amount
+             * @member {number} Amount
              * @memberof proto.SmartContract.CallValueData
              * @instance
              */

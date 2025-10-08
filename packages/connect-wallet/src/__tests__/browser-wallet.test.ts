@@ -28,9 +28,12 @@ describe('BrowserWallet', () => {
     // Mock provider
     mockProvider = {
       getBalance: vi.fn(),
-      getNonce: vi.fn(),
+      getNonce: vi.fn().mockResolvedValue(1),
       sendRawTransaction: vi.fn(),
       getTransaction: vi.fn(),
+      buildTransaction: vi.fn(),
+      sendRawTransactions: vi.fn(),
+      getAccount: vi.fn(),
     } as unknown as IProvider
 
     // Mock KleverHub
@@ -61,12 +64,23 @@ describe('BrowserWallet', () => {
         data: { txsHashes: ['tx-hash-123'] },
         error: '',
       }),
-      signTransaction: vi.fn().mockImplementation((tx) => Promise.resolve(tx)),
+      signTransaction: vi.fn().mockImplementation((txJson) => {
+        // Extension receives JSON and returns JSON with Signature added
+        const result = {
+          ...txJson,
+          Signature: [Buffer.from(new Uint8Array(64)).toString('base64')],
+        }
+        return Promise.resolve(result)
+      }),
       setWalletAddress: vi.fn().mockResolvedValue(undefined),
       setPrivateKey: vi.fn().mockResolvedValue(undefined),
       getWalletAddress: vi.fn().mockReturnValue('klv1test'),
       getProvider: vi.fn().mockReturnValue({}),
-      signMessage: vi.fn().mockResolvedValue('signature-hex'),
+      signMessage: vi
+        .fn()
+        .mockResolvedValue(
+          'a'.repeat(128),
+        ) /* 64 bytes = 128 hex chars */,
       validateSignature: vi.fn().mockResolvedValue({
         isValid: true,
         signer: 'klv1test',
@@ -216,7 +230,9 @@ describe('BrowserWallet', () => {
 
       const signature = await wallet.signMessage('test message')
 
-      expect(signature).toBe('signature-hex')
+      expect(signature).toBeDefined()
+      expect(signature.hex).toBe('a'.repeat(128))
+      expect(signature.bytes.length).toBe(64)
       expect(mockKleverWeb.signMessage).toHaveBeenCalledWith('test message')
     })
 
@@ -245,7 +261,10 @@ describe('BrowserWallet', () => {
       const signedTx = await wallet.signTransaction(unsignedTx)
 
       expect(signedTx).toBeDefined()
-      expect(mockKleverWeb.signTransaction).toHaveBeenCalledWith(unsignedTx)
+      expect(signedTx.Signature).toBeDefined()
+      expect(signedTx.Signature?.length).toBeGreaterThan(0)
+      // Extension receives JSON, not Transaction object
+      expect(mockKleverWeb.signTransaction).toHaveBeenCalledWith(unsignedTx.toJSON())
     })
 
     it('should throw error when signing without connection', async () => {
@@ -393,9 +412,7 @@ describe('BrowserWallet', () => {
       await expect(wallet.setWalletAddress('klv1test')).rejects.toThrow(
         'KleverWeb extension not available',
       )
-      await expect(wallet.setPrivateKey('key')).rejects.toThrow(
-        'KleverWeb extension not available',
-      )
+      await expect(wallet.setPrivateKey('key')).rejects.toThrow('KleverWeb extension not available')
       await expect(wallet.validateSignature('sig')).rejects.toThrow(
         'KleverWeb extension not available',
       )
@@ -463,7 +480,9 @@ describe('BrowserWallet', () => {
       const signature = await wallet.signMessage('test message')
 
       expect(signature).toBeDefined()
-      expect(typeof signature).toBe('string')
+      expect(signature.bytes).toBeDefined()
+      expect(signature.bytes.length).toBe(64)
+      expect(signature.hex).toBeDefined()
     })
 
     it('should sign transaction in private key mode', async () => {
@@ -489,16 +508,15 @@ describe('BrowserWallet', () => {
 
     it('should use base implementation for sendTransaction in private key mode', async () => {
       global.window.kleverWeb = undefined
-      mockProvider.sendRawTransaction = vi.fn().mockResolvedValue('tx-hash')
+      ;(mockProvider.sendRawTransaction as ReturnType<typeof vi.fn>).mockResolvedValue('tx-hash')
 
       const wallet = new BrowserWallet(mockProvider, {
         privateKey: 'a'.repeat(64),
       })
       await wallet.connect()
 
-      // Mock getNonce for TransactionBuilder
-      mockProvider.getNonce = vi.fn().mockResolvedValue(1)
-      mockProvider.buildTransaction = vi.fn().mockResolvedValue({
+      // Mock buildTransaction for TransactionBuilder
+      ;(mockProvider.buildTransaction as ReturnType<typeof vi.fn>).mockResolvedValue({
         result: {
           RawData: {
             Sender: new Uint8Array(32),
@@ -520,7 +538,7 @@ describe('BrowserWallet', () => {
 
     it('should build transaction in private key mode', async () => {
       global.window.kleverWeb = undefined
-      mockProvider.buildTransaction = vi.fn().mockResolvedValue({
+      ;(mockProvider.buildTransaction as ReturnType<typeof vi.fn>).mockResolvedValue({
         result: {
           RawData: {
             Sender: new Uint8Array(32),
@@ -535,7 +553,7 @@ describe('BrowserWallet', () => {
       })
       await wallet.connect()
 
-      mockProvider.getNonce = vi.fn().mockResolvedValue(5)
+      ;(mockProvider.getNonce as ReturnType<typeof vi.fn>).mockResolvedValue(5)
 
       const tx = await wallet.buildTransaction([
         {
@@ -551,8 +569,10 @@ describe('BrowserWallet', () => {
 
     it('should broadcast transactions in private key mode', async () => {
       global.window.kleverWeb = undefined
-      // Mock the sendRawTransactions method that's called internally
-      ;(mockProvider as any).sendRawTransactions = vi.fn().mockResolvedValue(['tx-hash-1'])
+      // Mock the sendRawTransactions method
+      ;(mockProvider.sendRawTransactions as ReturnType<typeof vi.fn>).mockResolvedValue([
+        'tx-hash-1',
+      ])
 
       const wallet = new BrowserWallet(mockProvider, {
         privateKey: 'a'.repeat(64),
@@ -576,7 +596,7 @@ describe('BrowserWallet', () => {
 
     it('should get account in private key mode using provider', async () => {
       global.window.kleverWeb = undefined
-      mockProvider.getAccount = vi.fn().mockResolvedValue({
+      ;(mockProvider.getAccount as ReturnType<typeof vi.fn>).mockResolvedValue({
         address: 'klv1test',
         balance: BigInt(1000000),
         nonce: 5,

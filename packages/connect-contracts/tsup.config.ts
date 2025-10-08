@@ -9,5 +9,13 @@ export default defineConfig({
   minify: false,
   splitting: false,
   treeshake: true,
-  external: ['@klever/connect-core', '@klever/connect-encoding'],
+  outExtension: ({ format }) => ({
+    js: format === 'cjs' ? '.js' : '.mjs',
+  }),
+  external: [
+    '@klever/connect-core',
+    '@klever/connect-encoding',
+    '@klever/connect-provider',
+    '@klever/connect-transactions',
+  ],
 })

@@ -54,7 +54,7 @@ export class DefaultCryptoProvider implements CryptoProvider {
   }
 
   async bytesToAddress(bytes: Uint8Array): Promise<string> {
-    return bech32Encode(bytes, 'klv')
+    return bech32Encode(bytes)
   }
 
   async sign(data: Uint8Array, privateKeyHex: string): Promise<Uint8Array> {

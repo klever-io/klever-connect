@@ -23,19 +23,28 @@ import type { AmountLike } from '@klever/connect-provider'
 import type { IKDAFee } from '@klever/connect-encoding'
 
 /**
- * Raw proto build options (offline building)
+ * Build call options
  * All fields are optional - will use builder's state if not provided
  */
-export interface BuildProtoOptions {
+export interface BuildCallOptions {
+  /** Value to send with transaction (e.g., { KLV: parseKLV('1') }) */
+  value?: Record<string, bigint>
+  /** Chain ID for offline transaction building */
   chainId?: string
+  /** Sender address */
   sender?: string
+  /** Nonce for offline transaction building */
   nonce?: number
+  /** Fees for offline transaction building */
   fees?: {
     kAppFee: number
     bandwidthFee: number
   }
+  /** KDA fee for offline transaction building */
   kdaFee?: { kda: string; amount: AmountLike }
+  /** Permission ID for the transaction */
   permissionId?: number
+  /** Transaction data (for smart contract calls) */
   data?: string[]
 }
 
@@ -159,7 +168,9 @@ export class TransactionBuilder {
     }
     // can`t use KLV as kdaFee (its default if not set)
     if (fee.kda === 'KLV') {
-      throw new ValidationError('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead', { assetId: fee.kda })
+      throw new ValidationError('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead', {
+        assetId: fee.kda,
+      })
     }
 
     const amount = typeof fee.amount === 'bigint' ? fee.amount : BigInt(fee.amount)
@@ -186,6 +197,33 @@ export class TransactionBuilder {
     return this
   }
 
+  /**
+   * Add call options
+   */
+  callOptions(options: BuildCallOptions): this {
+    if (options.sender) {
+      this.sender(options.sender)
+    }
+    if (options.nonce !== undefined) {
+      this.nonce(options.nonce)
+    }
+    if (options.kdaFee) {
+      this.kdaFee(options.kdaFee)
+    }
+    if (options.permissionId !== undefined) {
+      this.permissionId(options.permissionId)
+    }
+    if (options.data) {
+      this.data(options.data)
+    }
+    if (options.fees) {
+      // TODO: implement fees setting
+    }
+    if (options.value) {
+      // should be set in smart contract directly -- ignore --
+    }
+    return this
+  }
   /**
    * Add a contract using ContractRequestData
    * Routes to the appropriate builder method based on contractType
@@ -237,7 +275,9 @@ export class TransactionBuilder {
    */
   transfer(params: TransferRequest): this {
     if (!isValidAddress(params.receiver)) {
-      throw new ValidationError(`Invalid recipient address: ${params.receiver}`, { address: params.receiver })
+      throw new ValidationError(`Invalid recipient address: ${params.receiver}`, {
+        address: params.receiver,
+      })
     }
 
     const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
@@ -301,7 +341,9 @@ export class TransactionBuilder {
    */
   delegate(params: DelegateRequest): this {
     if (!isValidAddress(params.receiver)) {
-      throw new ValidationError(`Invalid validator address: ${params.receiver}`, { address: params.receiver })
+      throw new ValidationError(`Invalid validator address: ${params.receiver}`, {
+        address: params.receiver,
+      })
     }
 
     this.contracts.push({
@@ -394,7 +436,9 @@ export class TransactionBuilder {
    */
   smartContract(params: SmartContractRequest): this {
     if (!isValidAddress(params.address)) {
-      throw new ValidationError(`Invalid contract address: ${params.address}`, { address: params.address })
+      throw new ValidationError(`Invalid contract address: ${params.address}`, {
+        address: params.address,
+      })
     }
 
     this.contracts.push({
@@ -446,7 +490,12 @@ export class TransactionBuilder {
     if (this._nonce !== undefined) request.nonce = this._nonce
     if (this._kdaFee !== undefined) request.kdaFee = this._kdaFee.kda
     if (this._permissionId !== undefined) request.permissionId = this._permissionId
-    if (this._data !== undefined) request.data = this._data
+    // if smart contract transaction, request data must be converted to base64 if not already
+    if (this.contracts.some((c) => c.contractType === 63) && this._data !== undefined) {
+      request.data = this._data.map((d) => Buffer.from(d, 'utf-8').toString('base64'))
+    } else if (this._data !== undefined) {
+      request.data = this._data
+    }
 
     return request
   }
@@ -477,7 +526,7 @@ export class TransactionBuilder {
    *   })
    * ```
    */
-  buildProto(options: BuildProtoOptions = {}): Transaction {
+  buildProto(options: BuildCallOptions = {}): Transaction {
     if (this.contracts.length === 0) {
       throw new ValidationError('At least one contract is required')
     }
@@ -505,6 +554,13 @@ export class TransactionBuilder {
     const permissionId = options.permissionId ?? this._permissionId ?? null
     const data = options.data ?? this._data
 
+    if (options.value) {
+      // should be set in smart contract directly for offline proto building
+      throw new ValidationError('Value option is not supported for offline proto building', {
+        value: options.value,
+      })
+    }
+
     // Validate required fields
     if (!sender) {
       throw new ValidationError('Sender address is required. Set via .sender() or options.sender')
@@ -528,7 +584,11 @@ export class TransactionBuilder {
       kdaFee && kdaFee.kda
         ? {
             KDA: encoder.encode(kdaFee.kda),
-            Amount: typeof kdaFee.amount === 'bigint' ? kdaFee.amount : BigInt(kdaFee.amount),
+            Amount: typeof kdaFee.amount === 'bigint'
+              ? Number(kdaFee.amount)
+              : typeof kdaFee.amount === 'string'
+                ? Number(kdaFee.amount)
+                : kdaFee.amount,
           }
         : null
 
@@ -575,6 +635,11 @@ export class TransactionBuilder {
 
     // Send to node endpoint to build
     const nodeResponse = await this.provider.buildTransaction(request)
+    // remove GasLimit
+    if (!nodeResponse.result) {
+      throw new Error('Node response has no result')
+    }
+    delete (nodeResponse.result as { [k: string]: unknown })['GasLimit']
 
     // Return Transaction object from proto result
     // Use fromObject to properly convert base64 strings to Uint8Arrays

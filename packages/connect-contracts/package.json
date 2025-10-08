@@ -1,7 +1,10 @@
 {
   "name": "@klever/connect-contracts",
   "version": "0.0.1",
-  "description": "Smart contract interactions for Klever Connect SDK",
+  "description": "Smart contract interaction for Klever blockchain",
+  "author": "Klever",
+  "license": "MIT",
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -13,30 +16,31 @@
       "default": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
-    "test": "vitest",
-    "lint": "eslint src --ext .ts,.tsx",
     "dev": "tsup --watch",
-    "clean": "rm -rf dist .turbo"
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit"
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "klever",
-    "blockchain",
-    "sdk"
-  ],
-  "author": "Klever",
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
-  "sideEffects": false,
   "dependencies": {
     "@klever/connect-core": "workspace:*",
     "@klever/connect-encoding": "workspace:*",
+    "@klever/connect-provider": "workspace:*",
     "@klever/connect-transactions": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.5",
+    "tsup": "^8.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^1.6.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

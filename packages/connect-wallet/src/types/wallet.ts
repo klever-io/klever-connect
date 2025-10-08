@@ -23,6 +23,7 @@ export interface WalletConfig {
 export interface Wallet {
   readonly address: string
   readonly publicKey?: string
+  readonly provider?: IProvider
 
   // Connection management
   connect(): Promise<void>

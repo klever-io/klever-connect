@@ -8,10 +8,12 @@
       "@klever/connect-core/*": ["../connect-core/src/*"],
       "@klever/connect-encoding": ["../connect-encoding/src"],
       "@klever/connect-encoding/*": ["../connect-encoding/src/*"],
+      "@klever/connect-provider": ["../connect-provider/src"],
+      "@klever/connect-provider/*": ["../connect-provider/src/*"],
       "@klever/connect-transactions": ["../connect-transactions/src"],
       "@klever/connect-transactions/*": ["../connect-transactions/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "examples/**/*.json"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

@@ -1,3 +1,5 @@
+import type { TransactionHash } from '@klever/connect-core'
+
 export interface IAccount {
   address: string
   balance: bigint
@@ -227,7 +229,7 @@ export interface ITransactionResponse {
  */
 export interface TransactionSubmitResult {
   /** Transaction hash */
-  hash: string
+  hash: TransactionHash
   /** Transaction status */
   status: 'pending' | 'success' | 'failed'
   /** Raw transaction data that was submitted (proto Transaction format from @klever/connect-transactions) */
