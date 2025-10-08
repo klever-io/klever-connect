@@ -34,8 +34,6 @@ export function useBalance(
       return
     }
 
-    // Clear balance immediately when network changes to show loading state
-    setBalance(null)
     setError(null)
 
     let cancelled = false
