@@ -243,6 +243,25 @@ function encodeBech32(data: Uint8Array): string {
 }
 
 /**
+ * Convert hex string to base64
+ * Useful for converting event data (hex) to decoder format (base64)
+ */
+export function hexToBase64(hex: string): string {
+  // Remove 0x prefix if present
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
+
+  // Convert hex to bytes
+  const bytes = new Uint8Array(cleanHex.length / 2)
+  for (let i = 0; i < cleanHex.length; i += 2) {
+    const byte = parseInt(cleanHex.slice(i, i + 2), 16)
+    bytes[i / 2] = byte
+  }
+
+  // Convert bytes to base64
+  return encodeBase64(bytes)
+}
+
+/**
  * Helper object for manual decoding (exposed to developers)
  */
 export const contractResult = {
@@ -256,4 +275,5 @@ export const contractResult = {
   bytes: decodeBytes,
   fromBase64: decodeBase64,
   toBase64: encodeBase64,
+  hexToBase64: hexToBase64,
 }

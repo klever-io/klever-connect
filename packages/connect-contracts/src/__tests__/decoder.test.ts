@@ -15,7 +15,10 @@ import {
   decodeU64,
   decodeU8,
   encodeBase64,
+  hexToBase64,
 } from '../decoder/result-decoder'
+import { decodeResultsWithMetadata, ABIDecoder } from '../decoder/abi-decoder'
+import type { ContractABI } from '../types/abi'
 
 describe('Result Decoder', () => {
   describe('decodeU8', () => {
@@ -242,6 +245,308 @@ describe('Result Decoder', () => {
       const encoded = encodeString(value, true) // With length prefix
       const decoded = decodeString(encoded, 0, true)
       expect(decoded.value).toBe(value)
+    })
+  })
+
+  describe('decodeResultsWithMetadata', () => {
+    it('should decode results with type and raw data', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { inputs: [], outputs: [] },
+        upgradeConstructor: { inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'testFunction',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [
+              { name: 'result', type: 'u32' },
+              { name: 'flag', type: 'bool' },
+            ],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      // Encode test data: u32(42) and bool(true)
+      const data = [
+        encodeBase64(new Uint8Array([0x2a])), // 42
+        encodeBase64(new Uint8Array([0x01])), // true
+      ]
+
+      const params = [
+        { name: 'result', type: 'u32' },
+        { name: 'flag', type: 'bool' },
+      ]
+
+      const decoded = decodeResultsWithMetadata(data, params, mockABI)
+
+      expect(decoded.raw).toEqual(data)
+      expect(decoded.values).toHaveLength(2)
+
+      expect(decoded.values[0]).toEqual({
+        type: 'u32',
+        value: 42,
+        raw: data[0],
+      })
+
+      expect(decoded.values[1]).toEqual({
+        type: 'bool',
+        value: true,
+        raw: data[1],
+      })
+    })
+
+    it('should work with ABIDecoder class', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { inputs: [], outputs: [] },
+        upgradeConstructor: { inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getValue',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ name: 'value', type: 'u64' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // u64(1000)
+      const data = [encodeBase64(new Uint8Array([0x03, 0xe8]))]
+
+      const decoded = decoder.decodeFunctionResultsWithMetadata('getValue', data)
+
+      expect(decoded.raw).toEqual(data)
+      expect(decoded.values).toHaveLength(1)
+      expect(decoded.values[0]?.type).toBe('u64')
+      expect(decoded.values[0]?.value).toBe(1000n)
+      expect(decoded.values[0]?.raw).toBe(data[0])
+    })
+
+    it('should decode real Bet struct correctly', () => {
+      const diceABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.87.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'dice', version: '0.0.0' },
+          framework: { name: 'klever-sc', version: '0.45.0' },
+        },
+        name: 'Dice',
+        constructor: { inputs: [], outputs: [] },
+        upgradeConstructor: { inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'bet',
+            mutability: 'mutable',
+            inputs: [],
+            outputs: [{ name: 'result', type: 'Bet' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {
+          Bet: {
+            type: 'struct',
+            fields: [
+              { name: 'bet_type', type: 'u32' },
+              { name: 'bet_value', type: 'u32' },
+              { name: 'dice_value', type: 'u32' },
+              { name: 'multiplier', type: 'u32' },
+              { name: 'is_winner', type: 'bool' },
+            ],
+          },
+        },
+      }
+
+      const decoder = new ABIDecoder(diceABI)
+
+      // Real data: hex 000000010000000c000000600000007201
+      // Expected: bet_type=1, bet_value=12, dice_value=96, multiplier=114, is_winner=true
+      const returnData = ['AAAAAQAAAAwAAABgAAAAcgE=']
+
+      const result = decoder.decodeFunctionResultsWithMetadata('bet', returnData)
+
+      expect(result.raw).toEqual(returnData)
+      expect(result.values).toHaveLength(1)
+      expect(result.values[0]?.type).toBe('Bet')
+      expect(result.values[0]?.raw).toBe(returnData[0])
+
+      const bet = result.values[0]?.value as any
+      expect(bet.bet_type).toBe(1)
+      expect(bet.bet_value).toBe(12)
+      expect(bet.dice_value).toBe(96)
+      expect(bet.multiplier).toBe(114)
+      expect(bet.is_winner).toBe(true)
+    })
+
+    it('should decode Bet struct from hex event data using hexToBase64', () => {
+      const diceABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.87.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'dice', version: '0.0.0' },
+          framework: { name: 'klever-sc', version: '0.45.0' },
+        },
+        name: 'Dice',
+        constructor: { inputs: [], outputs: [] },
+        upgradeConstructor: { inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'bet',
+            mutability: 'mutable',
+            inputs: [],
+            outputs: [{ name: 'result', type: 'Bet' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {
+          Bet: {
+            type: 'struct',
+            fields: [
+              { name: 'bet_type', type: 'u32' },
+              { name: 'bet_value', type: 'u32' },
+              { name: 'dice_value', type: 'u32' },
+              { name: 'multiplier', type: 'u32' },
+              { name: 'is_winner', type: 'bool' },
+            ],
+          },
+        },
+      }
+
+      const decoder = new ABIDecoder(diceABI)
+
+      // Event data is hex-encoded (from logs.events)
+      const hexData = '000000010000000c000000600000007201'
+
+      // Convert hex to base64 for decoder
+      const base64Data = hexToBase64(hexData)
+      expect(base64Data).toBe('AAAAAQAAAAwAAABgAAAAcgE=')
+
+      const result = decoder.decodeFunctionResultsWithMetadata('bet', [base64Data])
+
+      const bet = result.values[0]?.value as any
+      expect(bet.bet_type).toBe(1)
+      expect(bet.bet_value).toBe(12)
+      expect(bet.dice_value).toBe(96)
+      expect(bet.multiplier).toBe(114)
+      expect(bet.is_winner).toBe(true)
+    })
+
+    it('should decode Bet struct directly from hex with encoding parameter', () => {
+      const diceABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.87.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'dice', version: '0.0.0' },
+          framework: { name: 'klever-sc', version: '0.45.0' },
+        },
+        name: 'Dice',
+        constructor: { inputs: [], outputs: [] },
+        upgradeConstructor: { inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'bet',
+            mutability: 'mutable',
+            inputs: [],
+            outputs: [{ name: 'result', type: 'Bet' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {
+          Bet: {
+            type: 'struct',
+            fields: [
+              { name: 'bet_type', type: 'u32' },
+              { name: 'bet_value', type: 'u32' },
+              { name: 'dice_value', type: 'u32' },
+              { name: 'multiplier', type: 'u32' },
+              { name: 'is_winner', type: 'bool' },
+            ],
+          },
+        },
+      }
+
+      const decoder = new ABIDecoder(diceABI)
+
+      // Event data is hex-encoded (from logs.events)
+      const hexData = '000000010000000c000000600000007201'
+
+      // Decode directly from hex using encoding parameter
+      const result = decoder.decodeFunctionResultsWithMetadata('bet', [hexData], 'hex')
+
+      // Raw data should be preserved as hex
+      expect(result.raw[0]).toBe(hexData)
+      expect(result.values[0]?.raw).toBe(hexData)
+
+      const bet = result.values[0]?.value as any
+      expect(bet.bet_type).toBe(1)
+      expect(bet.bet_value).toBe(12)
+      expect(bet.dice_value).toBe(96)
+      expect(bet.multiplier).toBe(114)
+      expect(bet.is_winner).toBe(true)
+    })
+
+    it('should handle 0x prefix in hex encoding', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { inputs: [], outputs: [] },
+        upgradeConstructor: { inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getValue',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ name: 'value', type: 'u32' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // With 0x prefix
+      const result = decoder.decodeFunctionResultsWithMetadata('getValue', ['0x2a'], 'hex')
+
+      expect(result.values[0]?.value).toBe(42)
+      expect(result.values[0]?.raw).toBe('0x2a')
+    })
+  })
+
+  describe('hexToBase64', () => {
+    it('should convert hex to base64', () => {
+      const hex = '000000010000000c000000600000007201'
+      const base64 = hexToBase64(hex)
+      expect(base64).toBe('AAAAAQAAAAwAAABgAAAAcgE=')
+    })
+
+    it('should handle 0x prefix', () => {
+      const hex = '0x48656c6c6f'
+      const base64 = hexToBase64(hex)
+      expect(base64).toBe('SGVsbG8=')
+    })
+
+    it('should handle empty string', () => {
+      const hex = ''
+      const base64 = hexToBase64(hex)
+      expect(base64).toBe('')
     })
   })
 })

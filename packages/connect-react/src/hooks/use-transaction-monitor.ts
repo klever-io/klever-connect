@@ -39,7 +39,6 @@ export interface TransactionMonitorResult {
   hash: string
   status: 'confirmed' | 'failed'
   transaction?: ITransactionResponse
-  decodedData?: unknown
   error?: Error
 }
 

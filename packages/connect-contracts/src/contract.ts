@@ -376,6 +376,25 @@ export class Contract {
   /**
    * Call a contract function dynamically
    * Useful when function name is determined at runtime
+   *
+   * Supports passing CallOptions as the last argument for transaction customization
+   * (value, nonce, fees, chainId, permissionId, data, etc.)
+   *
+   * @param functionName - The name of the function to call
+   * @param args - Arguments to pass to the function (last arg can be CallOptions)
+   *
+   * @example
+   * ```typescript
+   * // Basic call
+   * const result = await contract.call('transfer', toAddress, amount)
+   *
+   * // With CallOptions
+   * const result = await contract.call('transfer', toAddress, amount, {
+   *   value: parseKLV('1'),
+   *   nonce: 123,
+   *   fees: { kAppFee: 100 }
+   * })
+   * ```
    */
   async call<T = unknown>(functionName: string, ...args: unknown[]): Promise<T> {
     if (!this.hasFunction(functionName)) {
@@ -390,15 +409,34 @@ export class Contract {
    * Invoke a mutable contract function (state-changing transaction)
    * This method explicitly requires the function to be mutable.
    *
+   * Supports passing CallOptions as the last argument for transaction customization
+   * (value, nonce, fees, chainId, permissionId, data, etc.)
+   *
    * @param functionName - The name of the mutable function to invoke
-   * @param args - Arguments to pass to the function
+   * @param args - Arguments to pass to the function (last arg can be CallOptions)
    * @returns Transaction submit result with hash and wait() method
    *
    * @example
    * ```typescript
-   * // Invoke a state-changing function
+   * // Basic invocation with individual args
    * const result = await contract.invoke('bet', betType, betValue)
    * await result.wait() // Wait for confirmation
+   *
+   * // With array of args (will be spread automatically)
+   * const params = [betType, betValue]
+   * const result = await contract.invoke('bet', ...params)
+   *
+   * // With CallOptions (value, nonce, fees, etc.)
+   * const result = await contract.invoke('bet', betType, betValue, {
+   *   value: parseKLV('10'), // Send 10 KLV with call
+   *   nonce: 123,
+   *   fees: { kAppFee: 100 }
+   * })
+   *
+   * // With array of args AND CallOptions
+   * const result = await contract.invoke('bet', ...params, {
+   *   value: parseKLV('10')
+   * })
    * ```
    */
   async invoke(functionName: string, ...args: unknown[]): Promise<TransactionSubmitResult> {

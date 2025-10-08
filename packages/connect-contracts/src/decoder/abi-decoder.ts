@@ -18,6 +18,28 @@ export interface DecodedValue {
 }
 
 /**
+ * Decoded return value with type and raw data
+ */
+export interface DecodedReturnValue {
+  /** The ABI type (e.g., "u32", "Address", "Bet") */
+  type: string
+  /** The decoded value */
+  value: unknown
+  /** The raw data (base64 string or Uint8Array) */
+  raw: string | Uint8Array
+}
+
+/**
+ * Decoded return data with metadata
+ */
+export interface DecodedReturnData {
+  /** Array of decoded values with metadata */
+  values: DecodedReturnValue[]
+  /** Original raw data (base64 strings or Uint8Arrays) */
+  raw: (string | Uint8Array)[]
+}
+
+/**
  * Decode variable-length integer (top-level or nested)
  */
 function decodeVariableInt(
@@ -341,6 +363,115 @@ export function decodeResults(
 }
 
 /**
+ * String encoding format for decoder input
+ */
+export type StringEncoding = 'base64' | 'hex'
+
+/**
+ * Decode function results with metadata (type info + raw data)
+ *
+ * @param data - Array of encoded strings or Uint8Arrays
+ * @param params - ABI parameters defining return types
+ * @param abi - Contract ABI
+ * @param encoding - String encoding format ('base64' for receipts, 'hex' for events). Default: 'base64'
+ * @returns Decoded data with type metadata and raw values
+ *
+ * @example
+ * ```typescript
+ * // From receipts (base64)
+ * const result = decodeResultsWithMetadata(
+ *   ['AQ==', 'BQ=='],
+ *   [{ name: 'result', type: 'u32' }, { name: 'status', type: 'u8' }],
+ *   abi,
+ *   'base64'
+ * )
+ *
+ * // From events (hex)
+ * const result = decodeResultsWithMetadata(
+ *   ['01', '05'],
+ *   [{ name: 'result', type: 'u32' }, { name: 'status', type: 'u8' }],
+ *   abi,
+ *   'hex'
+ * )
+ * ```
+ */
+export function decodeResultsWithMetadata(
+  data: Uint8Array[] | string[],
+  params: ABIParameter[],
+  abi: ContractABI,
+  encoding: StringEncoding = 'base64',
+): DecodedReturnData {
+  if (data.length !== params.length) {
+    throw new Error(`Expected ${params.length} return values, got ${data.length}`)
+  }
+
+  const values: DecodedReturnValue[] = data.map((item, index) => {
+    const param = params[index]
+    if (!param) {
+      throw new Error(`Parameter at index ${index} not found`)
+    }
+
+    try {
+      // Convert to bytes based on encoding
+      let bytes: Uint8Array
+      if (typeof item === 'string') {
+        if (encoding === 'hex') {
+          // Decode from hex
+          const cleanHex = item.startsWith('0x') ? item.slice(2) : item
+          bytes = new Uint8Array(cleanHex.length / 2)
+          for (let i = 0; i < cleanHex.length; i += 2) {
+            const byte = parseInt(cleanHex.slice(i, i + 2), 16)
+            bytes[i / 2] = byte
+          }
+        } else {
+          // Decode from base64
+          bytes = decodeBase64(item)
+        }
+      } else {
+        bytes = item
+      }
+
+      // Decode based on type (top-level: nested = false)
+      const decoded = decodeByType(bytes, param.type, abi, 0, false)
+
+      return {
+        type: param.type,
+        value: decoded.value,
+        raw: item, // Keep original format
+      }
+    } catch (err) {
+      // On error, return hex-encoded raw data
+      let valueBytes: Uint8Array
+      if (typeof item === 'string') {
+        if (encoding === 'hex') {
+          const cleanHex = item.startsWith('0x') ? item.slice(2) : item
+          valueBytes = new Uint8Array(cleanHex.length / 2)
+          for (let i = 0; i < cleanHex.length; i += 2) {
+            const byte = parseInt(cleanHex.slice(i, i + 2), 16)
+            valueBytes[i / 2] = byte
+          }
+        } else {
+          valueBytes = decodeBase64(item)
+        }
+      } else {
+        valueBytes = item
+      }
+
+      return {
+        type: param.type,
+        value: Buffer.from(valueBytes).toString('hex'),
+        raw: item, // Keep original format
+      }
+    }
+  })
+
+  return {
+    values,
+    raw: data, // Keep original format
+  }
+}
+
+/**
  * ABI-aware decoder class
  */
 export class ABIDecoder {
@@ -355,10 +486,51 @@ export class ABIDecoder {
   }
 
   /**
+   * Decode function results with metadata (type + raw data)
+   *
+   * @param functionName - Name of the function
+   * @param data - Array of encoded strings or Uint8Arrays
+   * @param encoding - String encoding format ('base64' for receipts, 'hex' for events). Default: 'base64'
+   *
+   * @example
+   * ```typescript
+   * const decoder = new ABIDecoder(abi)
+   *
+   * // From receipt (base64)
+   * const result1 = decoder.decodeFunctionResultsWithMetadata('bet', receipt.returnData)
+   *
+   * // From event (hex)
+   * const eventData = tx.logs?.events?.find(e => e.identifier === 'ReturnData')?.data
+   * const result2 = decoder.decodeFunctionResultsWithMetadata('bet', eventData, 'hex')
+   * ```
+   */
+  decodeFunctionResultsWithMetadata(
+    functionName: string,
+    data: Uint8Array[] | string[],
+    encoding: StringEncoding = 'base64',
+  ): DecodedReturnData {
+    const endpoint = ABIParser.getEndpoint(this.abi, functionName)
+    return decodeResultsWithMetadata(data, endpoint.outputs, this.abi, encoding)
+  }
+
+  /**
    * Decode constructor results (if any)
    */
   decodeConstructorResults(data: Uint8Array[] | string[]): unknown[] {
     return decodeResults(data, this.abi.constructor.outputs, this.abi)
+  }
+
+  /**
+   * Decode constructor results with metadata
+   *
+   * @param data - Array of encoded strings or Uint8Arrays
+   * @param encoding - String encoding format ('base64' or 'hex'). Default: 'base64'
+   */
+  decodeConstructorResultsWithMetadata(
+    data: Uint8Array[] | string[],
+    encoding: StringEncoding = 'base64',
+  ): DecodedReturnData {
+    return decodeResultsWithMetadata(data, this.abi.constructor.outputs, this.abi, encoding)
   }
 
   /**

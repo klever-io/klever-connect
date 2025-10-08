@@ -40,8 +40,18 @@ export { encodeConstructor, encodeFunctionCall, FunctionEncoder } from './encode
 
 // Export ABI-aware encoding/decoding
 export { ABIEncoder, encodeArguments, encodeByType } from './encoder/abi-encoder'
-export { ABIDecoder, decodeByType, decodeResults } from './decoder/abi-decoder'
-export type { DecodedValue } from './decoder/abi-decoder'
+export {
+  ABIDecoder,
+  decodeByType,
+  decodeResults,
+  decodeResultsWithMetadata,
+} from './decoder/abi-decoder'
+export type {
+  DecodedValue,
+  DecodedReturnValue,
+  DecodedReturnData,
+  StringEncoding,
+} from './decoder/abi-decoder'
 
 // Export decoding utilities
 export {
@@ -56,6 +66,7 @@ export {
   decodeU64,
   decodeU8,
   encodeBase64,
+  hexToBase64,
 } from './decoder/result-decoder'
 
 // Export contract classes
