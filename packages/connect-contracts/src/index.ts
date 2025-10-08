@@ -66,6 +66,10 @@ export { ContractFactory } from './contract-factory'
 // Export utility functions
 export { loadABI, isValidABI } from './utils'
 
+// Export event parser
+export { EventParser } from './event-parser'
+export type { ContractEvent, ContractEventFilter, LogEvent, TransactionLog } from './event-parser'
+
 // Export receipt parser
 export {
   parseReceipt,

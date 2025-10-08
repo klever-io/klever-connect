@@ -9,6 +9,7 @@ import { ContractFactory } from '../contract-factory'
 import type { ContractABI } from '../types/abi'
 import type { Provider, Signer } from '../contract'
 import type { Transaction } from '@klever/connect-transactions'
+import type { TransactionLog } from '../event-parser'
 import { loadABI } from '../utils'
 import diceAbi from '../../examples/dice/dice.abi.json'
 
@@ -221,6 +222,68 @@ describe('Contract', () => {
       const attached = contract.attach(newAddress)
       expect(attached.address).toBe(newAddress)
       expect(attached.interface.name).toBe('Dice')
+    })
+  })
+
+  describe('event parsing', () => {
+    const mockLogs: TransactionLog = {
+      address: contractAddress,
+      events: [
+        {
+          address: contractAddress,
+          identifier: 'BetPlaced',
+          topics: ['0x123', '0x456'],
+          data: ['0xabc', '0xdef'],
+        },
+        {
+          address: contractAddress,
+          identifier: 'BetSettled',
+          topics: ['0x789'],
+          data: ['0x111'],
+        },
+        {
+          address: 'klv1different',
+          identifier: 'Transfer',
+          topics: [],
+          data: [],
+        },
+      ],
+    }
+
+    it('should parse events from logs', () => {
+      const contract = new Contract(contractAddress, abi)
+      const events = contract.parseEvents(mockLogs)
+
+      // Should filter to only this contract's events
+      expect(events).toHaveLength(2)
+      expect(events[0].identifier).toBe('BetPlaced')
+      expect(events[1].identifier).toBe('BetSettled')
+    })
+
+    it('should filter events by identifier', () => {
+      const contract = new Contract(contractAddress, abi)
+      const events = contract.parseEvents(mockLogs, {
+        identifier: 'BetPlaced',
+      })
+
+      expect(events).toHaveLength(1)
+      expect(events[0].identifier).toBe('BetPlaced')
+    })
+
+    it('should get event identifiers', () => {
+      const contract = new Contract(contractAddress, abi)
+      const identifiers = contract.getEventIdentifiers(mockLogs)
+
+      expect(identifiers).toHaveLength(3)
+      expect(identifiers).toContain('BetPlaced')
+      expect(identifiers).toContain('BetSettled')
+      expect(identifiers).toContain('Transfer')
+    })
+
+    it('should handle undefined logs', () => {
+      const contract = new Contract(contractAddress, abi)
+      const events = contract.parseEvents(undefined)
+      expect(events).toEqual([])
     })
   })
 

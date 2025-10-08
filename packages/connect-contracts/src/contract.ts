@@ -15,6 +15,12 @@ import type { Transaction } from '@klever/connect-transactions'
 import type { KleverAddress, Network } from '@klever/connect-core'
 import type { TransactionHash } from '@klever/connect-core'
 import type { TransactionSubmitResult, ITransactionResponse } from '@klever/connect-provider'
+import {
+  EventParser,
+  type ContractEvent,
+  type ContractEventFilter,
+  type TransactionLog,
+} from './event-parser'
 
 /**
  * Signer interface (compatible with @klever/connect-wallet)
@@ -461,6 +467,50 @@ export class Contract {
    */
   attach(address: string): Contract {
     return new Contract(address, this.interface.abi, this.signer || this.provider)
+  }
+
+  /**
+   * Parse events from transaction logs
+   *
+   * @param logs - Transaction logs from a transaction response
+   * @param filter - Optional filter to apply (identifier, address, topics)
+   * @returns Array of parsed events
+   *
+   * @example
+   * ```typescript
+   * // Parse all events from a transaction
+   * const tx = await provider.getTransaction(hash)
+   * const events = contract.parseEvents(tx.logs)
+   *
+   * // Filter events by identifier
+   * const betEvents = contract.parseEvents(tx.logs, {
+   *   identifier: 'BetPlaced'
+   * })
+   *
+   * // Filter events from this contract only
+   * const contractEvents = contract.parseEvents(tx.logs, {
+   *   address: contract.address
+   * })
+   * ```
+   */
+  parseEvents(logs?: TransactionLog, filter?: ContractEventFilter): ContractEvent[] {
+    // If no address filter specified, filter by this contract's address
+    const eventFilter: ContractEventFilter = {
+      ...filter,
+      address: filter?.address || this.address,
+    }
+
+    return EventParser.parseEvents(logs, eventFilter)
+  }
+
+  /**
+   * Get unique event identifiers from transaction logs
+   *
+   * @param logs - Transaction logs
+   * @returns Array of unique event identifiers
+   */
+  getEventIdentifiers(logs?: TransactionLog): string[] {
+    return EventParser.getEventIdentifiers(logs)
   }
 
   /**
