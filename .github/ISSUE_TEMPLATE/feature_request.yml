@@ -1,0 +1,109 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please provide as much detail as possible.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: I'm frustrated when... It would be helpful to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like
+      placeholder: Add a method that allows...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: I tried using... but it doesn't work because...
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example API
+      description: Show how you'd like to use this feature
+      placeholder: |
+        ```typescript
+        const wallet = new Wallet(...)
+        await wallet.newFeature({ ... })
+        ```
+      render: typescript
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected Package(s)
+      description: Which package(s) should have this feature?
+      multiple: true
+      options:
+        - "@klever/connect"
+        - "@klever/connect-core"
+        - "@klever/connect-wallet"
+        - "@klever/connect-transactions"
+        - "@klever/connect-provider"
+        - "@klever/connect-contracts"
+        - "@klever/connect-crypto"
+        - "@klever/connect-encoding"
+        - "@klever/connect-react"
+        - "New package"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - "Low - Nice to have"
+        - "Medium - Would improve my workflow"
+        - "High - Blocking my project"
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe your use case for this feature
+      placeholder: I'm building a dApp that needs to...
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or examples
+      placeholder: Similar to how ethers.js handles...
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to contribute this feature?
+      options:
+        - label: I'd be willing to submit a PR for this feature
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

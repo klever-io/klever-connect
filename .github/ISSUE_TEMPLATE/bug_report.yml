@@ -1,0 +1,138 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the sections below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+      placeholder: When I try to... the SDK throws an error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Install @klever/connect
+        2. Create a wallet with...
+        3. Call method...
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: The transaction should be signed successfully...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include error messages and stack traces.
+      placeholder: |
+        Error: Invalid signature
+        at Wallet.signTransaction (wallet.ts:123)
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Code Sample
+      description: Minimal code to reproduce the issue
+      placeholder: |
+        ```typescript
+        import { Wallet } from '@klever/connect-wallet'
+
+        const wallet = new Wallet(privateKey, provider)
+        const tx = await wallet.signTransaction(...)
+        ```
+      render: typescript
+    validations:
+      required: false
+
+  - type: input
+    id: sdk-version
+    attributes:
+      label: SDK Version
+      description: Which version of the SDK are you using?
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected Package(s)
+      description: Which package(s) are affected?
+      multiple: true
+      options:
+        - "@klever/connect"
+        - "@klever/connect-core"
+        - "@klever/connect-wallet"
+        - "@klever/connect-transactions"
+        - "@klever/connect-provider"
+        - "@klever/connect-contracts"
+        - "@klever/connect-crypto"
+        - "@klever/connect-encoding"
+        - "@klever/connect-react"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where are you running the SDK?
+      options:
+        - Node.js
+        - Browser
+        - React Native
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version (if applicable)
+      placeholder: "v20.10.0"
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser (if applicable)
+      placeholder: "Chrome 120.0"
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: This started happening after upgrading from v0.0.1...
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
