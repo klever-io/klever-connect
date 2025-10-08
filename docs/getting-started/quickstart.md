@@ -67,12 +67,7 @@ console.log(`Transaction hash: ${txHash}`)
 ## Complete Example
 
 ```typescript
-import {
-  KleverProvider,
-  TransactionBuilder,
-  parseKLV,
-  NETWORKS
-} from '@klever/connect'
+import { KleverProvider, TransactionBuilder, parseKLV, NETWORKS } from '@klever/connect'
 
 async function sendKLV() {
   // 1. Setup provider
@@ -118,7 +113,7 @@ console.log('Transaction confirmed!', confirmedTx.status)
 const [account1, account2, balance] = await provider.batch([
   () => provider.getAccount('klv1...'),
   () => provider.getAccount('klv1xxx...'),
-  () => provider.getBalance('klv1...')
+  () => provider.getBalance('klv1...'),
 ])
 ```
 
@@ -128,13 +123,13 @@ const [account1, account2, balance] = await provider.batch([
 import { NodeWallet } from '@klever/connect'
 
 const wallet = new NodeWallet(privateKey)
-const message = "Hello, Klever!"
+const message = 'Hello, Klever!'
 
 // Sign a message - returns Signature object
 const signature = await wallet.signMessage(message)
 
 // Developer chooses encoding format
-const hexSignature = signature.toHex()      // Hex format (recommended)
+const hexSignature = signature.toHex() // Hex format (recommended)
 const base64Signature = signature.toBase64() // Base64 format (for JSON)
 
 // Verify with Signature object

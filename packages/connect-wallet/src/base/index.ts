@@ -81,16 +81,14 @@ export abstract class BaseWallet implements Wallet {
    */
   async verifyMessage(
     message: string | Uint8Array,
-    signature: Signature | string
+    signature: Signature | string,
   ): Promise<boolean> {
     if (!this._publicKey) {
       throw new WalletError('Wallet not connected or public key not available')
     }
 
     try {
-      const messageBytes = typeof message === 'string'
-        ? new TextEncoder().encode(message)
-        : message
+      const messageBytes = typeof message === 'string' ? new TextEncoder().encode(message) : message
 
       // Handle Signature object or string (hex/base64)
       let signatureBytes: Uint8Array

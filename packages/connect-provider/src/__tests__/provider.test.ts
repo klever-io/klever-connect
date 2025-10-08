@@ -465,10 +465,9 @@ describe('KleverProvider', () => {
 
       await provider.requestTestKLV(validAddress, 5000000n)
 
-      expect(mockPost).toHaveBeenCalledWith(
-        `/v1.0/transaction/send-user-funds/${validAddress}`,
-        { amount: '5000000' },
-      )
+      expect(mockPost).toHaveBeenCalledWith(`/v1.0/transaction/send-user-funds/${validAddress}`, {
+        amount: '5000000',
+      })
     })
 
     it('should throw error on mainnet', async () => {

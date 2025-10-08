@@ -49,6 +49,7 @@ const txHash = await provider.sendRawTransaction(tx.toHex())
 Create a new transaction builder.
 
 **Parameters:**
+
 - `provider` - Optional provider for automatic nonce/fee fetching
 
 ### Methods

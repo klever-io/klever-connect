@@ -1,109 +1,107 @@
 {
-    "buildInfo": {
-        "rustc": {
-            "version": "1.87.0",
-            "commitHash": "17067e9ac6d7ecb70e50f92c1944e545188d2359",
-            "commitDate": "2025-05-09",
-            "channel": "Stable",
-            "short": "rustc 1.87.0 (17067e9ac 2025-05-09)"
-        },
-        "contractCrate": {
-            "name": "dice",
-            "version": "0.0.0",
-            "gitVersion": "v0.44.0-21-g5dfef4320"
-        },
-        "framework": {
-            "name": "klever-sc",
-            "version": "0.45.0"
-        }
+  "buildInfo": {
+    "rustc": {
+      "version": "1.87.0",
+      "commitHash": "17067e9ac6d7ecb70e50f92c1944e545188d2359",
+      "commitDate": "2025-05-09",
+      "channel": "Stable",
+      "short": "rustc 1.87.0 (17067e9ac 2025-05-09)"
     },
-    "name": "Dice",
-    "constructor": {
-        "inputs": [],
-        "outputs": []
+    "contractCrate": {
+      "name": "dice",
+      "version": "0.0.0",
+      "gitVersion": "v0.44.0-21-g5dfef4320"
     },
-    "upgradeConstructor": {
-        "inputs": [],
-        "outputs": []
-    },
-    "endpoints": [
-        {
-            "name": "getLastResult",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "Bet"
-                }
-            ]
-        },
-        {
-            "name": "bet",
-            "mutability": "mutable",
-            "payableInTokens": [
-                "KLV"
-            ],
-            "inputs": [
-                {
-                    "name": "bet_type",
-                    "type": "BetType"
-                },
-                {
-                    "name": "bet_value",
-                    "type": "u32"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "Bet"
-                }
-            ]
-        }
-    ],
-    "kdaAttributes": [],
-    "types": {
-        "Bet": {
-            "type": "struct",
-            "fields": [
-                {
-                    "name": "bet_type",
-                    "type": "u32"
-                },
-                {
-                    "name": "bet_value",
-                    "type": "u32"
-                },
-                {
-                    "name": "dice_value",
-                    "type": "u32"
-                },
-                {
-                    "name": "multiplier",
-                    "type": "u32"
-                },
-                {
-                    "name": "is_winner",
-                    "type": "bool"
-                }
-            ]
-        },
-        "BetType": {
-            "type": "enum",
-            "variants": [
-                {
-                    "name": "UNDER",
-                    "discriminant": 0
-                },
-                {
-                    "name": "OVER",
-                    "discriminant": 1
-                }
-            ]
-        }
+    "framework": {
+      "name": "klever-sc",
+      "version": "0.45.0"
     }
+  },
+  "name": "Dice",
+  "constructor": {
+    "inputs": [],
+    "outputs": []
+  },
+  "upgradeConstructor": {
+    "inputs": [],
+    "outputs": []
+  },
+  "endpoints": [
+    {
+      "name": "getLastResult",
+      "mutability": "readonly",
+      "inputs": [
+        {
+          "name": "address",
+          "type": "Address"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "Bet"
+        }
+      ]
+    },
+    {
+      "name": "bet",
+      "mutability": "mutable",
+      "payableInTokens": ["KLV"],
+      "inputs": [
+        {
+          "name": "bet_type",
+          "type": "BetType"
+        },
+        {
+          "name": "bet_value",
+          "type": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "Bet"
+        }
+      ]
+    }
+  ],
+  "kdaAttributes": [],
+  "types": {
+    "Bet": {
+      "type": "struct",
+      "fields": [
+        {
+          "name": "bet_type",
+          "type": "u32"
+        },
+        {
+          "name": "bet_value",
+          "type": "u32"
+        },
+        {
+          "name": "dice_value",
+          "type": "u32"
+        },
+        {
+          "name": "multiplier",
+          "type": "u32"
+        },
+        {
+          "name": "is_winner",
+          "type": "bool"
+        }
+      ]
+    },
+    "BetType": {
+      "type": "enum",
+      "variants": [
+        {
+          "name": "UNDER",
+          "discriminant": 0
+        },
+        {
+          "name": "OVER",
+          "discriminant": 1
+        }
+      ]
+    }
+  }
 }

@@ -14,27 +14,34 @@ The Dice contract is a simple gambling game where users can bet on dice rolls.
 ### Endpoints
 
 #### `getLastResult(address: Address) → Bet` (readonly)
+
 Returns the last bet result for a given address.
 
 **Parameters:**
+
 - `address` - User's Klever address
 
 **Returns:**
+
 - `Bet` struct containing bet details
 
 #### `bet(bet_type: BetType, bet_value: u32) → Bet` (mutable, payable in KLV)
+
 Place a bet on the dice game.
 
 **Parameters:**
+
 - `bet_type` - Type of bet (UNDER=0, OVER=1)
 - `bet_value` - Target number (1-100)
 
 **Returns:**
+
 - `Bet` struct with result
 
 ### Types
 
 #### `Bet` (struct)
+
 ```rust
 struct Bet {
   bet_type: u32,      // Type of bet placed
@@ -46,6 +53,7 @@ struct Bet {
 ```
 
 #### `BetType` (enum)
+
 ```rust
 enum BetType {
   UNDER = 0,  // Bet that dice rolls under bet_value
@@ -70,7 +78,7 @@ console.log('Last bet:', result)
 const betType = contractParam.u32(0) // UNDER
 const betValue = contractParam.u32(50)
 const tx = await contract.bet(betType, betValue, {
-  value: { KLV: parseKLV('1') }
+  value: { KLV: parseKLV('1') },
 })
 ```
 

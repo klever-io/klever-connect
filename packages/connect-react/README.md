@@ -15,6 +15,7 @@ pnpm add @klever/connect-react
 Complete staking workflow hook with freeze, unfreeze, delegate, claim, and withdraw operations.
 
 **Staking Flow:**
+
 1. **Freeze** - Stake assets to create bucket
    - KLV: Creates bucket with 32-byte hash bucketID (max 100 buckets/user)
    - Other KDA: Accumulates frozen amount (no bucket limit)
@@ -120,11 +121,12 @@ const { sender, receiver, amount, kda, transfers } = parseReceipt.transfer(trans
 console.log(`Primary transfer: ${sender} → ${receiver}: ${amount} ${kda}`)
 if (transfers) {
   console.log(`Total ${transfers.length} transfers:`)
-  transfers.forEach(t => console.log(`  ${t.sender} → ${t.receiver}: ${t.amount} ${t.kda}`))
+  transfers.forEach((t) => console.log(`  ${t.sender} → ${t.receiver}: ${t.amount} ${t.kda}`))
 }
 ```
 
 Available parsers (hybrid API - simple fields + optional arrays for multiple operations):
+
 - `parseReceipt.freeze(receipt)` → `{ bucketId, amount, kda, freezes? }`
 - `parseReceipt.unfreeze(receipt)` → `{ bucketId, kda, availableAt? }`
 - `parseReceipt.claim(receipt)` → `{ rewards[], totalClaimed, claimType? }`
@@ -180,6 +182,7 @@ function TransferComponent() {
 ```
 
 **Why no auto-conversion?**
+
 - Prevents accidental 1000x transfers
 - Consistent with other hooks (freeze, unfreeze, etc.)
 - Explicit is better than implicit

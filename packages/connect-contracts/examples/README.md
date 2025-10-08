@@ -9,12 +9,14 @@ This folder contains example smart contracts for testing and demonstrating the `
 A simple gambling game smart contract written in Rust for Klever blockchain.
 
 **Features:**
+
 - Bet on dice rolls (UNDER/OVER)
 - Query last bet results
 - Payable in KLV
 - Demonstrates structs, enums, and readonly/mutable endpoints
 
 **Files:**
+
 - `dice.abi.json` - Contract ABI
 - `dice.wasm` - Compiled bytecode
 - `README.md` - Full documentation
@@ -48,6 +50,7 @@ pnpm --filter @klever/connect-contracts test
 ```
 
 All 125 tests use the Dice contract example to verify:
+
 - ABI parsing and validation
 - Parameter encoding/decoding
 - Function call encoding

@@ -90,7 +90,10 @@ describe('Transaction', () => {
       expect(tx.Signature).toBeDefined()
       expect(tx.Signature).toHaveLength(1)
       expect(tx.Signature?.[0]).toBe(mockSignature)
-      expect(cryptoProvider.signMessage).toHaveBeenCalledWith(expect.any(Uint8Array), mockPrivateKey)
+      expect(cryptoProvider.signMessage).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+        mockPrivateKey,
+      )
     })
   })
 

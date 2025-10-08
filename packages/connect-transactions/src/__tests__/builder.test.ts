@@ -92,9 +92,7 @@ describe('TransactionBuilder', () => {
     it('should throw error for KLV as KDA fee', () => {
       const builder = new TransactionBuilder()
 
-      expect(() => builder.kdaFee({ kda: 'KLV', amount: 1000n })).toThrow(
-        'KDA fee cannot be KLV',
-      )
+      expect(() => builder.kdaFee({ kda: 'KLV', amount: 1000n })).toThrow('KDA fee cannot be KLV')
     })
 
     it('should throw error for negative amount', () => {
@@ -155,7 +153,7 @@ describe('TransactionBuilder', () => {
       // Test with string (also raw value)
       builder.transfer({
         receiver: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
-        amount: "2500000", // Raw value as string (2.5 KLV)
+        amount: '2500000', // Raw value as string (2.5 KLV)
       })
 
       const request = builder.buildRequest()
@@ -235,7 +233,9 @@ describe('TransactionBuilder', () => {
     it('should throw error when KDA is missing', () => {
       const builder = new TransactionBuilder()
 
-      expect(() => builder.unfreeze({ bucketId: 'bucket123' } as any)).toThrow('KDA is required for unfreeze')
+      expect(() => builder.unfreeze({ bucketId: 'bucket123' } as any)).toThrow(
+        'KDA is required for unfreeze',
+      )
     })
   })
 
@@ -429,9 +429,7 @@ describe('TransactionBuilder', () => {
 
       expect(request.contracts).toHaveLength(1)
       expect(request.contracts[0].contractType).toBe(TXType.Transfer)
-      expect(request.sender).toBe(
-        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
-      )
+      expect(request.sender).toBe('klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5')
       expect(request.nonce).toBe(123)
     })
 
@@ -484,12 +482,10 @@ describe('TransactionBuilder', () => {
 
     it('should throw error when nonce is missing', () => {
       const builder = new TransactionBuilder(mockProvider)
-      builder
-        .sender('klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5')
-        .transfer({
-          receiver: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
-          amount: 1000000n,
-        })
+      builder.sender('klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5').transfer({
+        receiver: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
+        amount: 1000000n,
+      })
 
       expect(() => builder.buildProto()).toThrow('Nonce is required')
     })
@@ -584,12 +580,10 @@ describe('TransactionBuilder', () => {
       mockProvider.buildTransaction = mockBuildTransaction
 
       const builder = new TransactionBuilder(mockProvider)
-      builder
-        .sender('klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5')
-        .transfer({
-          receiver: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
-          amount: 1000000n,
-        })
+      builder.sender('klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5').transfer({
+        receiver: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
+        amount: 1000000n,
+      })
 
       const tx = await builder.build()
 

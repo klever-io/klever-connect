@@ -125,10 +125,14 @@ export class ABIValidator {
 
         const f = field as Record<string, unknown>
         if (!f['name'] || typeof f['name'] !== 'string') {
-          throw new Error(`Invalid ABI: struct '${typeName}' field[${index}] must have a string name`)
+          throw new Error(
+            `Invalid ABI: struct '${typeName}' field[${index}] must have a string name`,
+          )
         }
         if (!f['type'] || typeof f['type'] !== 'string') {
-          throw new Error(`Invalid ABI: struct '${typeName}' field[${index}] must have a string type`)
+          throw new Error(
+            `Invalid ABI: struct '${typeName}' field[${index}] must have a string type`,
+          )
         }
       })
     }
@@ -145,10 +149,14 @@ export class ABIValidator {
 
         const v = variant as Record<string, unknown>
         if (!v['name'] || typeof v['name'] !== 'string') {
-          throw new Error(`Invalid ABI: enum '${typeName}' variant[${index}] must have a string name`)
+          throw new Error(
+            `Invalid ABI: enum '${typeName}' variant[${index}] must have a string name`,
+          )
         }
         if (typeof v['discriminant'] !== 'number') {
-          throw new Error(`Invalid ABI: enum '${typeName}' variant[${index}] must have a number discriminant`)
+          throw new Error(
+            `Invalid ABI: enum '${typeName}' variant[${index}] must have a number discriminant`,
+          )
         }
       })
     }

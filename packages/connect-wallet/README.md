@@ -61,6 +61,7 @@ await wallet.signTransaction(tx)
 Browser-based wallet implementation.
 
 **Methods:**
+
 - `static create(): Promise<BrowserWallet>` - Create new wallet
 - `getAddress(): Address` - Get wallet address
 - `getBalance(): Promise<bigint>` - Get wallet balance
@@ -73,9 +74,11 @@ Browser-based wallet implementation.
 Node.js wallet implementation.
 
 **Constructor:**
+
 - `new NodeWallet(privateKey: PrivateKey)` - Create from private key
 
 **Methods:**
+
 - `getAddress(): Address` - Get wallet address
 - `getBalance(): Promise<bigint>` - Get wallet balance
 - `signMessage(message: string | Uint8Array): Promise<Signature>` - Sign arbitrary message, returns Signature object

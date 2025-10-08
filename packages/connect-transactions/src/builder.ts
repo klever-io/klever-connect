@@ -584,11 +584,12 @@ export class TransactionBuilder {
       kdaFee && kdaFee.kda
         ? {
             KDA: encoder.encode(kdaFee.kda),
-            Amount: typeof kdaFee.amount === 'bigint'
-              ? Number(kdaFee.amount)
-              : typeof kdaFee.amount === 'string'
+            Amount:
+              typeof kdaFee.amount === 'bigint'
                 ? Number(kdaFee.amount)
-                : kdaFee.amount,
+                : typeof kdaFee.amount === 'string'
+                  ? Number(kdaFee.amount)
+                  : kdaFee.amount,
           }
         : null
 

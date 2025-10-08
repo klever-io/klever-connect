@@ -6,28 +6,28 @@ describe('KleverProvider Configuration', () => {
   describe('Network configuration patterns', () => {
     it('should use mainnet by default (no config)', () => {
       const provider = new KleverProvider()
-      
+
       expect(provider.network.name).toBe('mainnet')
       expect(provider.network.chainId).toBe('108')
     })
 
     it('should accept network name as string', () => {
       const provider = new KleverProvider('testnet')
-      
+
       expect(provider.network.name).toBe('testnet')
       expect(provider.network.chainId).toBe('109')
     })
 
     it('should accept network name in config object', () => {
       const provider = new KleverProvider({ network: 'testnet' })
-      
+
       expect(provider.network.name).toBe('testnet')
       expect(provider.network.chainId).toBe('109')
     })
 
     it('should accept Network object', () => {
       const provider = new KleverProvider({ network: NETWORKS.testnet })
-      
+
       expect(provider.network.name).toBe('testnet')
       expect(provider.network.chainId).toBe('109')
     })
@@ -35,9 +35,9 @@ describe('KleverProvider Configuration', () => {
     it('should accept custom network via url and chainId', () => {
       const provider = new KleverProvider({
         url: 'https://custom-node.com',
-        chainId: '100'
+        chainId: '100',
       })
-      
+
       expect(provider.network.name).toBe('custom')
       expect(provider.network.chainId).toBe('100')
       expect(provider.network.config.api).toBe('https://custom-node.com')
@@ -77,9 +77,9 @@ describe('KleverProvider Configuration', () => {
         timeout: 60000,
         cache: { ttl: 30000, maxSize: 200 },
         retry: { maxRetries: 5, backoff: 'exponential' },
-        debug: false
+        debug: false,
       })
-      
+
       expect(provider.network.name).toBe('testnet')
     })
 
@@ -95,12 +95,12 @@ describe('KleverProvider Configuration', () => {
     it('should maintain compatibility with existing code', () => {
       // Old way (config object with network)
       const oldWay = new KleverProvider({
-        network: NETWORKS.testnet
+        network: NETWORKS.testnet,
       })
-      
+
       // New way (network name string)
       const newWay = new KleverProvider('testnet')
-      
+
       expect(oldWay.network.chainId).toBe(newWay.network.chainId)
       expect(oldWay.network.name).toBe(newWay.network.name)
     })

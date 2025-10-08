@@ -264,7 +264,10 @@ function encodeEnum(
     // Check if it's a numeric string (e.g., "01", "0", "00", "1")
     const numericValue = Number(value)
     // Handle numeric strings including those with leading zeros (e.g., "00", "01")
-    if (!isNaN(numericValue) && (String(numericValue) === value.replace(/^0+/, '') || value.match(/^0+$/))) {
+    if (
+      !isNaN(numericValue) &&
+      (String(numericValue) === value.replace(/^0+/, '') || value.match(/^0+$/))
+    ) {
       // It's a numeric discriminant passed as string
       discriminant = numericValue
     } else {

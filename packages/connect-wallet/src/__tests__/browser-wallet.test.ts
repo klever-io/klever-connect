@@ -76,11 +76,7 @@ describe('BrowserWallet', () => {
       setPrivateKey: vi.fn().mockResolvedValue(undefined),
       getWalletAddress: vi.fn().mockReturnValue('klv1test'),
       getProvider: vi.fn().mockReturnValue({}),
-      signMessage: vi
-        .fn()
-        .mockResolvedValue(
-          'a'.repeat(128),
-        ) /* 64 bytes = 128 hex chars */,
+      signMessage: vi.fn().mockResolvedValue('a'.repeat(128)) /* 64 bytes = 128 hex chars */,
       validateSignature: vi.fn().mockResolvedValue({
         isValid: true,
         signer: 'klv1test',
@@ -552,7 +548,6 @@ describe('BrowserWallet', () => {
         privateKey: 'a'.repeat(64),
       })
       await wallet.connect()
-
       ;(mockProvider.getNonce as ReturnType<typeof vi.fn>).mockResolvedValue(5)
 
       const tx = await wallet.buildTransaction([
