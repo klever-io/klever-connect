@@ -1,0 +1,103 @@
+name: Release
+
+# Manual release workflow - trigger via GitHub UI
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      packages:
+        description: 'Packages to publish (comma-separated, or "all")'
+        required: true
+        default: 'all'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Bump versions
+        run: |
+          if [ "${{ github.event.inputs.packages }}" = "all" ]; then
+            pnpm -r exec -- npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          else
+            IFS=',' read -ra PKGS <<< "${{ github.event.inputs.packages }}"
+            for pkg in "${PKGS[@]}"; do
+              pnpm --filter "@klever/${pkg}" exec -- npm version ${{ github.event.inputs.version }} --no-git-tag-version
+            done
+          fi
+
+      - name: Commit version changes
+        run: |
+          git add .
+          git commit -m "chore: release ${{ github.event.inputs.version }} version" || echo "No changes to commit"
+          git push
+
+      - name: Publish to npm (dry-run for review)
+        run: |
+          echo "📦 Packages that would be published:"
+          if [ "${{ github.event.inputs.packages }}" = "all" ]; then
+            pnpm -r publish --dry-run --access public --no-git-checks
+          else
+            IFS=',' read -ra PKGS <<< "${{ github.event.inputs.packages }}"
+            for pkg in "${PKGS[@]}"; do
+              pnpm --filter "@klever/${pkg}" publish --dry-run --access public --no-git-checks
+            done
+          fi
+
+      - name: Create summary
+        run: |
+          echo "## 📦 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version bump**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Packages**: ${{ github.event.inputs.packages }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚠️ Next Steps (Manual)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the version changes in the commit" >> $GITHUB_STEP_SUMMARY
+          echo "2. Create git tags for released packages" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run publish command manually:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "pnpm -r publish --access public" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
