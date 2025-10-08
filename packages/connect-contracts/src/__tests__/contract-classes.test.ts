@@ -184,6 +184,26 @@ describe('Contract', () => {
     })
   })
 
+  describe('invoke method', () => {
+    it('should throw when calling readonly function', async () => {
+      const mockProvider = createMockProvider()
+      const contract = new Contract(contractAddress, abi, mockProvider)
+
+      await expect(contract.invoke('getLastResult')).rejects.toThrow(
+        'Function getLastResult is readonly',
+      )
+    })
+
+    it('should throw when function does not exist', async () => {
+      const mockSigner = createMockSigner()
+      const contract = new Contract(contractAddress, abi, mockSigner)
+
+      await expect(contract.invoke('nonExistent')).rejects.toThrow(
+        'Function nonExistent does not exist in contract',
+      )
+    })
+  })
+
   describe('connect and attach', () => {
     it('should connect to new signer', () => {
       const contract = new Contract(contractAddress, abi)

@@ -59,9 +59,9 @@ export interface IProvider {
   getNetwork(): Network
   getBlockNumber(): Promise<number>
   getBlock(blockHashOrNumber: BlockIdentifier): Promise<IBlockResponse | null>
-  getTransaction(hash: TransactionHash): Promise<ITransactionResponse | null>
-  getTransactionReceipt(hash: TransactionHash): Promise<IReceipt[] | null>
-  getTransactionUrl(hash: TransactionHash): string
+  getTransaction(hash: TransactionHash | string): Promise<ITransactionResponse | null>
+  getTransactionReceipt(hash: TransactionHash | string): Promise<IReceipt[] | null>
+  getTransactionUrl(hash: TransactionHash | string): string
   getBalance(address: KleverAddress, assetId?: AssetID): Promise<bigint>
   getAccount(address: KleverAddress): Promise<IAccount>
   getNonce(address: KleverAddress): Promise<number>
@@ -70,7 +70,7 @@ export interface IProvider {
   sendRawTransaction(signedTx: string | Uint8Array | unknown): Promise<TransactionHash>
   sendRawTransactions(signedTxs: (string | Uint8Array | unknown)[]): Promise<TransactionHash[]>
   waitForTransaction(
-    hash: TransactionHash,
+    hash: TransactionHash | string,
     confirmations?: number,
     onProgress?: (
       status: 'pending' | 'confirming' | 'failed' | 'timeout',

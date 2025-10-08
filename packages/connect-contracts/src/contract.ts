@@ -381,6 +381,37 @@ export class Contract {
   }
 
   /**
+   * Invoke a mutable contract function (state-changing transaction)
+   * This method explicitly requires the function to be mutable.
+   *
+   * @param functionName - The name of the mutable function to invoke
+   * @param args - Arguments to pass to the function
+   * @returns Transaction submit result with hash and wait() method
+   *
+   * @example
+   * ```typescript
+   * // Invoke a state-changing function
+   * const result = await contract.invoke('bet', betType, betValue)
+   * await result.wait() // Wait for confirmation
+   * ```
+   */
+  async invoke(functionName: string, ...args: unknown[]): Promise<TransactionSubmitResult> {
+    if (!this.hasFunction(functionName)) {
+      throw new Error(`Function ${functionName} does not exist in contract`)
+    }
+
+    // Ensure function is mutable (not readonly)
+    if (this.interface.isReadonly(functionName)) {
+      throw new Error(
+        `Function ${functionName} is readonly. Use call() or callRaw() for queries instead.`,
+      )
+    }
+
+    // Delegate to the dynamic call method which handles mutable functions
+    return this.call<TransactionSubmitResult>(functionName, ...args)
+  }
+
+  /**
    * Query a contract function and return raw result (unparsed)
    * Useful when you need access to the raw returnData
    */

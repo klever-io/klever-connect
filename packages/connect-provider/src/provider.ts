@@ -325,10 +325,10 @@ export class KleverProvider implements IProvider {
   /**
    * Retrieves transaction information by hash
    *
-   * @param hash - The transaction hash
+   * @param hash - The transaction hash (as TransactionHash branded type or string)
    * @returns Transaction details
    */
-  async getTransaction(hash: string): Promise<ITransactionResponse | null> {
+  async getTransaction(hash: TransactionHash | string): Promise<ITransactionResponse | null> {
     const cacheKey = `tx:${hash}`
 
     if (this.cache) {
@@ -355,7 +355,7 @@ export class KleverProvider implements IProvider {
     return transaction
   }
 
-  async getTransactionReceipt(hash: TransactionHash): Promise<IReceipt[] | null> {
+  async getTransactionReceipt(hash: TransactionHash | string): Promise<IReceipt[] | null> {
     const tx = await this.getTransaction(hash)
     if (!tx) {
       return null
@@ -527,7 +527,7 @@ export class KleverProvider implements IProvider {
 
   /**
    * Get the full URL for viewing a transaction in the explorer
-   * @param txHash - The transaction hash
+   * @param txHash - The transaction hash (as TransactionHash branded type or string)
    * @returns The full URL to view the transaction
    *
    * @example
@@ -536,7 +536,7 @@ export class KleverProvider implements IProvider {
    * console.log(txUrl) // https://kleverscan.org/transaction/0x123...
    * ```
    */
-  getTransactionUrl(txHash: string): string {
+  getTransactionUrl(txHash: TransactionHash | string): string {
     return `${this.network.config.explorer}/transaction/${txHash}`
   }
 
@@ -770,7 +770,7 @@ export class KleverProvider implements IProvider {
 
   /**
    * Waits for a transaction to be mined and confirmed
-   * @param hash - The transaction hash
+   * @param hash - The transaction hash (as TransactionHash branded type or string)
    * @param confirmations - Number of confirmations to wait for (default: 1)
    * @param onProgress - Optional callback for progress updates
    * @returns The transaction or null if not found/timeout
@@ -791,7 +791,7 @@ export class KleverProvider implements IProvider {
    * ```
    */
   waitForTransaction(
-    hash: TransactionHash,
+    hash: TransactionHash | string,
     confirmations?: number,
     onProgress?: (
       status: 'pending' | 'confirming' | 'failed' | 'timeout',
