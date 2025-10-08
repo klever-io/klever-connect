@@ -199,7 +199,21 @@ export class ReceiptParseError extends Error {
 // ============================================================================
 
 /**
- * Safely extract string from receipt data
+ * Safely extract string value from receipt data using dot notation path
+ *
+ * Supports:
+ * - Nested objects: 'contract.parameter.receiver'
+ * - Array access: 'contract[0].parameter'
+ *
+ * @param receipt - Transaction receipt to extract from
+ * @param path - Dot notation path (e.g., 'contract[0].parameter.claimType')
+ * @returns Extracted string value or undefined if path not found
+ *
+ * @example
+ * ```typescript
+ * const receiver = getReceiptString(receipt, 'contract[0].parameter.receiver')
+ * const claimType = getReceiptString(receipt, 'contract[0].parameter.claimType')
+ * ```
  */
 function getReceiptString(receipt: ITransactionResponse, path: string): string | undefined {
   const parts = path.split('.')
@@ -235,7 +249,19 @@ function getReceiptString(receipt: ITransactionResponse, path: string): string |
 }
 
 /**
- * Safely extract number from receipt data
+ * Safely extract numeric value from receipt data using dot notation path
+ *
+ * Converts string values to numbers automatically.
+ *
+ * @param receipt - Transaction receipt to extract from
+ * @param path - Dot notation path (e.g., 'contract[0].parameter.withdrawType')
+ * @returns Extracted number or undefined if path not found or not a valid number
+ *
+ * @example
+ * ```typescript
+ * const withdrawType = getReceiptNumber(receipt, 'contract[0].parameter.withdrawType')
+ * const claimType = getReceiptNumber(receipt, 'contract[0].parameter.claimType')
+ * ```
  */
 function getReceiptNumber(receipt: ITransactionResponse, path: string): number | undefined {
   const value = getReceiptString(receipt, path)
@@ -250,7 +276,33 @@ function getReceiptNumber(receipt: ITransactionResponse, path: string): number |
 // ============================================================================
 
 /**
- * Parse freeze transaction receipt to extract bucketId and amount
+ * Parse freeze transaction receipt to extract bucket ID and frozen amount
+ *
+ * Freeze receipts contain:
+ * - bucketId: Unique identifier for the frozen bucket (32-byte hash)
+ * - amount: Amount that was frozen
+ * - kda: Asset ID (KDA) that was frozen
+ *
+ * Supports multi-freeze transactions where multiple assets are frozen in one transaction.
+ *
+ * @param receipt - Transaction receipt from a freeze operation
+ * @returns Parsed freeze data with bucket ID, amount, and asset details
+ * @throws {ReceiptParseError} If receipt is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * // Single freeze
+ * const tx = await provider.getTransaction(freezeTxHash)
+ * const { bucketId, amount, kda } = parseReceipt.freeze(tx)
+ * console.log(`Frozen ${amount} ${kda} in bucket ${bucketId}`)
+ *
+ * // Multiple freezes
+ * const { bucketId, amount, kda, freezes } = parseReceipt.freeze(tx)
+ * console.log(`Primary freeze: ${amount} ${kda}`)
+ * if (freezes) {
+ *   freezes.forEach(f => console.log(`  ${f.amount} ${f.kda} -> ${f.bucketId}`))
+ * }
+ * ```
  */
 function freeze(receipt: ITransactionResponse): FreezeReceiptData {
   if (!receipt.receipts || receipt.receipts.length === 0) {
@@ -300,7 +352,27 @@ function freeze(receipt: ITransactionResponse): FreezeReceiptData {
 }
 
 /**
- * Parse unfreeze transaction receipt
+ * Parse unfreeze transaction receipt to extract bucket and availability details
+ *
+ * Unfreeze receipts contain:
+ * - bucketId: ID of the bucket that was unfrozen
+ * - kda: Asset ID that was unfrozen
+ * - availableAt: Timestamp when funds can be withdrawn (if applicable)
+ *
+ * @param receipt - Transaction receipt from an unfreeze operation
+ * @returns Parsed unfreeze data with bucket ID and availability info
+ * @throws {ReceiptParseError} If receipt is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * const tx = await provider.getTransaction(unfreezeTxHash)
+ * const { bucketId, kda, availableAt } = parseReceipt.unfreeze(tx)
+ * console.log(`Unfrozen ${kda} from bucket ${bucketId}`)
+ * if (availableAt) {
+ *   const date = new Date(availableAt * 1000)
+ *   console.log(`Available for withdrawal at: ${date.toISOString()}`)
+ * }
+ * ```
  */
 function unfreeze(receipt: ITransactionResponse): UnfreezeReceiptData {
   if (!receipt.receipts || receipt.receipts.length === 0) {
@@ -336,7 +408,32 @@ function unfreeze(receipt: ITransactionResponse): UnfreezeReceiptData {
 }
 
 /**
- * Parse claim transaction receipt to extract rewards
+ * Parse claim transaction receipt to extract reward details
+ *
+ * Claim receipts contain:
+ * - rewards: Array of all claimed rewards by asset
+ * - totalClaimed: Sum of all claimed amounts
+ * - claimType: Type of claim (0=Staking, 1=Market, 2=Allowance, 3=FPR)
+ *
+ * Claims always involve multiple receipts (one per asset claimed).
+ *
+ * @param receipt - Transaction receipt from a claim operation
+ * @returns Parsed claim data with rewards array and totals
+ * @throws {ReceiptParseError} If receipt is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * const tx = await provider.getTransaction(claimTxHash)
+ * const { rewards, totalClaimed, claimType } = parseReceipt.claim(tx)
+ *
+ * console.log(`Claimed ${totalClaimed} total across ${rewards.length} assets`)
+ * rewards.forEach(r => {
+ *   console.log(`  ${r.amount} ${r.kda}`)
+ * })
+ *
+ * const claimTypes = ['Staking', 'Market', 'Allowance', 'FPR']
+ * console.log(`Claim type: ${claimTypes[claimType || 0]}`)
+ * ```
  */
 function claim(receipt: ITransactionResponse): ClaimReceiptData {
   if (!receipt.receipts || receipt.receipts.length === 0) {
@@ -366,7 +463,32 @@ function claim(receipt: ITransactionResponse): ClaimReceiptData {
 }
 
 /**
- * Parse withdraw transaction receipt
+ * Parse withdraw transaction receipt to extract withdrawal details
+ *
+ * Withdraw receipts contain:
+ * - amount: Amount withdrawn
+ * - kda: Asset ID that was withdrawn
+ * - withdrawType: Type of withdrawal operation
+ *
+ * Supports multi-withdraw transactions.
+ *
+ * @param receipt - Transaction receipt from a withdraw operation
+ * @returns Parsed withdraw data with amount and asset details
+ * @throws {ReceiptParseError} If receipt is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * const tx = await provider.getTransaction(withdrawTxHash)
+ * const { amount, kda, withdrawType } = parseReceipt.withdraw(tx)
+ * console.log(`Withdrew ${amount} ${kda}`)
+ *
+ * // Multiple withdrawals
+ * const { amount, kda, withdrawals } = parseReceipt.withdraw(tx)
+ * if (withdrawals) {
+ *   console.log(`Total withdrawals: ${withdrawals.length}`)
+ *   withdrawals.forEach(w => console.log(`  ${w.amount} ${w.kda}`))
+ * }
+ * ```
  */
 function withdraw(receipt: ITransactionResponse): WithdrawReceiptData {
   if (!receipt.receipts || receipt.receipts.length === 0) {
@@ -411,7 +533,22 @@ function withdraw(receipt: ITransactionResponse): WithdrawReceiptData {
 }
 
 /**
- * Parse delegate transaction receipt
+ * Parse delegate transaction receipt to extract delegation details
+ *
+ * Delegate receipts contain:
+ * - validator: Address of the validator that was delegated to
+ * - bucketId: Bucket ID that was delegated
+ *
+ * @param receipt - Transaction receipt from a delegate operation
+ * @returns Parsed delegation data with validator and bucket ID
+ * @throws {ReceiptParseError} If receipt is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * const tx = await provider.getTransaction(delegateTxHash)
+ * const { validator, bucketId } = parseReceipt.delegate(tx)
+ * console.log(`Delegated bucket ${bucketId} to validator ${validator}`)
+ * ```
  */
 function delegate(receipt: ITransactionResponse): DelegateReceiptData {
   if (!receipt.receipts || receipt.receipts.length === 0) {
@@ -450,8 +587,28 @@ function delegate(receipt: ITransactionResponse): DelegateReceiptData {
 }
 
 /**
- * Parse undelegate transaction receipt
+ * Parse undelegate transaction receipt to extract undelegation details
+ *
+ * Undelegate receipts contain:
+ * - bucketId: Bucket ID that was undelegated
+ * - availableAt: Timestamp when funds can be withdrawn
+ *
  * Note: Undelegate creates a Delegate receipt (type 7) with empty delegate field
+ *
+ * @param receipt - Transaction receipt from an undelegate operation
+ * @returns Parsed undelegation data with bucket ID and availability info
+ * @throws {ReceiptParseError} If receipt is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * const tx = await provider.getTransaction(undelegateTxHash)
+ * const { bucketId, availableAt } = parseReceipt.undelegate(tx)
+ * console.log(`Undelegated bucket ${bucketId}`)
+ * if (availableAt) {
+ *   const date = new Date(availableAt * 1000)
+ *   console.log(`Available for withdrawal: ${date.toISOString()}`)
+ * }
+ * ```
  */
 function undelegate(receipt: ITransactionResponse): UndelegateReceiptData {
   if (!receipt.receipts || receipt.receipts.length === 0) {
@@ -493,7 +650,37 @@ function undelegate(receipt: ITransactionResponse): UndelegateReceiptData {
 }
 
 /**
- * Parse transfer transaction receipt
+ * Parse transfer transaction receipt to extract transfer details
+ *
+ * Transfer receipts contain:
+ * - sender: Address that sent the assets
+ * - receiver: Address that received the assets
+ * - amount: Amount transferred
+ * - kda: Asset ID that was transferred (defaults to KLV)
+ *
+ * Supports multi-transfer transactions where multiple transfers occur.
+ *
+ * @param receipt - Transaction receipt from a transfer operation
+ * @returns Parsed transfer data with sender, receiver, and amount
+ * @throws {ReceiptParseError} If receipt is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * // Single transfer
+ * const tx = await provider.getTransaction(transferTxHash)
+ * const { sender, receiver, amount, kda } = parseReceipt.transfer(tx)
+ * console.log(`${sender} sent ${amount} ${kda} to ${receiver}`)
+ *
+ * // Multiple transfers
+ * const { sender, receiver, amount, kda, transfers } = parseReceipt.transfer(tx)
+ * console.log(`Primary: ${sender} -> ${receiver}: ${amount} ${kda}`)
+ * if (transfers) {
+ *   console.log(`Total transfers: ${transfers.length}`)
+ *   transfers.forEach(t => {
+ *     console.log(`  ${t.sender} -> ${t.receiver}: ${t.amount} ${t.kda}`)
+ *   })
+ * }
+ * ```
  */
 function transfer(receipt: ITransactionResponse): TransferReceiptData {
   if (!receipt.receipts || receipt.receipts.length === 0) {

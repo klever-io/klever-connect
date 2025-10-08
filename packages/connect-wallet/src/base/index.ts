@@ -16,8 +16,46 @@ import type { Wallet, WalletEvent, WalletEventHandler } from '../types'
 import type { TransactionHash } from '@klever/connect-core'
 
 /**
- * Base wallet implementation providing common functionality
- * All wallet implementations should extend this class
+ * Abstract base wallet implementation providing common functionality
+ *
+ * BaseWallet implements the core wallet interface and provides shared functionality
+ * for all wallet types. It handles:
+ * - Provider management
+ * - Event system (connect, disconnect, accountChanged)
+ * - Balance and nonce queries
+ * - Transaction broadcasting
+ * - Message verification
+ *
+ * **Design Pattern:**
+ * This class follows the Template Method pattern, where concrete implementations
+ * (NodeWallet, BrowserWallet) provide specific implementations for:
+ * - connect() - How to establish wallet connection
+ * - disconnect() - How to clean up connection
+ * - signMessage() - How to sign arbitrary messages
+ * - signTransaction() - How to sign blockchain transactions
+ *
+ * **Common Functionality:**
+ * All wallets inherit these capabilities:
+ * - getBalance() - Query wallet balance
+ * - getNonce() - Get transaction nonce
+ * - verifyMessage() - Verify message signatures
+ * - broadcastTransaction() - Send signed transactions to blockchain
+ * - Event handling (on/off/emit)
+ *
+ * **Do Not Instantiate Directly:**
+ * This is an abstract class. Use concrete implementations:
+ * - NodeWallet for server-side Node.js applications
+ * - BrowserWallet for browser/dApp applications
+ *
+ * @example
+ * ```typescript
+ * // Don't do this (abstract class):
+ * // const wallet = new BaseWallet(provider) // ❌ Error
+ *
+ * // Do this instead:
+ * import { NodeWallet } from '@klever/connect-wallet'
+ * const wallet = new NodeWallet(provider, privateKey) // ✅ Correct
+ * ```
  */
 export abstract class BaseWallet implements Wallet {
   protected _provider: IProvider

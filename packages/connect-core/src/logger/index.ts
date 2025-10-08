@@ -184,7 +184,34 @@ function isTTY(): boolean {
   return false
 }
 
-// Logger factory
+/**
+ * Creates a logger instance for a specific module
+ *
+ * Logger instances provide debug, info, warn, and error logging methods
+ * with configurable levels, formatting, and output handling.
+ *
+ * @param module - The module name to prefix log messages with
+ * @param options - Optional logger configuration
+ * @returns A configured Logger instance
+ *
+ * @example
+ * ```typescript
+ * const logger = createLogger('MyModule', {
+ *   level: 'debug',
+ *   timestamp: true,
+ *   colors: true
+ * })
+ *
+ * logger.debug('Detailed debug info')
+ * logger.info('Operation started')
+ * logger.warn('Low memory warning')
+ * logger.error('Operation failed', error)
+ *
+ * // Create child logger with nested module name
+ * const childLogger = logger.child('SubModule')
+ * childLogger.info('Message from MyModule:SubModule')
+ * ```
+ */
 export function createLogger(module: string, options: LoggerOptions = {}): Logger {
   const level = options.level || (isProduction() ? 'warn' : 'debug')
   const handler = options.handler || new ConsoleHandler(options)
@@ -245,6 +272,34 @@ function initGlobalOptions(): LoggerOptions {
 // Global logger configuration
 let globalOptions: LoggerOptions = initGlobalOptions()
 
+/**
+ * Sets global logger options that apply to all loggers created via `getGlobalLogger()`
+ *
+ * This allows you to configure logging behavior across the entire SDK from a single point.
+ * Changes affect all future logger instances created with `getGlobalLogger()`.
+ *
+ * @param options - Partial logger options to merge with current global settings
+ *
+ * @example
+ * ```typescript
+ * // Set global log level to debug
+ * setGlobalLoggerOptions({ level: 'debug' })
+ *
+ * // Disable timestamps and colors
+ * setGlobalLoggerOptions({
+ *   timestamp: false,
+ *   colors: false
+ * })
+ *
+ * // Use custom log handler
+ * setGlobalLoggerOptions({
+ *   handler: myCustomHandler
+ * })
+ * ```
+ *
+ * @see {@link getGlobalLogger}
+ * @see {@link initBrowserLogger}
+ */
 export function setGlobalLoggerOptions(options: Partial<LoggerOptions>): void {
   globalOptions = { ...globalOptions, ...options }
 }
@@ -279,13 +334,73 @@ export function initBrowserLogger(options?: Partial<LoggerOptions>): void {
   }
 }
 
+/**
+ * Creates a logger instance using global configuration
+ *
+ * This is the recommended way to create loggers in the SDK, as it ensures
+ * consistent configuration across all modules. The global options can be
+ * set via `setGlobalLoggerOptions()` or `initBrowserLogger()`.
+ *
+ * @param module - The module name for the logger
+ * @returns A Logger instance configured with global options
+ *
+ * @example
+ * ```typescript
+ * // In your module
+ * const logger = getGlobalLogger('MyModule')
+ *
+ * logger.info('Module initialized')
+ * logger.debug('Processing data', { count: 10 })
+ * ```
+ *
+ * @see {@link setGlobalLoggerOptions} to configure global options
+ * @see {@link createLogger} for creating loggers with custom options
+ */
 export function getGlobalLogger(module: string): Logger {
   return createLogger(module, globalOptions)
 }
 
-// Singleton loggers for core modules
+/**
+ * Pre-configured logger for core SDK operations
+ * @example
+ * ```typescript
+ * coreLogger.info('SDK initialized')
+ * ```
+ */
 export const coreLogger = getGlobalLogger('core')
+
+/**
+ * Pre-configured logger for provider/network operations
+ * @example
+ * ```typescript
+ * providerLogger.debug('Fetching account balance')
+ * ```
+ */
 export const providerLogger = getGlobalLogger('provider')
+
+/**
+ * Pre-configured logger for wallet operations
+ * @example
+ * ```typescript
+ * walletLogger.info('Signing transaction')
+ * ```
+ */
 export const walletLogger = getGlobalLogger('wallet')
+
+/**
+ * Pre-configured logger for transaction operations
+ * @example
+ * ```typescript
+ * transactionLogger.debug('Building transfer transaction')
+ * ```
+ */
 export const transactionLogger = getGlobalLogger('transaction')
+
+/**
+ * Pre-configured logger for smart contract operations
+ * @example
+ * ```typescript
+ * contractLogger.info('Invoking contract method', { method: 'transfer' })
+ * ```
+ */
 export const contractLogger = getGlobalLogger('contract')

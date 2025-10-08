@@ -3,14 +3,67 @@
  *
  * Decodes return values from contract functions.
  * Flow: Base64 string → Bytes → Decode by ABI type
+ *
+ * @remarks
+ * This module provides low-level decoding functions for individual parameter types.
+ * For most use cases, prefer using ABIDecoder which handles decoding automatically
+ * based on the contract ABI.
+ *
+ * Decoding rules:
+ * - Integers: Big-endian bytes to number (u8, u16, u32) or bigint (u64)
+ * - Boolean: 0x01 = true, 0x00 = false
+ * - Address: 32 raw bytes encoded to bech32
+ * - Strings: UTF-8 bytes to string (with optional 4-byte length prefix)
+ * - Bytes: Raw bytes (with optional 4-byte length prefix)
+ *
+ * @example Using contractResult helper
+ * ```typescript
+ * import { contractResult } from '@klever/connect-contracts'
+ *
+ * // Decode base64 to bytes
+ * const bytes = contractResult.fromBase64('AQ==')
+ *
+ * // Decode different types
+ * const u32 = contractResult.u32(bytes)
+ * const addr = contractResult.address(bytes)
+ * const str = contractResult.string(bytes)
+ *
+ * // Convert hex to base64
+ * const base64 = contractResult.hexToBase64('0f4240')
+ * ```
+ *
+ * @example Using individual decoding functions
+ * ```typescript
+ * import { decodeU32, decodeAddress, decodeString } from '@klever/connect-contracts'
+ *
+ * const amount = decodeU32(bytes)
+ * const sender = decodeAddress(bytes, 0)
+ * const message = decodeString(bytes, 32)
+ * ```
  */
 
 import { bech32Encode } from '@klever/connect-encoding'
 import type { DecodedResult } from '../types/contract'
 
 /**
- * Decode unsigned integer (u8, u16, u32, u64)
- * Big-endian encoding
+ * Decode unsigned 8-bit integer (u8)
+ *
+ * Decodes a single byte to a number (0-255).
+ * Uses big-endian encoding.
+ *
+ * @param bytes - Bytes to decode
+ * @param offset - Starting offset in bytes (default: 0)
+ * @returns Decoded result with value, type, and bytes consumed
+ * @throws Error if insufficient bytes
+ *
+ * @example
+ * ```typescript
+ * const bytes = new Uint8Array([42])
+ * const result = decodeU8(bytes)
+ * console.log(result.value) // 42
+ * console.log(result.type) // 'u8'
+ * console.log(result.consumed) // 1
+ * ```
  */
 export function decodeU8(bytes: Uint8Array, offset = 0): DecodedResult {
   if (offset >= bytes.length) {
@@ -25,6 +78,25 @@ export function decodeU8(bytes: Uint8Array, offset = 0): DecodedResult {
   }
 }
 
+/**
+ * Decode unsigned 16-bit integer (u16)
+ *
+ * Decodes 2 bytes to a number (0-65535).
+ * Uses big-endian encoding.
+ *
+ * @param bytes - Bytes to decode
+ * @param offset - Starting offset in bytes (default: 0)
+ * @returns Decoded result with value, type, and bytes consumed
+ * @throws Error if insufficient bytes
+ *
+ * @example
+ * ```typescript
+ * const bytes = new Uint8Array([3, 232]) // 0x03E8 = 1000
+ * const result = decodeU16(bytes)
+ * console.log(result.value) // 1000
+ * console.log(result.consumed) // 2
+ * ```
+ */
 export function decodeU16(bytes: Uint8Array, offset = 0): DecodedResult {
   if (offset + 1 >= bytes.length) {
     throw new Error('Insufficient bytes to decode u16')
@@ -44,6 +116,25 @@ export function decodeU16(bytes: Uint8Array, offset = 0): DecodedResult {
   }
 }
 
+/**
+ * Decode unsigned 32-bit integer (u32)
+ *
+ * Decodes 4 bytes to a number (0-4294967295).
+ * Uses big-endian encoding.
+ *
+ * @param bytes - Bytes to decode
+ * @param offset - Starting offset in bytes (default: 0)
+ * @returns Decoded result with value, type, and bytes consumed
+ * @throws Error if insufficient bytes
+ *
+ * @example
+ * ```typescript
+ * const bytes = new Uint8Array([15, 66, 64]) // 0x0F4240 = 1000000
+ * const result = decodeU32(bytes)
+ * console.log(result.value) // 1000000
+ * console.log(result.consumed) // 4
+ * ```
+ */
 export function decodeU32(bytes: Uint8Array, offset = 0): DecodedResult {
   if (offset + 3 >= bytes.length) {
     throw new Error('Insufficient bytes to decode u32')
@@ -63,6 +154,26 @@ export function decodeU32(bytes: Uint8Array, offset = 0): DecodedResult {
   }
 }
 
+/**
+ * Decode unsigned 64-bit integer (u64)
+ *
+ * Decodes 8 bytes to a bigint (0 to 2^64-1).
+ * Uses big-endian encoding.
+ *
+ * @param bytes - Bytes to decode
+ * @param offset - Starting offset in bytes (default: 0)
+ * @returns Decoded result with bigint value, type, and bytes consumed
+ * @throws Error if insufficient bytes
+ *
+ * @example
+ * ```typescript
+ * const bytes = new Uint8Array([59, 154, 202, 0, 0, 0, 0, 0])
+ * const result = decodeU64(bytes)
+ * console.log(result.value) // 1000000000n
+ * console.log(result.type) // 'u64'
+ * console.log(result.consumed) // 8
+ * ```
+ */
 export function decodeU64(bytes: Uint8Array, offset = 0): DecodedResult {
   if (offset + 7 >= bytes.length) {
     throw new Error('Insufficient bytes to decode u64')
@@ -84,7 +195,26 @@ export function decodeU64(bytes: Uint8Array, offset = 0): DecodedResult {
 
 /**
  * Decode boolean
- * 0x01 = true, 0x00 = false
+ *
+ * Decodes a single byte to a boolean value.
+ * - 0x01 = true
+ * - 0x00 = false
+ *
+ * @param bytes - Bytes to decode
+ * @param offset - Starting offset in bytes (default: 0)
+ * @returns Decoded result with boolean value, type, and bytes consumed
+ * @throws Error if insufficient bytes
+ *
+ * @example
+ * ```typescript
+ * const trueBytes = new Uint8Array([1])
+ * const result1 = decodeBool(trueBytes)
+ * console.log(result1.value) // true
+ *
+ * const falseBytes = new Uint8Array([0])
+ * const result2 = decodeBool(falseBytes)
+ * console.log(result2.value) // false
+ * ```
  */
 export function decodeBool(bytes: Uint8Array, offset = 0): DecodedResult {
   if (offset >= bytes.length) {
@@ -101,7 +231,23 @@ export function decodeBool(bytes: Uint8Array, offset = 0): DecodedResult {
 }
 
 /**
- * Decode address (32 raw bytes → bech32)
+ * Decode Klever address
+ *
+ * Decodes 32 raw bytes to a bech32-formatted Klever address (klv1...).
+ *
+ * @param bytes - Bytes to decode (must have at least 32 bytes from offset)
+ * @param offset - Starting offset in bytes (default: 0)
+ * @returns Decoded result with bech32 address string, type, and bytes consumed
+ * @throws Error if insufficient bytes (needs 32 bytes)
+ *
+ * @example
+ * ```typescript
+ * // Assume bytes contains 32-byte raw address
+ * const result = decodeAddress(addressBytes)
+ * console.log(result.value) // 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
+ * console.log(result.type) // 'Address'
+ * console.log(result.consumed) // 32
+ * ```
  */
 export function decodeAddress(bytes: Uint8Array, offset = 0): DecodedResult {
   if (offset + 31 >= bytes.length) {
@@ -121,8 +267,33 @@ export function decodeAddress(bytes: Uint8Array, offset = 0): DecodedResult {
 }
 
 /**
- * Decode string (UTF-8 bytes)
- * Nested strings have 4-byte length prefix
+ * Decode UTF-8 string
+ *
+ * Decodes UTF-8 bytes to a string. The format depends on context:
+ * - Top-level: Raw bytes to end of array
+ * - Nested (with length prefix): 4-byte big-endian length + UTF-8 bytes
+ *
+ * @param bytes - Bytes to decode
+ * @param offset - Starting offset in bytes (default: 0)
+ * @param hasLengthPrefix - Whether to read 4-byte length prefix (default: false)
+ * @returns Decoded result with string value, type, and bytes consumed
+ * @throws Error if insufficient bytes
+ *
+ * @example Top-level decoding
+ * ```typescript
+ * const bytes = new Uint8Array([72, 101, 108, 108, 111]) // "Hello"
+ * const result = decodeString(bytes, 0, false)
+ * console.log(result.value) // 'Hello'
+ * console.log(result.consumed) // 5
+ * ```
+ *
+ * @example Nested decoding with length prefix
+ * ```typescript
+ * const bytes = new Uint8Array([0, 0, 0, 2, 72, 105]) // length=2, "Hi"
+ * const result = decodeString(bytes, 0, true)
+ * console.log(result.value) // 'Hi'
+ * console.log(result.consumed) // 6 (4 bytes length + 2 bytes data)
+ * ```
  */
 export function decodeString(
   bytes: Uint8Array,
@@ -205,6 +376,34 @@ export function decodeBytes(bytes: Uint8Array, offset = 0, hasLengthPrefix = fal
 
 /**
  * Decode base64 string to bytes
+ *
+ * Decodes a base64-encoded string to a Uint8Array.
+ * Works in both browser and Node.js environments.
+ *
+ * @param base64 - Base64-encoded string
+ * @returns Decoded bytes
+ *
+ * @example
+ * ```typescript
+ * const base64 = 'SGVsbG8=' // "Hello" in base64
+ * const bytes = decodeBase64(base64)
+ * console.log(bytes) // Uint8Array([72, 101, 108, 108, 111])
+ *
+ * const text = new TextDecoder().decode(bytes)
+ * console.log(text) // 'Hello'
+ * ```
+ *
+ * @example Decoding contract return data
+ * ```typescript
+ * // Contract returns base64-encoded data
+ * const returnData = ['AQ==', 'BQ=='] // [1, 5]
+ *
+ * const bytes1 = decodeBase64(returnData[0])
+ * const bytes2 = decodeBase64(returnData[1])
+ *
+ * console.log(bytes1) // Uint8Array([1])
+ * console.log(bytes2) // Uint8Array([5])
+ * ```
  */
 export function decodeBase64(base64: string): Uint8Array {
   // Use native atob in browser, Buffer in Node
@@ -224,6 +423,32 @@ export function decodeBase64(base64: string): Uint8Array {
 
 /**
  * Encode bytes to base64
+ *
+ * Encodes a Uint8Array to a base64 string.
+ * Works in both browser and Node.js environments.
+ *
+ * @param bytes - Bytes to encode
+ * @returns Base64-encoded string
+ *
+ * @example
+ * ```typescript
+ * const bytes = new Uint8Array([72, 101, 108, 108, 111]) // "Hello"
+ * const base64 = encodeBase64(bytes)
+ * console.log(base64) // 'SGVsbG8='
+ * ```
+ *
+ * @example Encoding for API requests
+ * ```typescript
+ * const data = new Uint8Array([1, 2, 3, 4])
+ * const encoded = encodeBase64(data)
+ *
+ * // Use in API request
+ * const response = await provider.queryContract({
+ *   ScAddress: contractAddress,
+ *   FuncName: 'processData',
+ *   Arguments: [encoded]
+ * })
+ * ```
  */
 export function encodeBase64(bytes: Uint8Array): string {
   if (typeof globalThis !== 'undefined' && 'btoa' in globalThis) {

@@ -326,7 +326,19 @@ export class KleverProvider implements IProvider {
    * Retrieves transaction information by hash
    *
    * @param hash - The transaction hash (as TransactionHash branded type or string)
-   * @returns Transaction details
+   * @returns Transaction details including receipts, or null if not found
+   * @throws {NetworkError} If there's a network error
+   *
+   * @example
+   * ```typescript
+   * const tx = await provider.getTransaction('0x123...')
+   * if (tx) {
+   *   console.log('Status:', tx.status)
+   *   console.log('Block:', tx.blockNum)
+   *   console.log('From:', tx.sender)
+   *   console.log('Receipts:', tx.receipts)
+   * }
+   * ```
    */
   async getTransaction(hash: TransactionHash | string): Promise<ITransactionResponse | null> {
     const cacheKey = `tx:${hash}`
@@ -355,6 +367,35 @@ export class KleverProvider implements IProvider {
     return transaction
   }
 
+  /**
+   * Retrieves transaction receipt(s) by hash
+   *
+   * Receipts contain detailed information about what happened during transaction execution,
+   * including transfers, freezes, claims, and other operations.
+   *
+   * @param hash - The transaction hash (as TransactionHash branded type or string)
+   * @returns Array of receipts or null if transaction not found
+   *
+   * @example
+   * ```typescript
+   * // Get receipts after transaction is mined
+   * const receipts = await provider.getTransactionReceipt(txHash)
+   * if (receipts) {
+   *   console.log(`Transaction has ${receipts.length} receipt(s)`)
+   *   receipts.forEach(receipt => {
+   *     console.log(`Type: ${receipt.typeString}, Asset: ${receipt.assetId}`)
+   *   })
+   * }
+   *
+   * // Parse receipts with type-safe parsers
+   * import { parseReceipt } from '@klever/connect-provider'
+   * const tx = await provider.getTransaction(txHash)
+   * if (tx) {
+   *   const freezeData = parseReceipt.freeze(tx)
+   *   console.log(`Bucket ID: ${freezeData.bucketId}`)
+   * }
+   * ```
+   */
   async getTransactionReceipt(hash: TransactionHash | string): Promise<IReceipt[] | null> {
     const tx = await this.getTransaction(hash)
     if (!tx) {
@@ -452,10 +493,30 @@ export class KleverProvider implements IProvider {
   }
 
   /**
-   * Queries a smart contract
+   * Queries a smart contract (read-only, no gas cost)
+   *
+   * Contract queries are free and don't require signing or broadcasting.
+   * Use this to read contract state or call view functions.
    *
    * @param params - Contract query parameters
-   * @returns Query result
+   * @returns Query result with return data and status
+   *
+   * @example
+   * ```typescript
+   * // Query contract balance
+   * const result = await provider.queryContract({
+   *   scAddress: 'klv1contract...',
+   *   funcName: 'getBalance',
+   *   args: ['klv1user...']
+   * })
+   *
+   * if (result.error) {
+   *   console.error('Query failed:', result.error)
+   * } else {
+   *   console.log('Return data:', result.data?.returnData)
+   *   console.log('Gas remaining:', result.data?.gasRemaining)
+   * }
+   * ```
    */
   async queryContract(params: IContractQueryParams): Promise<IContractQueryResult> {
     const response = await this.apiClient.post<IContractQueryResponse>('/sc/query', params)
@@ -490,8 +551,23 @@ export class KleverProvider implements IProvider {
    * Requests test KLV from faucet (testnet/devnet only)
    *
    * @param address - The address to send test KLV to
-   * @param amount - Optional amount to request
-   * @returns Faucet result with transaction hash
+   * @param amount - Optional amount to request (in smallest unit)
+   * @returns Faucet result with transaction hash and status
+   * @throws {ValidationError} If address is invalid or network is mainnet
+   *
+   * @example
+   * ```typescript
+   * // Request test KLV on testnet
+   * const provider = new KleverProvider('testnet')
+   * const result = await provider.requestTestKLV('klv1...')
+   * console.log('Faucet TX:', result.txHash)
+   * console.log('Status:', result.status)
+   *
+   * // Wait for confirmation
+   * await provider.waitForTransaction(result.txHash)
+   * const balance = await provider.getBalance('klv1...')
+   * console.log('New balance:', balance)
+   * ```
    */
   async requestTestKLV(address: KleverAddress, amount?: bigint): Promise<IFaucetResult> {
     if (!isValidAddress(address)) {
@@ -643,11 +719,33 @@ export class KleverProvider implements IProvider {
 
   /**
    * Estimates the fee for a transaction
-   * @param tx - The transaction request
-   * @returns The estimated fee
+   *
+   * TODO: Implementation pending - currently returns zero fees
+   *
+   * This method will calculate the expected fees for a transaction including:
+   * - kAppFee: Application-specific fee
+   * - bandwidthFee: Network bandwidth cost
+   * - gasEstimated: Estimated gas for smart contract execution
+   *
+   * @param _tx - The transaction request to estimate fees for
+   * @returns The estimated fee breakdown
+   *
+   * @example
+   * ```typescript
+   * // Future usage (not yet implemented)
+   * const fees = await provider.estimateFee({
+   *   sender: 'klv1...',
+   *   contracts: [{
+   *     type: TXType.Transfer,
+   *     parameter: { receiver: 'klv1...', amount: 1000000n }
+   *   }]
+   * })
+   * console.log('Estimated kAppFee:', fees.kAppFee)
+   * console.log('Estimated bandwidthFee:', fees.bandwidthFee)
+   * ```
    */
   estimateFee(_tx: unknown): Promise<IFeesResponse> {
-    // TODO:
+    // TODO: Implement fee estimation
     return Promise.resolve({
       kAppFee: 0,
       bandwidthFee: 0,
@@ -884,20 +982,77 @@ export class KleverProvider implements IProvider {
     })
   }
 
+  /**
+   * Subscribe to provider events
+   *
+   * TODO: Implementation pending - event subscription not yet supported
+   *
+   * This method will allow subscribing to blockchain events like:
+   * - New blocks
+   * - Pending transactions
+   * - Account balance changes
+   * - Contract events
+   *
+   * @param _event - The event type to subscribe to
+   * @param _listener - Callback function to handle the event
+   *
+   * @example
+   * ```typescript
+   * // Future usage (not yet implemented)
+   * provider.on('block', (block) => {
+   *   console.log('New block:', block.nonce)
+   * })
+   *
+   * provider.on('transaction', (tx) => {
+   *   console.log('New transaction:', tx.hash)
+   * })
+   * ```
+   */
   on(_event: ProviderEvent, _listener: (...args: unknown[]) => void): void {
-    // TODO:
-  }
-
-  off(_event: ProviderEvent, _listener: (...args: unknown[]) => void): void {
-    // TODO:
+    // TODO: Implement event subscription
   }
 
   /**
-   * Calls a contract method
+   * Unsubscribe from provider events
    *
-   * @param endpoint - The API endpoint for the contract call
-   * @param params - The parameters for the contract call
+   * TODO: Implementation pending - event unsubscription not yet supported
+   *
+   * @param _event - The event type to unsubscribe from
+   * @param _listener - The callback function to remove
+   *
+   * @example
+   * ```typescript
+   * // Future usage (not yet implemented)
+   * const listener = (block) => console.log('Block:', block.nonce)
+   * provider.on('block', listener)
+   * // Later...
+   * provider.off('block', listener)
+   * ```
+   */
+  off(_event: ProviderEvent, _listener: (...args: unknown[]) => void): void {
+    // TODO: Implement event unsubscription
+  }
+
+  /**
+   * Calls a contract method (generic API call)
+   *
+   * TODO: Implementation pending - generic contract calls not yet supported
+   *
+   * This is a low-level method for making arbitrary contract API calls.
+   * For standard contract queries, use `queryContract()` instead.
+   *
+   * @param _endpoint - The API endpoint for the contract call
+   * @param _params - The parameters for the contract call
    * @returns The result of the contract call
+   *
+   * @example
+   * ```typescript
+   * // Future usage (not yet implemented)
+   * const result = await provider.call<ContractData>('/contract/endpoint', {
+   *   param1: 'value1',
+   *   param2: 123
+   * })
+   * ```
    */
   async call<T = unknown>(_endpoint: string, _params?: Record<string, unknown>): Promise<T> {
     // TODO: Implement contract call logic

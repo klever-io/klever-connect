@@ -3,6 +3,56 @@
  *
  * Provides ethers.js-like API for contract interactions with
  * auto-generated methods from ABI.
+ *
+ * The Contract class is the primary way to interact with deployed smart contracts
+ * on the Klever blockchain. It automatically generates typed methods based on the
+ * contract's ABI, making it easy to call functions and query state.
+ *
+ * @remarks
+ * Contract methods are dynamically generated based on the ABI:
+ * - Readonly functions become query methods (read-only, no transaction)
+ * - Mutable functions become transaction methods (state-changing, requires signing)
+ *
+ * @example Basic contract interaction
+ * ```typescript
+ * import { Contract } from '@klever/connect-contracts'
+ * import { Wallet } from '@klever/connect-wallet'
+ *
+ * const abi = [...] // Contract ABI
+ * const wallet = new Wallet(privateKey, provider)
+ * const contract = new Contract('klv1...', abi, wallet)
+ *
+ * // Query (readonly) - no transaction needed
+ * const balance = await contract.balanceOf(address)
+ *
+ * // Transaction (mutable) - requires signing
+ * const tx = await contract.transfer(toAddress, amount)
+ * await tx.wait() // Wait for confirmation
+ * ```
+ *
+ * @example Using invoke() for explicit state changes
+ * ```typescript
+ * // Invoke a mutable function explicitly
+ * const result = await contract.invoke('bet', betType, betValue, {
+ *   value: parseKLV('10'), // Send 10 KLV with call
+ *   nonce: 123
+ * })
+ * await result.wait()
+ * ```
+ *
+ * @example Parsing events from transactions
+ * ```typescript
+ * const tx = await contract.transfer(toAddress, amount)
+ * const receipt = await tx.wait()
+ *
+ * // Parse all events from this contract
+ * const events = contract.parseEvents(receipt.logs)
+ *
+ * // Filter events by identifier
+ * const transferEvents = contract.parseEvents(receipt.logs, {
+ *   identifier: 'Transfer'
+ * })
+ * ```
  */
 
 import type { ContractABI } from './types/abi'
@@ -103,6 +153,25 @@ export interface Provider {
 
 /**
  * Contract class with dynamic methods
+ *
+ * @remarks
+ * The Contract class provides two types of interactions:
+ *
+ * 1. Query (Readonly): Functions marked as 'readonly' in the ABI
+ *    - No transaction created
+ *    - No gas fees
+ *    - Returns data immediately
+ *    - Accessed via dynamically generated methods or `call()`
+ *
+ * 2. Invoke (Mutable): Functions that modify contract state
+ *    - Creates and signs a transaction
+ *    - Requires gas fees
+ *    - Returns transaction result with `wait()` method
+ *    - Accessed via dynamically generated methods or `invoke()`
+ *
+ * @see {@link Interface} for ABI parsing and encoding
+ * @see {@link ABIEncoder} for parameter encoding
+ * @see {@link ABIDecoder} for result decoding
  */
 export class Contract {
   readonly address: string
@@ -361,6 +430,18 @@ export class Contract {
 
   /**
    * Check if contract has a function
+   *
+   * Verifies whether the contract's ABI includes a function with the specified name.
+   *
+   * @param functionName - The name of the function to check
+   * @returns True if the function exists in the contract's ABI, false otherwise
+   *
+   * @example
+   * ```typescript
+   * if (contract.hasFunction('transfer')) {
+   *   await contract.transfer(toAddress, amount)
+   * }
+   * ```
    */
   hasFunction(functionName: string): boolean {
     return this.interface.getEndpointNames().includes(functionName)
@@ -368,6 +449,22 @@ export class Contract {
 
   /**
    * Get all available function names
+   *
+   * Returns an array of all function names defined in the contract's ABI,
+   * including both readonly (query) and mutable (transaction) functions.
+   *
+   * @returns Array of function names
+   *
+   * @example
+   * ```typescript
+   * const functions = contract.getFunctions()
+   * console.log(functions) // ['transfer', 'balanceOf', 'approve', ...]
+   *
+   * // Iterate over all functions
+   * for (const funcName of contract.getFunctions()) {
+   *   console.log(`Function: ${funcName}`)
+   * }
+   * ```
    */
   getFunctions(): string[] {
     return this.interface.getEndpointNames()
@@ -457,7 +554,31 @@ export class Contract {
 
   /**
    * Query a contract function and return raw result (unparsed)
-   * Useful when you need access to the raw returnData
+   *
+   * This method is useful when you need access to the raw returnData from a contract query,
+   * including metadata like returnCode, returnMessage, and gas information.
+   *
+   * @param functionName - The name of the readonly function to query
+   * @param args - Arguments to pass to the function
+   * @returns Raw query result with returnData, returnCode, returnMessage, and gas info
+   *
+   * @throws Error if the function is not readonly
+   * @throws Error if the provider is not available
+   * @throws Error if the contract query fails
+   *
+   * @example
+   * ```typescript
+   * // Query a contract and get raw results
+   * const result = await contract.callRaw('getBalance', address)
+   *
+   * console.log(result.data?.returnData) // ['AQ==', 'BQ==']
+   * console.log(result.data?.returnCode) // 'ok'
+   * console.log(result.data?.gasRemaining) // 500000n
+   * console.log(result.data?.returnMessage) // 'Success'
+   * ```
+   *
+   * @see {@link call} for automatically decoded results
+   * @see {@link invoke} for state-changing transactions
    */
   async callRaw(functionName: string, ...args: unknown[]): Promise<IContractQueryResult> {
     if (!this.hasFunction(functionName)) {
@@ -494,7 +615,25 @@ export class Contract {
   }
 
   /**
-   * Connect contract to a different signer
+   * Connect contract to a different signer or provider
+   *
+   * Creates a new Contract instance with the same ABI and address but connected
+   * to a different signer or provider. This is useful when you want to interact
+   * with the same contract using different accounts.
+   *
+   * @param signerOrProvider - The signer or provider to connect to
+   * @returns New Contract instance with the same ABI and address
+   *
+   * @example
+   * ```typescript
+   * const contract = new Contract(address, abi, wallet1)
+   *
+   * // Switch to a different wallet
+   * const contract2 = contract.connect(wallet2)
+   *
+   * // Now transactions will be signed by wallet2
+   * await contract2.transfer(toAddress, amount)
+   * ```
    */
   connect(signerOrProvider: Signer | Provider): Contract {
     return new Contract(this.address, this.interface.abi, signerOrProvider)
@@ -502,6 +641,26 @@ export class Contract {
 
   /**
    * Attach contract to a different address
+   *
+   * Creates a new Contract instance with the same ABI but pointing to a different
+   * contract address. This is useful when you have multiple instances of the same
+   * contract deployed at different addresses.
+   *
+   * @param address - The new contract address
+   * @returns New Contract instance with the same ABI but different address
+   *
+   * @example
+   * ```typescript
+   * const tokenABI = [...] // ERC20-like token ABI
+   * const token1 = new Contract('klv1token1...', tokenABI, wallet)
+   *
+   * // Create a new instance pointing to a different token
+   * const token2 = token1.attach('klv1token2...')
+   *
+   * // Both use the same ABI but interact with different contracts
+   * const balance1 = await token1.balanceOf(address)
+   * const balance2 = await token2.balanceOf(address)
+   * ```
    */
   attach(address: string): Contract {
     return new Contract(address, this.interface.abi, this.signer || this.provider)

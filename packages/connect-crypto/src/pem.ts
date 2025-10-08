@@ -17,7 +17,19 @@ import { getPublicKeyFromPrivate } from './keys'
 import type { LoadPemOptions } from './types'
 
 /**
- * Parse PEM blocks from string content
+ * Parses PEM blocks from string content.
+ *
+ * @remarks
+ * This function extracts all PEM blocks from a string, handling both encrypted
+ * and unencrypted blocks. It parses the PEM headers, base64 data, and converts
+ * the content to bytes.
+ *
+ * @param content - The PEM file content as a string
+ * @returns An array of parsed PEM blocks
+ *
+ * @throws Error if the PEM data is malformed or cannot be decoded
+ *
+ * @internal This is an internal function used by loadPrivateKeyFromPem
  */
 function parsePemBlocks(content: string): PemBlock[] {
   const blocks: PemBlock[] = []
@@ -81,14 +93,52 @@ function parsePemBlocks(content: string): PemBlock[] {
 }
 
 /**
- * Check if a PEM block is encrypted
+ * Checks if a PEM block is encrypted.
+ *
+ * @remarks
+ * Determines if a PEM block is encrypted by checking for the presence of the
+ * DEK-Info header, which indicates the encryption algorithm used.
+ *
+ * @param block - The PEM block to check
+ * @returns True if the block is encrypted, false otherwise
+ *
+ * @example
+ * ```typescript
+ * const blocks = parsePemBlocks(pemContent)
+ * const isEncrypted = isEncryptedPemBlock(blocks[0])
+ *
+ * if (isEncrypted) {
+ *   console.log('This PEM file requires a password')
+ * }
+ * ```
  */
 export function isEncryptedPemBlock(block: PemBlock): boolean {
   return 'DEK-Info' in block.headers
 }
 
 /**
- * Decrypt a PEM block using AES-GCM
+ * Decrypts an encrypted PEM block using AES-GCM encryption.
+ *
+ * @remarks
+ * This function decrypts a PEM block that was encrypted using AES-GCM mode.
+ * The decryption key is derived from the password using SHA-256.
+ *
+ * SECURITY WARNINGS:
+ * - Use strong passwords for PEM encryption (minimum 12 characters, mix of letters, numbers, symbols)
+ * - Incorrect passwords will result in decryption failure
+ * - Never hardcode passwords in source code
+ * - Store passwords securely (use environment variables, secure vaults, or password managers)
+ *
+ * @param block - The encrypted PEM block to decrypt
+ * @param password - The password used to decrypt the block
+ * @returns A promise that resolves to the decrypted PEM block
+ *
+ * @throws Error if the DEK-Info header is missing or invalid
+ * @throws Error if the encryption mode is not supported (only AES-GCM is supported)
+ * @throws Error if the data size is invalid
+ * @throws Error if decryption fails (usually due to incorrect password)
+ *
+ * @internal This is an internal function used by loadPrivateKeyFromPem
  */
 async function decryptPemBlock(block: PemBlock, password: string): Promise<PemBlock> {
   const dekInfo = block.headers['DEK-Info']
@@ -144,8 +194,23 @@ async function decryptPemBlock(block: PemBlock, password: string): Promise<PemBl
 }
 
 /**
- * Derive encryption key from password
- * This should match the Go implementation's getEncryptionKey function
+ * Derives an encryption key from a password using SHA-256.
+ *
+ * @remarks
+ * This function derives a 32-byte encryption key from a password using SHA-256 hashing.
+ * It should match the Go implementation's getEncryptionKey function for compatibility.
+ *
+ * SECURITY WARNINGS:
+ * - Use strong passwords (minimum 12 characters, mix of letters, numbers, and symbols)
+ * - Passwords should not be reused across different systems
+ * - Consider using a password manager to generate and store secure passwords
+ * - This uses SHA-256 for key derivation; for new implementations, consider using
+ *   PBKDF2, scrypt, or Argon2 for better security
+ *
+ * @param password - The password to derive the encryption key from
+ * @returns A promise that resolves to a 32-byte encryption key
+ *
+ * @internal This is an internal function used by decryptPemBlock
  */
 async function getEncryptionKey(password: string): Promise<Uint8Array> {
   // Convert password to bytes
@@ -159,16 +224,52 @@ async function getEncryptionKey(password: string): Promise<Uint8Array> {
 }
 
 /**
- * Load private key from PEM file content
+ * Loads a private key from PEM file content with address verification.
  *
- * This function performs address verification to ensure the private key
- * in the PEM file actually corresponds to the address claimed in the PEM header.
- * This prevents tampering or mistakes in PEM file generation.
+ * @remarks
+ * This function parses PEM content and extracts the private key. It performs
+ * address verification to ensure the private key in the PEM file actually
+ * corresponds to the address claimed in the PEM header, preventing tampering
+ * or mistakes in PEM file generation.
+ *
+ * For encrypted PEM files, a password must be provided. The function supports
+ * multiple PEM blocks in a single file and allows selecting a specific block
+ * by index.
+ *
+ * SECURITY WARNINGS:
+ * - Use strong passwords for encrypted PEM files (minimum 12 characters, mix of letters, numbers, symbols)
+ * - Store PEM files with restrictive permissions (e.g., 600 on Unix systems)
+ * - Never transmit unencrypted PEM files over insecure channels
+ * - Never commit PEM files to version control
+ * - Consider using hardware wallets for production applications
+ * - The private key is loaded into memory; ensure your application has appropriate
+ *   security measures to protect memory from unauthorized access
  *
  * @param content - PEM file content as string
  * @param options - Loading options including password and key index
- * @returns Private key bytes and address from the PEM block
- * @throws Error if the private key does not derive to the claimed address
+ * @returns A promise that resolves to an object containing the private key bytes and address
+ *
+ * @throws Error if no PEM blocks are found
+ * @throws Error if the index is invalid or out of range
+ * @throws Error if an encrypted key is encountered without a password
+ * @throws Error if the block type is invalid (doesn't start with 'PRIVATE KEY for ')
+ * @throws Error if the private key does not derive to the claimed address (security check)
+ * @throws Error if decryption fails (usually due to incorrect password)
+ *
+ * @example
+ * ```typescript
+ * // Load encrypted PEM
+ * const pemContent = '-----BEGIN PRIVATE KEY for klv1...-----\n...'
+ * const result = await loadPrivateKeyFromPem(pemContent, {
+ *   password: 'your-secure-password',
+ *   index: 0
+ * })
+ * console.log('Address:', result.address)
+ * console.log('Private Key loaded successfully')
+ *
+ * // Load unencrypted PEM
+ * const result2 = await loadPrivateKeyFromPem(pemContent)
+ * ```
  */
 export async function loadPrivateKeyFromPem(
   content: string,
@@ -236,8 +337,47 @@ export async function loadPrivateKeyFromPem(
 }
 
 /**
- * Load private key from PEM file (Node.js environment)
- * This is a convenience wrapper that reads the file for you
+ * Loads a private key from a PEM file on the filesystem (Node.js only).
+ *
+ * @remarks
+ * This is a convenience wrapper that reads a PEM file from the filesystem and
+ * loads the private key. This method is only available in Node.js environments.
+ *
+ * The function performs the same address verification as loadPrivateKeyFromPem
+ * to ensure the private key corresponds to the claimed address.
+ *
+ * SECURITY WARNINGS:
+ * - Store PEM files with restrictive permissions (e.g., 600 on Unix systems)
+ * - Use strong passwords for encrypted PEM files (minimum 12 characters, mix of letters, numbers, symbols)
+ * - Never commit PEM files to version control
+ * - Never share PEM files over insecure channels (use encrypted transfer methods)
+ * - Consider using hardware wallets for production applications
+ * - Ensure the file path doesn't expose sensitive information in logs
+ * - The private key is loaded into memory; ensure your application has appropriate
+ *   security measures to protect memory from unauthorized access
+ *
+ * @param filePath - The path to the PEM file (absolute or relative)
+ * @param options - Loading options including password and key index
+ * @returns A promise that resolves to an object containing the private key bytes and address
+ *
+ * @throws Error if not in Node.js environment (browser context)
+ * @throws Error if the file cannot be read
+ * @throws Error if the PEM content is invalid (see loadPrivateKeyFromPem for details)
+ *
+ * @example
+ * ```typescript
+ * // Load encrypted PEM file
+ * const result = await loadPrivateKeyFromPemFile('./wallet.pem', {
+ *   password: 'your-secure-password'
+ * })
+ * console.log('Address:', result.address)
+ *
+ * // Load unencrypted PEM file
+ * const result2 = await loadPrivateKeyFromPemFile('./wallet.pem')
+ *
+ * // Set appropriate file permissions (Unix/Linux/macOS)
+ * // chmod 600 wallet.pem
+ * ```
  */
 export async function loadPrivateKeyFromPemFile(
   filePath: string,

@@ -16,6 +16,80 @@ import { kleverReducer } from './reducer'
 
 const KleverContext = React.createContext<KleverContextValue | undefined>(undefined)
 
+/**
+ * KleverProvider - Root provider component for Klever React integration
+ *
+ * Wraps your application to provide Klever blockchain connectivity, wallet management,
+ * and network switching capabilities. All child components can access Klever functionality
+ * via the `useKlever()` hook.
+ *
+ * @param children - React components that will have access to Klever context
+ * @param config - Optional configuration object for the provider
+ *
+ * @example Basic usage with default testnet
+ * ```tsx
+ * import { KleverProvider } from '@klever/connect-react'
+ *
+ * function App() {
+ *   return (
+ *     <KleverProvider>
+ *       <YourApp />
+ *     </KleverProvider>
+ *   )
+ * }
+ * ```
+ *
+ * @example With mainnet and auto-connect
+ * ```tsx
+ * import { KleverProvider } from '@klever/connect-react'
+ *
+ * function App() {
+ *   return (
+ *     <KleverProvider config={{
+ *       network: 'mainnet',
+ *       autoConnect: true,
+ *       debug: false
+ *     }}>
+ *       <YourApp />
+ *     </KleverProvider>
+ *   )
+ * }
+ * ```
+ *
+ * @example With custom network configuration
+ * ```tsx
+ * import { KleverProvider } from '@klever/connect-react'
+ *
+ * function App() {
+ *   return (
+ *     <KleverProvider config={{
+ *       network: {
+ *         name: 'custom',
+ *         chainId: 108,
+ *         api: 'https://api.custom-node.com',
+ *         node: 'https://node.custom-node.com'
+ *       }
+ *     }}>
+ *       <YourApp />
+ *     </KleverProvider>
+ *   )
+ * }
+ * ```
+ *
+ * @remarks
+ * - Network selection is persisted to localStorage and restored on reload
+ * - Wallet connection state is managed automatically with event listeners
+ * - Extension detection runs on mount to check for Klever Web Extension
+ * - Provider instances are memoized to prevent unnecessary re-initializations
+ * - Component handles cleanup of event listeners on unmount
+ *
+ * Configuration options:
+ * - `network`: 'mainnet' | 'testnet' | 'devnet' | 'local' | Network object (default: 'testnet')
+ * - `autoConnect`: Automatically connect wallet on mount (default: false)
+ * - `reconnectOnMount`: Reconnect if previously connected (default: false)
+ * - `provider`: Custom KleverProvider instance (overrides network config)
+ * - `debug`: Enable debug logging (default: false)
+ */
 export function KleverProvider({ children, config }: KleverProviderProps): React.ReactElement {
   // Get saved network from localStorage or use config/default
   const getSavedNetwork = (): NetworkName | Network => {
@@ -234,6 +308,122 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
   return <KleverContext.Provider value={value}>{children}</KleverContext.Provider>
 }
 
+/**
+ * useKlever - Main hook for accessing Klever blockchain functionality
+ *
+ * Provides access to wallet connection, network management, and blockchain provider.
+ * Must be used within a KleverProvider component tree.
+ *
+ * @returns KleverContextValue object with wallet state and control methods
+ *
+ * @throws Error if used outside of KleverProvider
+ *
+ * @example Basic wallet connection
+ * ```tsx
+ * import { useKlever } from '@klever/connect-react'
+ *
+ * function WalletButton() {
+ *   const { connect, disconnect, isConnected, address } = useKlever()
+ *
+ *   return (
+ *     <div>
+ *       {!isConnected ? (
+ *         <button onClick={connect}>Connect Wallet</button>
+ *       ) : (
+ *         <div>
+ *           <p>Connected: {address}</p>
+ *           <button onClick={disconnect}>Disconnect</button>
+ *         </div>
+ *       )}
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @example Network switching
+ * ```tsx
+ * import { useKlever } from '@klever/connect-react'
+ *
+ * function NetworkSelector() {
+ *   const { currentNetwork, switchNetwork } = useKlever()
+ *
+ *   return (
+ *     <select
+ *       value={currentNetwork}
+ *       onChange={(e) => switchNetwork(e.target.value as NetworkName)}
+ *     >
+ *       <option value="mainnet">Mainnet</option>
+ *       <option value="testnet">Testnet</option>
+ *       <option value="devnet">Devnet</option>
+ *     </select>
+ *   )
+ * }
+ * ```
+ *
+ * @example Checking extension availability
+ * ```tsx
+ * import { useKlever } from '@klever/connect-react'
+ *
+ * function ExtensionCheck() {
+ *   const { extensionInstalled, searchingExtension } = useKlever()
+ *
+ *   if (searchingExtension) {
+ *     return <p>Checking for Klever Extension...</p>
+ *   }
+ *
+ *   if (!extensionInstalled) {
+ *     return (
+ *       <p>
+ *         Please install{' '}
+ *         <a href="https://klever.io/extension">Klever Extension</a>
+ *       </p>
+ *     )
+ *   }
+ *
+ *   return <p>Extension detected!</p>
+ * }
+ * ```
+ *
+ * @remarks
+ * Return value properties:
+ *
+ * **State:**
+ * - `wallet`: Wallet instance (undefined if not connected)
+ * - `provider`: KleverProvider instance for blockchain queries
+ * - `address`: Connected wallet address (undefined if not connected)
+ * - `isConnected`: Boolean indicating wallet connection status
+ * - `isConnecting`: Boolean indicating connection in progress
+ * - `error`: Error object if any operation failed (undefined otherwise)
+ * - `extensionInstalled`: Boolean indicating if Klever Extension is installed
+ * - `searchingExtension`: Boolean indicating if extension check is in progress
+ * - `currentNetwork`: Current network name ('mainnet' | 'testnet' | 'devnet' | 'local')
+ *
+ * **Methods:**
+ * - `connect()`: Async function to initiate wallet connection
+ *   - Detects and connects to Klever Web Extension
+ *   - Sets up event listeners for account changes and disconnection
+ *   - Persists connection state to localStorage
+ *   - Updates provider to match current network
+ *
+ * - `disconnect()`: Function to disconnect wallet
+ *   - Removes all event listeners
+ *   - Clears wallet state
+ *   - Removes connection state from localStorage
+ *
+ * - `switchNetwork(network)`: Async function to switch networks
+ *   - Changes blockchain network without disconnecting wallet
+ *   - Updates provider instance
+ *   - Updates extension provider if using BrowserWallet
+ *   - Persists network selection to localStorage
+ *   - Wallet remains connected during network switch
+ *
+ * **React Considerations:**
+ * - Hook follows React hooks rules (use only in function components or custom hooks)
+ * - Context updates trigger re-renders in consuming components
+ * - Connection/disconnection methods are stable (wrapped in useCallback)
+ * - Event listeners are automatically cleaned up on unmount
+ * - State changes are batched using useReducer for optimal performance
+ */
 export function useKlever(): KleverContextValue {
   const context = React.useContext(KleverContext)
   if (!context) {

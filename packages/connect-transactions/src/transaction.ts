@@ -39,7 +39,16 @@ export class Transaction extends ProtoTransaction {
   /**
    * Get raw proto bytes for the transaction
    * This is what gets signed and broadcast to the network
+   *
    * @returns Proto bytes as Uint8Array
+   *
+   * @example
+   * ```typescript
+   * const tx = new Transaction(txData)
+   * const bytes = tx.toBytes()
+   * // bytes: Uint8Array [10, 32, 65, ...]
+   * // Use for signing or network transmission
+   * ```
    */
   toBytes(): Uint8Array {
     return ProtoTransaction.encode(this).finish()
@@ -47,8 +56,20 @@ export class Transaction extends ProtoTransaction {
 
   /**
    * Get proto bytes as hex string
-   * Useful for broadcasting to node via HTTP
-   * @returns Hex encoded proto bytes
+   * Useful for broadcasting to node via HTTP or storing in databases
+   *
+   * @returns Hex encoded proto bytes (without 0x prefix)
+   *
+   * @example
+   * ```typescript
+   * const tx = new Transaction(txData)
+   * await tx.sign(privateKey)
+   * const hex = tx.toHex()
+   * // hex: "0a20418f2b3c..."
+   *
+   * // Broadcast to network
+   * const hash = await provider.sendRawTransaction(hex)
+   * ```
    */
   toHex(): string {
     return hexEncode(this.toBytes())
@@ -127,7 +148,23 @@ export class Transaction extends ProtoTransaction {
 
   /**
    * Check if transaction is signed
-   * @returns true if transaction has at least one signature
+   * Verifies whether the transaction has been signed and is ready for broadcast
+   *
+   * @returns true if transaction has at least one signature, false otherwise
+   *
+   * @example
+   * ```typescript
+   * const tx = new Transaction(txData)
+   * console.log(tx.isSigned()) // false
+   *
+   * await tx.sign(privateKey)
+   * console.log(tx.isSigned()) // true
+   *
+   * // Only broadcast if signed
+   * if (tx.isSigned()) {
+   *   await provider.sendRawTransaction(tx.toHex())
+   * }
+   * ```
    */
   isSigned(): boolean {
     return !!this.Signature && this.Signature.length > 0
@@ -135,7 +172,20 @@ export class Transaction extends ProtoTransaction {
 
   /**
    * Get total fee (KAppFee + BandwidthFee)
-   * @returns Total fee amount in KLV smallest units
+   * Returns the combined fee for the transaction in smallest KLV units
+   *
+   * @returns Total fee amount in KLV smallest units (1 KLV = 1,000,000 units)
+   *
+   * @example
+   * ```typescript
+   * const tx = new Transaction(txData)
+   * const totalFee = tx.getTotalFee()
+   * console.log(`Total fee: ${totalFee} units`) // e.g., "600000 units"
+   *
+   * // Convert to human-readable KLV
+   * const feeInKLV = Number(totalFee) / 1_000_000
+   * console.log(`Fee: ${feeInKLV} KLV`) // e.g., "0.6 KLV"
+   * ```
    */
   getTotalFee(): bigint {
     const kAppFee = this.RawData?.KAppFee ?? 0
@@ -190,8 +240,23 @@ export class Transaction extends ProtoTransaction {
 
   /**
    * Create a Transaction from hex-encoded proto bytes
-   * @param hex - Hex string of proto-encoded transaction
+   * Decodes a hex string back into a Transaction object
+   *
+   * @param hex - Hex string of proto-encoded transaction (with or without 0x prefix)
    * @returns Transaction instance
+   *
+   * @example
+   * ```typescript
+   * // Decode hex string from storage or API
+   * const hex = "0a20418f2b3c..."
+   * const tx = Transaction.fromHex(hex)
+   *
+   * // Verify signature
+   * console.log(tx.isSigned()) // true or false
+   *
+   * // Get transaction hash
+   * console.log(tx.getHash())
+   * ```
    */
   static fromHex(hex: string): Transaction {
     const bytes = Buffer.from(hex, 'hex')
@@ -201,8 +266,21 @@ export class Transaction extends ProtoTransaction {
 
   /**
    * Create a Transaction from raw proto bytes
+   * Decodes protobuf bytes back into a Transaction object
+   *
    * @param bytes - Proto-encoded transaction bytes
    * @returns Transaction instance
+   *
+   * @example
+   * ```typescript
+   * // Decode bytes from storage or network
+   * const bytes = new Uint8Array([10, 32, 65, ...])
+   * const tx = Transaction.fromBytes(bytes)
+   *
+   * // Verify and use
+   * console.log(tx.getHash())
+   * console.log(tx.isSigned())
+   * ```
    */
   static fromBytes(bytes: Uint8Array): Transaction {
     const decoded = ProtoTransaction.decode(bytes)
@@ -211,15 +289,50 @@ export class Transaction extends ProtoTransaction {
 
   /**
    * Create a Transaction from a plain JSON object (from API)
-   * Properly converts base64 strings to Uint8Array
+   * Properly converts base64 strings to Uint8Array for proto fields.
+   * This is typically used when receiving transaction data from the node's API.
+   *
    * @param obj - Plain object with base64-encoded byte fields
    * @returns Transaction instance
+   *
+   * @example
+   * ```typescript
+   * // Response from node's /transaction/build endpoint
+   * const response = await fetch('/transaction/build', {
+   *   method: 'POST',
+   *   body: JSON.stringify(buildRequest)
+   * })
+   * const data = await response.json()
+   *
+   * // Convert API response to Transaction
+   * const tx = Transaction.fromObject(data.result)
+   *
+   * // Sign and broadcast
+   * await tx.sign(privateKey)
+   * await provider.sendRawTransaction(tx.toHex())
+   * ```
    */
   static override fromObject(obj: { [k: string]: unknown }): Transaction {
     const decoded = ProtoTransaction.fromObject(obj)
     return new Transaction(decoded)
   }
 
+  /**
+   * Create a new Transaction from an existing Transaction
+   * Creates a deep copy of the transaction
+   *
+   * @param tx - Existing Transaction instance
+   * @returns New Transaction instance
+   *
+   * @example
+   * ```typescript
+   * const originalTx = new Transaction(txData)
+   * const copiedTx = Transaction.fromTransaction(originalTx)
+   *
+   * // Modifications to copiedTx won't affect originalTx
+   * await copiedTx.sign(privateKey)
+   * ```
+   */
   static fromTransaction(tx: Transaction): Transaction {
     const decoded = ProtoTransaction.fromObject(tx as unknown as { [k: string]: unknown })
     return new Transaction(decoded)

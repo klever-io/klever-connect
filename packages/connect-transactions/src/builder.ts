@@ -131,6 +131,19 @@ export class TransactionBuilder {
 
   /**
    * Set chain ID (overrides provider's network if set)
+   * The chain ID identifies which Klever network to use (e.g., "100" for mainnet)
+   *
+   * @param chainId - Chain ID string (e.g., "100" for mainnet, "101" for testnet)
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * const tx = TransactionBuilder.create()
+   *   .setChainId('100')
+   *   .sender('klv1...')
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .buildProto({ nonce: 1, fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   * ```
    */
   setChainId(chainId: string): this {
     this._chainId = chainId
@@ -138,7 +151,19 @@ export class TransactionBuilder {
   }
 
   /**
-   * Set sender address
+   * Set sender address for the transaction
+   *
+   * @param address - Bech32 encoded Klever address (e.g., "klv1...")
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If address format is invalid
+   *
+   * @example
+   * ```typescript
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5')
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .build()
+   * ```
    */
   sender(address: string): this {
     if (!isValidAddress(address)) {
@@ -149,7 +174,42 @@ export class TransactionBuilder {
   }
 
   /**
-   * Set nonce manually
+   * Set nonce manually for offline transaction building
+   * The nonce is a sequential counter that prevents transaction replay attacks.
+   * Each account has its own nonce that increments with every transaction.
+   *
+   * **When to use:**
+   * - Offline transaction building (required with buildProto())
+   * - Manual nonce management for batch transactions
+   * - Testing or debugging specific scenarios
+   *
+   * **Getting current nonce:**
+   * Use `provider.getAccount(address)` to get the current nonce from the network
+   *
+   * @param nonce - Transaction nonce (must be non-negative)
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If nonce is negative
+   *
+   * @example
+   * ```typescript
+   * // Manual nonce for offline building
+   * const tx = TransactionBuilder.create()
+   *   .sender('klv1...')
+   *   .nonce(123)
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .buildProto({
+   *     chainId: '100',
+   *     fees: { kAppFee: 500000, bandwidthFee: 100000 }
+   *   })
+   *
+   * // Get nonce from provider first
+   * const account = await provider.getAccount('klv1...')
+   * const tx = TransactionBuilder.create()
+   *   .sender('klv1...')
+   *   .nonce(account.nonce)
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .buildProto({ chainId: '100', fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   * ```
    */
   nonce(nonce: number): this {
     if (nonce < 0) {
@@ -160,7 +220,32 @@ export class TransactionBuilder {
   }
 
   /**
-   * Set KDA fee
+   * Set KDA fee to pay transaction fees in a custom KDA asset instead of KLV
+   * By default, transactions pay fees in KLV (kAppFee + bandwidthFee).
+   * This method allows paying fees in a different asset.
+   *
+   * **Important:**
+   * - Cannot use 'KLV' as kdaFee (KLV is the default fee asset)
+   * - The asset must support being used as a fee payment option
+   *
+   * @param fee - KDA fee configuration
+   * @param fee.kda - Asset ID to use for fee payment (cannot be 'KLV')
+   * @param fee.amount - Fee amount in smallest units of the KDA asset
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If kda is 'KLV' or amount is negative
+   *
+   * @example
+   * ```typescript
+   * // Pay fees in custom token instead of KLV
+   * const tx = TransactionBuilder.create()
+   *   .sender('klv1...')
+   *   .kdaFee({ kda: 'MYTOKEN-ABCD', amount: '1000000' })
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .buildProto({
+   *     nonce: 1,
+   *     chainId: '100',
+   *   })
+   * ```
    */
   kdaFee(fee: { kda: string; amount: AmountLike }): this {
     if (!fee.kda) {
@@ -182,7 +267,26 @@ export class TransactionBuilder {
   }
 
   /**
-   * Set permission ID
+   * Set permission ID for multi-signature transactions
+   * Permission IDs enable complex account structures with multiple signers and permissions.
+   *
+   * **Use cases:**
+   * - Multi-signature wallets requiring multiple approvals
+   * - Corporate accounts with different permission levels
+   * - Smart contract interactions with specific permissions
+   *
+   * @param id - Permission ID number
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Transaction requiring specific permission
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .permissionId(2)
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .build()
+   * ```
    */
   permissionId(id: number): this {
     this._permissionId = id
@@ -190,7 +294,34 @@ export class TransactionBuilder {
   }
 
   /**
-   * Set transaction data
+   * Set transaction data for smart contract calls
+   * Data is used primarily for smart contract interactions, where it contains:
+   * - Function name (first element)
+   * - Function arguments (remaining elements)
+   *
+   * **Important:**
+   * - Data is automatically base64 encoded when building with buildRequest()
+   * - For offline building with buildProto(), provide UTF-8 strings
+   *
+   * @param data - Array of strings containing function name and arguments
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Smart contract call with arguments
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .smartContract({ address: 'klv1contract...', scType: 1 })
+   *   .data(['transfer', 'klv1receiver...', '1000000'])
+   *   .build()
+   *
+   * // Multiple data fields
+   * const tx = TransactionBuilder.create()
+   *   .sender('klv1...')
+   *   .smartContract({ address: 'klv1contract...', scType: 1 })
+   *   .data(['functionName', 'arg1', 'arg2', 'arg3'])
+   *   .buildProto({ nonce: 1, chainId: '100', fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   * ```
    */
   data(data: string[]): this {
     this._data = data
@@ -198,7 +329,35 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add call options
+   * Add multiple build options at once
+   * Convenience method to set multiple builder options in a single call.
+   * This is particularly useful when working with smart contracts or offline building.
+   *
+   * **Note:** The `value` option is not supported here - set callValue directly in smartContract()
+   *
+   * @param options - Build options object
+   * @param options.sender - Sender's bech32 address
+   * @param options.nonce - Transaction nonce
+   * @param options.kdaFee - KDA fee configuration
+   * @param options.permissionId - Permission ID
+   * @param options.data - Transaction data array
+   * @param options.chainId - Chain ID
+   * @param options.fees - Fee amounts (kAppFee and bandwidthFee) - currently not implemented
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Set multiple options at once
+   * const tx = TransactionBuilder.create()
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *   .callOptions({
+   *     sender: 'klv1...',
+   *     nonce: 123,
+   *     chainId: '100',
+   *     permissionId: 1
+   *   })
+   *   .buildProto({ fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   * ```
    */
   callOptions(options: BuildCallOptions): this {
     if (options.sender) {
@@ -226,14 +385,39 @@ export class TransactionBuilder {
   }
   /**
    * Add a contract using ContractRequestData
-   * Routes to the appropriate builder method based on contractType
+   * Routes to the appropriate builder method based on contractType.
+   * This is a generic method that automatically calls the correct specialized method.
+   *
+   * **Contract Types:**
+   * - 0: Transfer
+   * - 1: CreateAsset
+   * - 2: CreateValidator
+   * - 4: Freeze
+   * - 5: Unfreeze
+   * - 6: Delegate
+   * - 7: Undelegate
+   * - 8: Withdraw
+   * - 9: Claim
+   * - 14: Vote
+   * - 63: SmartContract
+   *
+   * @param contract - Contract request data with contractType
+   * @returns This builder instance for chaining
    *
    * @example
    * ```typescript
+   * // Add transfer contract directly
    * builder.addContract({
    *   contractType: 0,
    *   receiver: 'klv1...',
    *   amount: 1000000
+   * })
+   *
+   * // Add freeze contract
+   * builder.addContract({
+   *   contractType: 4,
+   *   amount: 5000000,
+   *   kda: 'KLV'
    * })
    * ```
    */
@@ -271,7 +455,50 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add transfer contract
+   * Add transfer contract to send KLV or KDA assets
+   *
+   * @param params - Transfer parameters
+   * @param params.receiver - Recipient's bech32 address
+   * @param params.amount - Amount to transfer in smallest units (e.g., 1000000 = 1 KLV)
+   * @param params.kda - Optional asset ID to transfer (defaults to KLV if not specified)
+   * @param params.kdaRoyalties - Optional KDA royalties amount
+   * @param params.klvRoyalties - Optional KLV royalties amount
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If receiver address is invalid or amount is not positive
+   *
+   * @example
+   * ```typescript
+   * // Transfer KLV
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .transfer({
+   *     receiver: 'klv1abc123...',
+   *     amount: '1000000' // 1 KLV
+   *   })
+   *   .build()
+   *
+   * // Transfer custom KDA token
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .transfer({
+   *     receiver: 'klv1abc123...',
+   *     amount: '5000000',
+   *     kda: 'MYTOKEN-ABCD'
+   *   })
+   *   .build()
+   *
+   * // Transfer with royalties (for NFTs)
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .transfer({
+   *     receiver: 'klv1abc123...',
+   *     amount: '1',
+   *     kda: 'NFT-COLLECTION/NONCE-1',
+   *     kdaRoyalties: '100000',
+   *     klvRoyalties: '50000'
+   *   })
+   *   .build()
+   * ```
    */
   transfer(params: TransferRequest): this {
     if (!isValidAddress(params.receiver)) {
@@ -299,7 +526,34 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add freeze (stake) contract
+   * Add freeze (stake) contract to lock KLV or KDA assets
+   * Freezing creates a bucket that can be delegated to validators or used for governance
+   *
+   * @param params - Freeze parameters
+   * @param params.amount - Amount to freeze in smallest units
+   * @param params.kda - Optional asset ID to freeze (defaults to KLV if not specified)
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If amount is not positive
+   *
+   * @example
+   * ```typescript
+   * // Freeze KLV for staking
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .freeze({
+   *     amount: '5000000' // 5 KLV
+   *   })
+   *   .build()
+   *
+   * // Freeze custom KDA token
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .freeze({
+   *     amount: '1000000',
+   *     kda: 'MYTOKEN-ABCD'
+   *   })
+   *   .build()
+   * ```
    */
   freeze(params: FreezeRequest): this {
     const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
@@ -318,9 +572,34 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add unfreeze (unstake) contract
-   * - kda: Required - the asset to unfreeze
-   * - bucketId: Optional - only required for KLV
+   * Add unfreeze (unstake) contract to unlock frozen assets
+   * Unfreezing initiates the unlocking process - assets become available after the unlock period
+   *
+   * @param params - Unfreeze parameters
+   * @param params.kda - Asset ID to unfreeze (required)
+   * @param params.bucketId - Bucket ID to unfreeze (required for KLV, optional for other assets)
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If kda parameter is missing
+   *
+   * @example
+   * ```typescript
+   * // Unfreeze KLV bucket
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .unfreeze({
+   *     kda: 'KLV',
+   *     bucketId: 'bucket-hash-123'
+   *   })
+   *   .build()
+   *
+   * // Unfreeze custom KDA token
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .unfreeze({
+   *     kda: 'MYTOKEN-ABCD'
+   *   })
+   *   .build()
+   * ```
    */
   unfreeze(params: UnfreezeRequest): this {
     if (!params.kda) {
@@ -337,7 +616,34 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add delegate contract
+   * Add delegate contract to assign a frozen bucket to a validator
+   * Delegation allows validators to use your staked KLV for consensus and earn rewards
+   *
+   * @param params - Delegate parameters
+   * @param params.receiver - Validator's bech32 address to delegate to
+   * @param params.bucketId - Optional bucket ID to delegate (if not specified, delegates all available buckets)
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If validator address is invalid
+   *
+   * @example
+   * ```typescript
+   * // Delegate specific bucket to validator
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .delegate({
+   *     receiver: 'klv1validator123...',
+   *     bucketId: 'bucket-hash-123'
+   *   })
+   *   .build()
+   *
+   * // Delegate all available buckets
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .delegate({
+   *     receiver: 'klv1validator123...'
+   *   })
+   *   .build()
+   * ```
    */
   delegate(params: DelegateRequest): this {
     if (!isValidAddress(params.receiver)) {
@@ -356,7 +662,24 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add undelegate contract
+   * Add undelegate contract to remove delegation from a validator
+   * Undelegation returns the bucket to your control but keeps it frozen
+   *
+   * @param params - Undelegate parameters
+   * @param params.bucketId - Bucket ID to undelegate (required)
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If bucketId is missing
+   *
+   * @example
+   * ```typescript
+   * // Undelegate bucket from validator
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .undelegate({
+   *     bucketId: 'bucket-hash-123'
+   *   })
+   *   .build()
+   * ```
    */
   undelegate(params: UndelegateRequest): this {
     if (!params.bucketId) {
@@ -372,7 +695,36 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add withdraw contract
+   * Add withdraw contract to retrieve available funds
+   * Used to withdraw staking rewards, unlocked frozen assets, or other withdrawable amounts
+   *
+   * @param params - Withdraw parameters
+   * @param params.withdrawType - Type of withdrawal (0 = staking, 1 = FPR, etc.)
+   * @param params.kda - Optional asset ID to withdraw
+   * @param params.amount - Optional specific amount to withdraw
+   * @param params.currencyID - Optional currency ID for cross-currency withdrawals
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Withdraw staking rewards
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .withdraw({
+   *     withdrawType: 0 // Staking rewards
+   *   })
+   *   .build()
+   *
+   * // Withdraw specific KDA amount
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .withdraw({
+   *     withdrawType: 0,
+   *     kda: 'MYTOKEN-ABCD',
+   *     amount: '1000000'
+   *   })
+   *   .build()
+   * ```
    */
   withdraw(params: WithdrawRequest): this {
     this.contracts.push({
@@ -384,7 +736,33 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add claim contract
+   * Add claim contract to claim rewards or allocations
+   * Used for claiming staking rewards, airdrops, or other claimable amounts
+   *
+   * @param params - Claim parameters
+   * @param params.claimType - Type of claim (0 = staking rewards, 1 = market rewards, etc.)
+   * @param params.id - Optional claim ID for specific claims
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Claim staking rewards
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .claim({
+   *     claimType: 0 // Staking rewards
+   *   })
+   *   .build()
+   *
+   * // Claim specific allocation
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .claim({
+   *     claimType: 1,
+   *     id: 'allocation-id-123'
+   *   })
+   *   .build()
+   * ```
    */
   claim(params: ClaimRequest): this {
     this.contracts.push({
@@ -396,7 +774,51 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add create asset contract
+   * Add create asset contract to create a new token or NFT collection
+   * Creates fungible tokens (FTs), non-fungible tokens (NFTs), or other asset types
+   *
+   * @param params - Asset creation parameters
+   * @param params.type - Asset type (0 = Fungible Token, 1 = NFT, etc.)
+   * @param params.name - Full name of the asset
+   * @param params.ticker - Short ticker symbol
+   * @param params.ownerAddress - Owner's bech32 address
+   * @param params.precision - Number of decimal places (0 for NFTs)
+   * @param params.maxSupply - Maximum supply in smallest units
+   * @param params.initialSupply - Optional initial supply to mint
+   * @param params.properties - Optional asset properties (mintable, burnable, etc.)
+   * @param params.royalties - Optional royalty configuration (for NFTs)
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Create fungible token
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .createAsset({
+   *     type: 0,
+   *     name: 'My Token',
+   *     ticker: 'MTK',
+   *     ownerAddress: 'klv1...',
+   *     precision: 6,
+   *     maxSupply: '1000000000000',
+   *     initialSupply: '100000000000'
+   *   })
+   *   .build()
+   *
+   * // Create NFT collection
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .createAsset({
+   *     type: 1,
+   *     name: 'My NFT Collection',
+   *     ticker: 'MYNFT',
+   *     ownerAddress: 'klv1...',
+   *     precision: 0,
+   *     maxSupply: 0,
+   *     royalties: { address: 'klv1...', percentage: 5 }
+   *   })
+   *   .build()
+   * ```
    */
   createAsset(params: CreateAssetRequest): this {
     this.contracts.push({
@@ -408,7 +830,40 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add create validator contract
+   * Add create validator contract to register a new validator node
+   * Validators participate in consensus and earn rewards for securing the network
+   *
+   * @param params - Validator creation parameters
+   * @param params.blsPublicKey - BLS public key for validator signing
+   * @param params.ownerAddress - Owner's bech32 address
+   * @param params.commission - Commission rate percentage (e.g., 10 for 10%)
+   * @param params.canDelegate - Whether delegators can stake to this validator
+   * @param params.rewardAddress - Optional address to receive rewards
+   * @param params.maxDelegationAmount - Optional maximum delegation amount
+   * @param params.name - Optional validator name
+   * @param params.logo - Optional logo URI
+   * @param params.uris - Optional additional URIs (website, social media, etc.)
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Create validator node
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .createValidator({
+   *     blsPublicKey: '0xabcd1234...',
+   *     ownerAddress: 'klv1...',
+   *     commission: 10, // 10% commission
+   *     canDelegate: true,
+   *     name: 'My Validator',
+   *     logo: 'https://example.com/logo.png',
+   *     uris: {
+   *       website: 'https://validator.example.com',
+   *       twitter: 'https://twitter.com/myvalidator'
+   *     }
+   *   })
+   *   .build()
+   * ```
    */
   createValidator(params: CreateValidatorRequest): this {
     this.contracts.push({
@@ -420,7 +875,36 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add vote contract
+   * Add vote contract to participate in governance proposals
+   * Voting allows token holders to participate in network governance decisions
+   *
+   * @param params - Vote parameters
+   * @param params.proposalId - ID of the proposal to vote on
+   * @param params.type - Vote type (0 = abstain, 1 = yes, 2 = no)
+   * @param params.amount - Optional stake amount to use for voting weight
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Vote yes on proposal
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .vote({
+   *     proposalId: 5,
+   *     type: 1, // Yes
+   *     amount: '1000000' // Optional voting weight
+   *   })
+   *   .build()
+   *
+   * // Vote no on proposal
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .vote({
+   *     proposalId: 5,
+   *     type: 2 // No
+   *   })
+   *   .build()
+   * ```
    */
   vote(params: VoteRequest): this {
     this.contracts.push({
@@ -432,7 +916,49 @@ export class TransactionBuilder {
   }
 
   /**
-   * Add smart contract (using typed request)
+   * Add smart contract call to interact with deployed contracts
+   * Enables calling functions on smart contracts deployed on the Klever blockchain
+   *
+   * **Contract Call Types (scType):**
+   * - 0: Deploy contract
+   * - 1: Invoke contract function
+   * - 2: Upgrade contract
+   *
+   * **Important:**
+   * - Use `.data()` to specify function name and arguments
+   * - callValue allows sending KLV or KDA tokens with the call
+   * - Contract address must be valid bech32 format
+   *
+   * @param params - Smart contract parameters
+   * @param params.address - Contract's bech32 address
+   * @param params.scType - Contract call type (0 = deploy, 1 = invoke, 2 = upgrade)
+   * @param params.callValue - Optional amounts to send (e.g., { KLV: '1000000' })
+   * @returns This builder instance for chaining
+   * @throws {ValidationError} If contract address is invalid
+   *
+   * @example
+   * ```typescript
+   * // Invoke contract function
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .smartContract({
+   *     address: 'klv1contract...',
+   *     scType: 1, // Invoke
+   *     callValue: { KLV: '1000000' } // Send 1 KLV
+   *   })
+   *   .data(['transfer', 'klv1receiver...', '500000'])
+   *   .build()
+   *
+   * // Call contract without sending value
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1...')
+   *   .smartContract({
+   *     address: 'klv1contract...',
+   *     scType: 1
+   *   })
+   *   .data(['getValue'])
+   *   .build()
+   * ```
    */
   smartContract(params: SmartContractRequest): this {
     if (!isValidAddress(params.address)) {
@@ -473,8 +999,24 @@ export class TransactionBuilder {
   }
 
   /**
-   * Build transaction request for node endpoint
-   * @returns Request object to send to node's /transaction/build endpoint
+   * Build transaction request object for node endpoint
+   * Creates a request object that can be sent to the node's /transaction/build endpoint
+   * The node will handle nonce fetching, fee calculation, and proto encoding
+   *
+   * @returns Request object ready to send to node's /transaction/build endpoint
+   * @throws {ValidationError} If no contracts have been added
+   *
+   * @example
+   * ```typescript
+   * const builder = TransactionBuilder.create()
+   *   .sender('klv1...')
+   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   *
+   * const request = builder.buildRequest()
+   * // Send request to node via HTTP:
+   * // POST /transaction/build
+   * // Body: request
+   * ```
    */
   buildRequest(): BuildTransactionRequest {
     if (this.contracts.length === 0) {
@@ -501,28 +1043,70 @@ export class TransactionBuilder {
   }
 
   /**
-   * Build proto transaction (client-side, offline)
-   * Options override builder state if provided, otherwise uses builder's state
+   * Build proto transaction offline (client-side, no network required)
+   * This method creates a transaction entirely on the client side without contacting the node.
+   * You must provide all required parameters (sender, nonce, fees) either via builder state or options.
    *
-   * @param options - Optional build options (sender, nonce, fees, etc.)
-   * @returns Transaction object with proto bytes
+   * **Offline Mode Benefits:**
+   * - No network latency
+   * - Works without internet connection
+   * - Full control over transaction parameters
+   * - Ideal for hardware wallets and air-gapped signing
+   *
+   * **Fee Calculation:**
+   * When building offline, fees must be provided manually or estimated:
+   * - KAppFee: Base fee for the contract type (typically 500000-1000000)
+   * - BandwidthFee: Fee based on transaction size (typically 100000-500000)
+   * - KDAFee: Optional - pay fees in custom KDA instead of KLV
+   *
+   * @param options - Build options (sender, nonce, fees, etc.)
+   * @param options.sender - Sender's bech32 address (required if not set via builder)
+   * @param options.nonce - Transaction nonce (required if not set via builder)
+   * @param options.chainId - Chain ID (defaults to provider's network if available)
+   * @param options.fees - Fee amounts (kAppFee and bandwidthFee)
+   * @param options.kdaFee - Optional KDA fee (pay fees in custom asset)
+   * @param options.permissionId - Optional permission ID for multi-sig
+   * @param options.data - Optional transaction data
+   * @returns Transaction object with proto bytes ready to sign
+   * @throws {ValidationError} If required parameters are missing or invalid
    *
    * @example
    * ```typescript
-   * // Using builder state
-   * const tx = new TransactionBuilder()
-   *   .sender('klv1...')
-   *   .nonce(123)
-   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
-   *   .buildProto({ fees: { kAppFee: 500000, bandwidthFee: 100000 } })
-   *
-   * // Using options to override
-   * const tx2 = new TransactionBuilder()
-   *   .transfer({ receiver: 'klv1...', amount: '1000000' })
+   * // Offline build with all parameters in options
+   * const tx = TransactionBuilder.create()
+   *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
    *   .buildProto({
-   *     sender: 'klv1...',
+   *     sender: 'klv1xyz...',
    *     nonce: 123,
+   *     chainId: '100',
+   *     fees: {
+   *       kAppFee: 500000,
+   *       bandwidthFee: 100000
+   *     }
+   *   })
+   *
+   * await tx.sign(privateKey)
+   * const hex = tx.toHex()
+   *
+   * // Offline build using builder state
+   * const tx = TransactionBuilder.create()
+   *   .sender('klv1xyz...')
+   *   .nonce(123)
+   *   .setChainId('100')
+   *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
+   *   .buildProto({
    *     fees: { kAppFee: 500000, bandwidthFee: 100000 }
+   *   })
+   *
+   * // Offline build with KDA fee (pay fees in custom token)
+   * const tx = TransactionBuilder.create()
+   *   .sender('klv1xyz...')
+   *   .nonce(123)
+   *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
+   *   .buildProto({
+   *     chainId: '100',
+   *     fees: { kAppFee: 0, bandwidthFee: 0 },
+   *     kdaFee: { kda: 'MYTOKEN-ABCD', amount: '1000000' }
    *   })
    * ```
    */
@@ -617,8 +1201,57 @@ export class TransactionBuilder {
 
   /**
    * Build transaction using node endpoint (requires provider)
-   * Node handles nonce fetching, fee calculation, and proto encoding
-   * @returns Transaction object with proto bytes from node
+   * This is the recommended method for most use cases as the node handles complex operations.
+   *
+   * **Node-Assisted Building:**
+   * The node automatically handles:
+   * - Nonce fetching (gets current account nonce)
+   * - Fee calculation (computes optimal kAppFee and bandwidthFee)
+   * - Proto encoding (creates valid proto bytes)
+   * - Validation (ensures transaction is valid)
+   *
+   * **When to Use:**
+   * - Standard wallet applications
+   * - When you have internet connectivity
+   * - When you want automatic fee calculation
+   * - When you don't need to control every parameter
+   *
+   * **Comparison with buildProto():**
+   * - build() = Online, automatic, easy (requires provider)
+   * - buildProto() = Offline, manual, flexible (no network needed)
+   *
+   * @returns Transaction object with proto bytes from node, ready to sign
+   * @throws {ValidationError} If provider is not set or no contracts added
+   * @throws {Error} If node response is invalid or network request fails
+   *
+   * @example
+   * ```typescript
+   * // Simple node-assisted build
+   * const provider = new KleverProvider({ network: 'mainnet' })
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1xyz...')
+   *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
+   *   .build()
+   *
+   * // Node automatically fetches nonce and calculates fees
+   * await tx.sign(privateKey)
+   * const hash = await provider.sendRawTransaction(tx.toHex())
+   *
+   * // Build with multiple contracts
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1xyz...')
+   *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
+   *   .freeze({ amount: '5000000' })
+   *   .delegate({ receiver: 'klv1validator...' })
+   *   .build()
+   *
+   * // Override specific parameters
+   * const tx = await TransactionBuilder.create(provider)
+   *   .sender('klv1xyz...')
+   *   .nonce(150) // Override automatic nonce
+   *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
+   *   .build()
+   * ```
    */
   async build(): Promise<Transaction> {
     if (!this.provider) {
@@ -648,7 +1281,40 @@ export class TransactionBuilder {
   }
 
   /**
-   * Reset builder state
+   * Reset builder state to initial values
+   * Clears all contracts and builder configuration, allowing reuse of the builder instance
+   *
+   * **What gets reset:**
+   * - All added contracts
+   * - Sender address
+   * - Nonce
+   * - KDA fee
+   * - Permission ID
+   * - Transaction data
+   *
+   * **What persists:**
+   * - Provider (if set)
+   * - Chain ID (if set)
+   *
+   * @returns This builder instance for chaining
+   *
+   * @example
+   * ```typescript
+   * const builder = TransactionBuilder.create(provider)
+   *
+   * // Build first transaction
+   * const tx1 = await builder
+   *   .sender('klv1...')
+   *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
+   *   .build()
+   *
+   * // Reset and build second transaction
+   * const tx2 = await builder
+   *   .reset()
+   *   .sender('klv1...')
+   *   .freeze({ amount: '5000000' })
+   *   .build()
+   * ```
    */
   reset(): this {
     this.contracts = []

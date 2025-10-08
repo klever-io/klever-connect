@@ -2,6 +2,44 @@
  * ABI-Aware Parameter Encoder
  *
  * Automatically encodes parameters based on ABI type definitions.
+ * This module provides intelligent encoding that handles all Klever smart contract types,
+ * including primitives (u8, u32, u64, bool), complex types (structs, enums), and
+ * variable-length types (strings, bytes, lists).
+ *
+ * @remarks
+ * Encoding rules:
+ * - Fixed-size types (u8, u16, u32, u64, bool): Big-endian, leading zeros trimmed (min 1 byte)
+ * - Top-level arguments: No length prefix
+ * - Nested arguments (struct fields, list items): 4-byte length prefix for variable types
+ * - Addresses: Decoded from bech32 to 32 raw bytes
+ *
+ * @example Using ABIEncoder class
+ * ```typescript
+ * import { ABIEncoder } from '@klever/connect-contracts'
+ *
+ * const encoder = new ABIEncoder(contractABI)
+ *
+ * // Encode function arguments
+ * const encoded = encoder.encodeFunctionArgs('transfer', [
+ *   'klv1receiver...',
+ *   1000000n
+ * ])
+ * ```
+ *
+ * @example Manual encoding with encodeByType
+ * ```typescript
+ * import { encodeByType } from '@klever/connect-contracts'
+ *
+ * // Encode a BigUint
+ * const encoded = encodeByType(1000000n, 'BigUint', abi, false)
+ *
+ * // Encode a struct
+ * const betStruct = {
+ *   betType: 0,
+ *   betValue: 100n
+ * }
+ * const encoded = encodeByType(betStruct, 'Bet', abi, false)
+ * ```
  */
 
 import type { ContractABI, ABIParameter, ABITypeDefinition } from '../types/abi'
@@ -334,12 +372,56 @@ export function encodeArguments(
 
 /**
  * ABI-aware encoder class
+ *
+ * Provides high-level encoding methods that use the contract's ABI to
+ * automatically encode values to the correct format.
+ *
+ * @example
+ * ```typescript
+ * const encoder = new ABIEncoder(abi)
+ *
+ * // Encode function arguments
+ * const args = encoder.encodeFunctionArgs('transfer', [
+ *   'klv1receiver...',
+ *   1000000n
+ * ])
+ *
+ * // Encode constructor arguments
+ * const constructorArgs = encoder.encodeConstructorArgs([
+ *   'MyToken',
+ *   'MTK',
+ *   1000000000n
+ * ])
+ *
+ * // Encode single value
+ * const encoded = encoder.encodeValue(1000n, 'u64')
+ * ```
  */
 export class ABIEncoder {
   constructor(private abi: ContractABI) {}
 
   /**
    * Encode function arguments
+   *
+   * Encodes an array of values according to the function's ABI definition.
+   * Automatically handles type conversion and validation.
+   *
+   * @param functionName - The name of the function
+   * @param args - Array of argument values
+   * @returns Array of encoded arguments as Uint8Array
+   * @throws Error if argument count doesn't match ABI
+   * @throws Error if argument type is invalid
+   *
+   * @example
+   * ```typescript
+   * const encoder = new ABIEncoder(abi)
+   *
+   * // Encode transfer function arguments
+   * const encoded = encoder.encodeFunctionArgs('transfer', [
+   *   'klv1receiver...',  // Address
+   *   1000000n            // BigUint amount
+   * ])
+   * ```
    */
   encodeFunctionArgs(functionName: string, args: unknown[]): Uint8Array[] {
     const endpoint = ABIParser.getEndpoint(this.abi, functionName)
@@ -348,6 +430,25 @@ export class ABIEncoder {
 
   /**
    * Encode constructor arguments
+   *
+   * Encodes constructor arguments for contract deployment.
+   *
+   * @param args - Array of constructor argument values
+   * @returns Array of encoded arguments as Uint8Array
+   * @throws Error if argument count doesn't match ABI
+   * @throws Error if argument type is invalid
+   *
+   * @example
+   * ```typescript
+   * const encoder = new ABIEncoder(tokenABI)
+   *
+   * // Encode token constructor arguments
+   * const encoded = encoder.encodeConstructorArgs([
+   *   'MyToken',      // name: string
+   *   'MTK',          // symbol: string
+   *   1000000000n     // totalSupply: BigUint
+   * ])
+   * ```
    */
   encodeConstructorArgs(args: unknown[]): Uint8Array[] {
     return encodeArguments(args, this.abi.constructor.inputs, this.abi)
@@ -355,6 +456,23 @@ export class ABIEncoder {
 
   /**
    * Encode single value by type
+   *
+   * Encodes a single value according to its ABI type.
+   * Useful for manual encoding or testing.
+   *
+   * @param value - The value to encode
+   * @param type - The ABI type (e.g., 'u32', 'Address', 'BigUint')
+   * @returns Encoded value as Uint8Array
+   *
+   * @example
+   * ```typescript
+   * const encoder = new ABIEncoder(abi)
+   *
+   * // Encode different types
+   * const u32 = encoder.encodeValue(100, 'u32')
+   * const addr = encoder.encodeValue('klv1...', 'Address')
+   * const bigint = encoder.encodeValue(1000000n, 'BigUint')
+   * ```
    */
   encodeValue(value: unknown, type: string): Uint8Array {
     return encodeByType(value, type, this.abi, false)

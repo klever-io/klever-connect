@@ -14,6 +14,86 @@ import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-ty
 import type { WalletConfig } from '../types/wallet'
 import { BaseWallet } from '../base'
 
+/**
+ * Wallet implementation for browser environments
+ *
+ * BrowserWallet supports two modes of operation:
+ *
+ * **1. Extension Mode (Default):**
+ * - Integrates with the Klever Browser Extension
+ * - Users sign transactions through the extension UI
+ * - Most secure for dApps - private keys never leave the extension
+ * - Supports account switching and network changes
+ * - Requires Klever Extension to be installed
+ *
+ * **2. Private Key Mode:**
+ * - Direct signing using a private key (like NodeWallet)
+ * - Useful for testing or non-extension wallets
+ * - Can also use PEM files with optional password protection
+ * - Less secure - private keys are in browser memory
+ *
+ * **Security Considerations:**
+ * - Extension mode is recommended for production dApps
+ * - Private key mode should only be used for testing or trusted environments
+ * - Never expose private keys in production code
+ * - Always validate transaction details before signing
+ *
+ * **Event Handling:**
+ * - Emits 'accountChanged' when user switches accounts in extension
+ * - Emits 'disconnect' when user switches to a different blockchain
+ * - Events are debounced to prevent rapid firing
+ *
+ * @example
+ * ```typescript
+ * // Extension mode (recommended for dApps)
+ * import { BrowserWallet } from '@klever/connect-wallet'
+ * import { KleverProvider } from '@klever/connect-provider'
+ *
+ * const provider = new KleverProvider({ network: 'mainnet' })
+ * const wallet = new BrowserWallet(provider)
+ *
+ * try {
+ *   await wallet.connect()
+ *   console.log('Connected:', wallet.address)
+ *
+ *   // Listen for account changes
+ *   wallet.on('accountChanged', ({ address }) => {
+ *     console.log('Account changed to:', address)
+ *   })
+ *
+ *   // Send a transaction (extension will prompt user)
+ *   const result = await wallet.transfer({
+ *     receiver: 'klv1...',
+ *     amount: 1000000,
+ *   })
+ *   console.log('Transaction hash:', result.hash)
+ * } catch (error) {
+ *   if (error.message.includes('Extension not found')) {
+ *     console.log('Please install Klever Extension')
+ *   }
+ * }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Private key mode (testing only)
+ * const wallet = new BrowserWallet(provider, {
+ *   privateKey: '0x123...',
+ * })
+ * await wallet.connect() // No extension needed
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // PEM file mode with password
+ * const pemContent = '-----BEGIN PRIVATE KEY-----...'
+ * const wallet = new BrowserWallet(provider, {
+ *   pemContent,
+ *   pemPassword: 'my-secure-password',
+ * })
+ * await wallet.connect()
+ * ```
+ */
 export class BrowserWallet extends BaseWallet {
   private _kleverWeb?: KleverWeb
   private _kleverHub?: KleverHub
@@ -23,6 +103,34 @@ export class BrowserWallet extends BaseWallet {
   private _lastEmittedAddress?: string | undefined
   private _accountChangeDebounceTimer?: NodeJS.Timeout | undefined
 
+  /**
+   * Create a new BrowserWallet instance
+   *
+   * @param provider - Provider instance for blockchain communication
+   * @param config - Optional wallet configuration
+   * @param config.privateKey - Private key for private key mode (hex string)
+   * @param config.pemContent - PEM file content for PEM mode
+   * @param config.pemPassword - Optional password for encrypted PEM files
+   *
+   * @throws {WalletError} If used in non-browser environment
+   *
+   * @example
+   * ```typescript
+   * // Extension mode (default)
+   * const wallet = new BrowserWallet(provider)
+   *
+   * // Private key mode
+   * const wallet = new BrowserWallet(provider, {
+   *   privateKey: '0x123...',
+   * })
+   *
+   * // PEM mode
+   * const wallet = new BrowserWallet(provider, {
+   *   pemContent: pemFileContent,
+   *   pemPassword: 'optional-password',
+   * })
+   * ```
+   */
   constructor(provider: IProvider, config?: WalletConfig) {
     super(provider)
 
@@ -58,6 +166,43 @@ export class BrowserWallet extends BaseWallet {
       }
     | undefined
 
+  /**
+   * Connect to the wallet
+   *
+   * **Extension Mode:**
+   * - Checks for Klever Extension installation
+   * - Retrieves the current wallet address from extension
+   * - Sets up event listeners for account changes
+   * - Prompts user if no wallet is connected in extension
+   *
+   * **Private Key Mode:**
+   * - Derives address from the provided private key or PEM file
+   * - No user interaction required
+   *
+   * @throws {WalletError} In extension mode: If extension is not installed or no wallet is connected
+   * @throws {WalletError} In private key mode: If key is invalid or PEM decryption fails
+   *
+   * @fires connect - Emits when successfully connected with { address: string }
+   *
+   * @example
+   * ```typescript
+   * // Extension mode - user must have extension installed
+   * const wallet = new BrowserWallet(provider)
+   * try {
+   *   await wallet.connect()
+   *   console.log('Connected to:', wallet.address)
+   * } catch (error) {
+   *   console.error('Extension not found or no wallet connected')
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Private key mode - instant connection
+   * const wallet = new BrowserWallet(provider, { privateKey: '0x123...' })
+   * await wallet.connect() // No extension needed
+   * ```
+   */
   async connect(): Promise<void> {
     if (this._connected) {
       return
@@ -172,9 +317,30 @@ export class BrowserWallet extends BaseWallet {
 
   /**
    * Disconnect from the wallet
+   *
+   * **Extension Mode:**
+   * - Disconnects from KleverHub
+   * - Removes event listeners
+   * - Clears connection state
+   *
+   * **Private Key Mode:**
+   * - Clears connection state
+   * - Optionally removes private key from memory (clearPrivateKey=true)
+   *
    * @param clearPrivateKey - In private key mode, whether to clear the private key from memory (default: false)
-   *                          If false, you can reconnect without providing the key again
-   *                          If true, you'll need to create a new wallet instance to reconnect
+   *                          - false: Keep key in memory for quick reconnection
+   *                          - true: Remove key from memory (recommended for security)
+   *
+   * @fires disconnect - Emits when disconnected
+   *
+   * @example
+   * ```typescript
+   * // Extension mode
+   * await wallet.disconnect()
+   *
+   * // Private key mode - clear key for security
+   * await wallet.disconnect(true)
+   * ```
    */
   async disconnect(clearPrivateKey: boolean = false): Promise<void> {
     if (!this._connected) {
@@ -213,6 +379,45 @@ export class BrowserWallet extends BaseWallet {
     }
   }
 
+  /**
+   * Sign a message with the wallet's private key
+   *
+   * **SECURITY WARNING:**
+   * - Only sign messages from trusted sources
+   * - Verify message content before signing
+   * - Extension mode will show a confirmation dialog to the user
+   * - Malicious messages could trick users into authorizing unintended actions
+   *
+   * **Extension Mode:**
+   * - Prompts user to confirm signing in extension UI
+   * - User can review message before approving
+   * - More secure as private key never leaves extension
+   *
+   * **Private Key Mode:**
+   * - Signs immediately without user confirmation
+   * - Use only in trusted environments
+   *
+   * @param message - Message to sign (string or bytes)
+   * @returns Signature object with .toHex() and .toBase64() methods
+   *
+   * @throws {WalletError} If wallet is not connected
+   * @throws {WalletError} If user rejects signing in extension mode
+   *
+   * @example
+   * ```typescript
+   * // Extension mode - user will see confirmation dialog
+   * const message = "Sign in to My dApp"
+   * const signature = await wallet.signMessage(message)
+   * console.log('Signature:', signature.toHex())
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Private key mode - immediate signing
+   * const signature = await wallet.signMessage("Hello, Klever!")
+   * const isValid = await wallet.verifyMessage("Hello, Klever!", signature)
+   * ```
+   */
   async signMessage(message: string | Uint8Array): Promise<Signature> {
     if (!this._connected) {
       throw new WalletError('Wallet not connected')
@@ -259,6 +464,48 @@ export class BrowserWallet extends BaseWallet {
     }
   }
 
+  /**
+   * Sign a transaction with the wallet's private key
+   *
+   * **SECURITY WARNING:**
+   * - Always verify transaction details before signing
+   * - Check recipient address, amount, and contract type
+   * - Extension mode shows transaction details to user for review
+   * - Signed transactions authorize blockchain state changes
+   *
+   * **Extension Mode:**
+   * - Displays transaction in extension UI for user approval
+   * - User can review all details before signing
+   * - Most secure - private key never exposed
+   *
+   * **Private Key Mode:**
+   * - Signs immediately without user confirmation
+   * - Validate transaction parameters before calling
+   *
+   * @param unsignedTx - Unsigned transaction to sign
+   * @returns Signed transaction ready for broadcast
+   *
+   * @throws {WalletError} If wallet is not connected
+   * @throws {WalletError} If user rejects signing in extension mode
+   *
+   * @example
+   * ```typescript
+   * // Build a transaction
+   * const unsignedTx = await wallet.buildTransaction([
+   *   {
+   *     contractType: TXType.Transfer,
+   *     receiver: 'klv1...',
+   *     amount: '1000000',
+   *   }
+   * ])
+   *
+   * // Sign it (extension will prompt user)
+   * const signedTx = await wallet.signTransaction(unsignedTx)
+   *
+   * // Broadcast
+   * const hash = await wallet.broadcastTransaction(signedTx)
+   * ```
+   */
   async signTransaction(unsignedTx: Transaction): Promise<Transaction> {
     if (!this._connected) {
       throw new WalletError('Wallet not connected')
@@ -297,13 +544,64 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Build a transaction
-   * In extension mode: Uses KleverWeb extension
-   * In private key mode: Uses TransactionBuilder with provider
-   * @param contracts Array of contract requests
-   * @param txData Optional transaction data
-   * @param options Optional transaction options
-   * @returns The built unsigned transaction
+   * Build an unsigned transaction
+   *
+   * Creates a transaction with the specified contracts and parameters.
+   * The transaction is built but not signed.
+   *
+   * **Extension Mode:**
+   * - Uses KleverWeb extension's transaction builder
+   * - Automatically fetches nonce and other parameters
+   *
+   * **Private Key Mode:**
+   * - Uses TransactionBuilder with provider
+   * - Fetches account data for proper transaction construction
+   *
+   * @param contracts - Array of contract requests to include in the transaction
+   * @param txData - Optional transaction data (for smart contracts or metadata)
+   * @param options - Optional transaction options
+   * @param options.nonce - Manual nonce override (auto-fetched if not provided)
+   * @param options.kdaFee - Asset ID to pay fees with (defaults to KLV)
+   *
+   * @returns Unsigned transaction ready to be signed
+   *
+   * @throws {WalletError} If wallet is not connected
+   * @throws {WalletError} If transaction building fails
+   *
+   * @example
+   * ```typescript
+   * // Build a simple transfer
+   * const tx = await wallet.buildTransaction([
+   *   {
+   *     contractType: TXType.Transfer,
+   *     receiver: 'klv1...',
+   *     amount: '1000000',
+   *   }
+   * ])
+   *
+   * // Sign and broadcast
+   * const signedTx = await wallet.signTransaction(tx)
+   * const hash = await wallet.broadcastTransaction(signedTx)
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Build multi-contract transaction
+   * const tx = await wallet.buildTransaction([
+   *   { contractType: TXType.Transfer, receiver: 'klv1...', amount: '1000000' },
+   *   { contractType: TXType.Claim, claimType: 0 },
+   * ])
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Build with custom nonce and KDA fee
+   * const tx = await wallet.buildTransaction(
+   *   [{ contractType: TXType.Transfer, receiver: 'klv1...', amount: '1000000' }],
+   *   undefined,
+   *   { nonce: 42, kdaFee: 'KFI' }
+   * )
+   * ```
    */
   async buildTransaction(
     contracts: ContractRequestData[],
@@ -410,12 +708,45 @@ export class BrowserWallet extends BaseWallet {
 
   /**
    * Build and sign a transfer transaction
-   * In extension mode: Uses KleverWeb extension
-   * In private key mode: Uses TransactionBuilder + local signing
-   * @param to - Recipient address
-   * @param amount - Amount to transfer
-   * @param token - Optional token ID (defaults to KLV)
-   * @returns Signed transaction
+   *
+   * Convenience method that combines building and signing a transfer in one call.
+   *
+   * **Extension Mode:**
+   * - Uses KleverWeb extension
+   * - User confirms the transfer in extension UI
+   *
+   * **Private Key Mode:**
+   * - Uses TransactionBuilder + local signing
+   * - Signs immediately without confirmation
+   *
+   * @param to - Recipient address (bech32 format)
+   * @param amount - Amount to transfer in smallest units (KLV has 6 decimals)
+   * @param token - Optional token ID (defaults to 'KLV')
+   *
+   * @returns Signed transaction ready to broadcast
+   *
+   * @throws {WalletError} If wallet is not connected
+   * @throws {WalletError} If user rejects in extension mode
+   *
+   * @example
+   * ```typescript
+   * // Transfer 1 KLV (1000000 smallest units)
+   * const signedTx = await wallet.buildTransfer(
+   *   'klv1...',
+   *   1000000
+   * )
+   * const hash = await wallet.broadcastTransaction(signedTx)
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Transfer custom token
+   * const signedTx = await wallet.buildTransfer(
+   *   'klv1...',
+   *   5000000,
+   *   'KFI-ABC' // Custom token ID
+   * )
+   * ```
    */
   async buildTransfer(to: string, amount: string | number, token?: string): Promise<Transaction> {
     const contract: ContractRequestData = {

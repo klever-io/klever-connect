@@ -82,6 +82,25 @@ export function isKleverAddress(value: string): value is KleverAddress {
 const KLEVER_ADDRESS_PREFIX = 'klv'
 const KLEVER_ADDRESS_LENGTH = 32
 
+/**
+ * Validates a Klever address using bech32 decoding
+ *
+ * This function performs full bech32 validation by decoding the address
+ * and verifying both the prefix and data length. It's more thorough than
+ * the regex-based `isKleverAddress()` function.
+ *
+ * @param address - The address string to validate
+ * @returns True if the address is valid (correct prefix and data length)
+ *
+ * @example
+ * ```typescript
+ * if (isValidAddress('klv1qqqqqqqqqqqqqpgqxwklx...')) {
+ *   console.log('Valid Klever address')
+ * }
+ * ```
+ *
+ * @see {@link isKleverAddress} for a faster regex-based validation
+ */
 export function isValidAddress(address: string): boolean {
   try {
     const { prefix, data } = bech32Decode(address)

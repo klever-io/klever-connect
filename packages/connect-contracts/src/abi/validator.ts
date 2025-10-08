@@ -1,14 +1,100 @@
 /**
  * ABI Validator for Klever Smart Contracts
  *
- * Validates ABI structure and integrity.
+ * Validates ABI structure and integrity to ensure contract ABIs are properly formed.
+ * This module performs comprehensive validation of all ABI components including
+ * endpoints, parameters, types (structs, enums), and metadata.
+ *
+ * @remarks
+ * Validation checks include:
+ * - Required fields (name, constructor, endpoints, types)
+ * - Endpoint structure (inputs, outputs, mutability)
+ * - Parameter definitions (type, name)
+ * - Custom type definitions (struct fields, enum variants)
+ * - Type references and consistency
+ *
+ * @example Basic validation
+ * ```typescript
+ * import { ABIValidator } from '@klever/connect-contracts'
+ *
+ * const abi = {
+ *   name: 'MyContract',
+ *   constructor: { inputs: [], outputs: [] },
+ *   endpoints: [...],
+ *   types: {}
+ * }
+ *
+ * try {
+ *   ABIValidator.validate(abi)
+ *   console.log('ABI is valid')
+ * } catch (error) {
+ *   console.error('ABI validation failed:', error.message)
+ * }
+ * ```
  */
 
 import type { ContractABI } from '../types/abi'
 
+/**
+ * ABI Validator class for Klever smart contracts
+ *
+ * Provides static validation methods to ensure ABIs are correctly structured
+ * and complete. All methods are static and do not require instantiation.
+ *
+ * @see {@link ContractABI} for ABI structure
+ * @see {@link ABIParser} for ABI parsing utilities
+ */
 export class ABIValidator {
   /**
    * Validate ABI structure
+   *
+   * Performs comprehensive validation of a contract ABI to ensure it is properly
+   * structured and contains all required components. This is the main entry point
+   * for ABI validation.
+   *
+   * @param abi - The contract ABI to validate
+   * @throws Error if any validation check fails
+   *
+   * @example
+   * ```typescript
+   * const abi = {
+   *   name: 'MyContract',
+   *   constructor: {
+   *     inputs: [{ name: 'owner', type: 'Address' }],
+   *     outputs: []
+   *   },
+   *   endpoints: [
+   *     {
+   *       name: 'transfer',
+   *       inputs: [
+   *         { name: 'to', type: 'Address' },
+   *         { name: 'amount', type: 'BigUint' }
+   *       ],
+   *       outputs: [],
+   *       mutability: 'mutable'
+   *     }
+   *   ],
+   *   types: {}
+   * }
+   *
+   * ABIValidator.validate(abi) // No error thrown - ABI is valid
+   * ```
+   *
+   * @example Invalid ABI
+   * ```typescript
+   * const invalidABI = {
+   *   name: 'MyContract',
+   *   // Missing constructor
+   *   endpoints: [],
+   *   types: {}
+   * }
+   *
+   * try {
+   *   ABIValidator.validate(invalidABI)
+   * } catch (error) {
+   *   console.error(error.message) // 'Invalid ABI: constructor is required'
+   * }
+   * ```
    */
   static validate(abi: ContractABI): void {
     // Validate contract name
@@ -45,6 +131,15 @@ export class ABIValidator {
 
   /**
    * Validate endpoint definition
+   *
+   * Validates the structure of an endpoint (function) definition.
+   * Checks for required fields (inputs, outputs) and validates their structure.
+   *
+   * @param endpoint - The endpoint object to validate
+   * @param name - The name of the endpoint (for error messages)
+   * @throws Error if the endpoint structure is invalid
+   *
+   * @internal
    */
   private static validateEndpoint(endpoint: unknown, name: string): void {
     if (!endpoint || typeof endpoint !== 'object') {
@@ -86,6 +181,15 @@ export class ABIValidator {
 
   /**
    * Validate parameter definition
+   *
+   * Validates an individual parameter (input or output) definition.
+   * Ensures the parameter has a valid type field.
+   *
+   * @param param - The parameter object to validate
+   * @param location - Description of where the parameter appears (for error messages)
+   * @throws Error if the parameter structure is invalid
+   *
+   * @internal
    */
   private static validateParameter(param: unknown, location: string): void {
     if (!param || typeof param !== 'object') {
@@ -101,6 +205,16 @@ export class ABIValidator {
 
   /**
    * Validate type definition
+   *
+   * Validates a custom type definition (struct or enum).
+   * For structs: validates fields array and each field's structure.
+   * For enums: validates variants array and each variant's discriminant.
+   *
+   * @param typeName - The name of the type (for error messages)
+   * @param typeDef - The type definition object to validate
+   * @throws Error if the type definition is invalid
+   *
+   * @internal
    */
   private static validateType(typeName: string, typeDef: unknown): void {
     if (!typeDef || typeof typeDef !== 'object') {

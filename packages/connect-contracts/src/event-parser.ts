@@ -1,7 +1,46 @@
 /**
  * Event Parser for Smart Contract Events
  *
- * Parses events from transaction logs and receipts.
+ * Parses and filters events from transaction logs and receipts. Events are emitted
+ * by smart contracts during transaction execution and provide valuable information
+ * about what happened during contract interactions.
+ *
+ * @remarks
+ * Events in Klever smart contracts consist of:
+ * - identifier: Event name (e.g., 'Transfer', 'Approval')
+ * - address: Contract address that emitted the event
+ * - topics: Indexed event parameters for efficient filtering
+ * - data: Non-indexed event parameters containing additional data
+ *
+ * @example Basic event parsing
+ * ```typescript
+ * import { EventParser } from '@klever/connect-contracts'
+ *
+ * // Get transaction receipt
+ * const tx = await contract.transfer(toAddress, amount)
+ * const receipt = await tx.wait()
+ *
+ * // Parse all events
+ * const events = EventParser.parseEvents(receipt.logs)
+ *
+ * // Filter by event identifier
+ * const transferEvents = EventParser.parseEvents(receipt.logs, {
+ *   identifier: 'Transfer'
+ * })
+ * ```
+ *
+ * @example Advanced filtering
+ * ```typescript
+ * // Filter by contract address and identifier
+ * const contractEvents = EventParser.parseEvents(receipt.logs, {
+ *   address: 'klv1contract...',
+ *   identifier: 'BetPlaced'
+ * })
+ *
+ * // Get unique event identifiers
+ * const identifiers = EventParser.getEventIdentifiers(receipt.logs)
+ * console.log(identifiers) // ['Transfer', 'Approval', 'BetPlaced']
+ * ```
  */
 
 /**
@@ -58,7 +97,27 @@ export interface ContractEventFilter {
 /**
  * Event Parser
  *
- * Utility for parsing events from transaction logs.
+ * Utility class for parsing and filtering events from transaction logs.
+ * Provides static methods for working with contract events without requiring instantiation.
+ *
+ * @remarks
+ * This class provides functionality to:
+ * - Parse raw blockchain events into structured format
+ * - Filter events by identifier, address, and topics
+ * - Extract unique event identifiers from logs
+ * - Count event occurrences
+ *
+ * @example Using EventParser directly
+ * ```typescript
+ * const events = EventParser.parseEvents(transactionLogs)
+ *
+ * // Filter to specific event type
+ * const betEvents = events.filter(e => e.identifier === 'BetPlaced')
+ *
+ * // Count event types
+ * const counts = EventParser.countEvents(transactionLogs)
+ * console.log(counts.get('Transfer')) // Number of Transfer events
+ * ```
  */
 export class EventParser {
   /**
@@ -136,8 +195,21 @@ export class EventParser {
   /**
    * Get unique event identifiers from logs
    *
+   * Extracts and returns all unique event identifiers (names) from the transaction logs.
+   * This is useful for discovering what events were emitted during a transaction.
+   *
    * @param logs - Transaction logs
    * @returns Array of unique event identifiers
+   *
+   * @example
+   * ```typescript
+   * const tx = await contract.performMultipleActions()
+   * const receipt = await tx.wait()
+   *
+   * // Get all unique event types emitted
+   * const identifiers = EventParser.getEventIdentifiers(receipt.logs)
+   * console.log(identifiers) // ['Transfer', 'Approval', 'ActionCompleted']
+   * ```
    */
   static getEventIdentifiers(logs?: TransactionLog): string[] {
     if (!logs || !logs.events) {
@@ -155,8 +227,28 @@ export class EventParser {
   /**
    * Count events by identifier
    *
+   * Creates a map showing how many times each event type was emitted in the transaction.
+   * Useful for analytics and verification of transaction outcomes.
+   *
    * @param logs - Transaction logs
    * @returns Map of identifier to count
+   *
+   * @example
+   * ```typescript
+   * const tx = await contract.batchTransfer(recipients, amounts)
+   * const receipt = await tx.wait()
+   *
+   * // Count event occurrences
+   * const counts = EventParser.countEvents(receipt.logs)
+   *
+   * console.log(`Transfer events: ${counts.get('Transfer')}`)
+   * console.log(`Approval events: ${counts.get('Approval')}`)
+   *
+   * // Verify expected number of transfers
+   * if (counts.get('Transfer') !== recipients.length) {
+   *   console.error('Not all transfers completed!')
+   * }
+   * ```
    */
   static countEvents(logs?: TransactionLog): Map<string, number> {
     if (!logs || !logs.events) {

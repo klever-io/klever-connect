@@ -342,7 +342,13 @@ describe('Result Decoder', () => {
     it('should decode real Bet struct correctly', () => {
       const diceABI: ContractABI = {
         buildInfo: {
-          rustc: { version: '1.87.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          rustc: {
+            version: '1.87.0',
+            commitHash: '',
+            commitDate: '',
+            channel: 'Stable',
+            short: '',
+          },
           contractCrate: { name: 'dice', version: '0.0.0' },
           framework: { name: 'klever-sc', version: '0.45.0' },
         },
@@ -396,7 +402,13 @@ describe('Result Decoder', () => {
     it('should decode Bet struct from hex event data using hexToBase64', () => {
       const diceABI: ContractABI = {
         buildInfo: {
-          rustc: { version: '1.87.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          rustc: {
+            version: '1.87.0',
+            commitHash: '',
+            commitDate: '',
+            channel: 'Stable',
+            short: '',
+          },
           contractCrate: { name: 'dice', version: '0.0.0' },
           framework: { name: 'klever-sc', version: '0.45.0' },
         },
@@ -448,7 +460,13 @@ describe('Result Decoder', () => {
     it('should decode Bet struct directly from hex with encoding parameter', () => {
       const diceABI: ContractABI = {
         buildInfo: {
-          rustc: { version: '1.87.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          rustc: {
+            version: '1.87.0',
+            commitHash: '',
+            commitDate: '',
+            channel: 'Stable',
+            short: '',
+          },
           contractCrate: { name: 'dice', version: '0.0.0' },
           framework: { name: 'klever-sc', version: '0.45.0' },
         },
