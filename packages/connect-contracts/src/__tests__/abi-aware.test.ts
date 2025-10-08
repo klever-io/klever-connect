@@ -5,11 +5,11 @@
 import { describe, it, expect } from 'vitest'
 import { ABIEncoder, encodeByType } from '../encoder/abi-encoder'
 import { ABIDecoder, decodeByType } from '../decoder/abi-decoder'
-import type { ContractABI } from '../types/abi'
 import diceAbi from '../../examples/dice/dice.abi.json'
+import { loadABI } from '../utils'
 
 describe('ABI-Aware Encoding', () => {
-  const abi = diceAbi as ContractABI
+  const abi = loadABI(diceAbi)
   const encoder = new ABIEncoder(abi)
 
   describe('Primitive Types', () => {
@@ -210,7 +210,7 @@ describe('ABI-Aware Encoding', () => {
 })
 
 describe('ABI-Aware Decoding', () => {
-  const abi = diceAbi as ContractABI
+  const abi = loadABI(diceAbi)
   const decoder = new ABIDecoder(abi)
 
   describe('Primitive Types', () => {
@@ -357,25 +357,13 @@ describe('ABI-Aware Decoding', () => {
       // - bool: 1 byte, no prefix
       const bytes = new Uint8Array([
         // bet_type = 0 (u32: 4 bytes fixed)
-        0x00,
-        0x00,
-        0x00,
-        0x00,
+        0x00, 0x00, 0x00, 0x00,
         // bet_value = 50 (u32: 4 bytes fixed)
-        0x00,
-        0x00,
-        0x00,
-        0x32,
+        0x00, 0x00, 0x00, 0x32,
         // dice_value = 25 (u32: 4 bytes fixed)
-        0x00,
-        0x00,
-        0x00,
-        0x19,
+        0x00, 0x00, 0x00, 0x19,
         // multiplier = 195000 = 0x02f9b8 (u32: 4 bytes fixed)
-        0x00,
-        0x02,
-        0xf9,
-        0xb8,
+        0x00, 0x02, 0xf9, 0xb8,
         // is_winner = true (bool: 1 byte)
         0x01,
       ])
@@ -393,10 +381,22 @@ describe('ABI-Aware Decoding', () => {
   describe('Function Results', () => {
     it('should decode function results from base64', () => {
       const fullStruct = new Uint8Array([
-        0x00, 0x00, 0x00, 0x00, // bet_type (u32: 4 bytes fixed)
-        0x00, 0x00, 0x00, 0x32, // bet_value (u32: 4 bytes fixed)
-        0x00, 0x00, 0x00, 0x19, // dice_value (u32: 4 bytes fixed)
-        0x00, 0x02, 0xf9, 0xb8, // multiplier (u32: 4 bytes fixed)
+        0x00,
+        0x00,
+        0x00,
+        0x00, // bet_type (u32: 4 bytes fixed)
+        0x00,
+        0x00,
+        0x00,
+        0x32, // bet_value (u32: 4 bytes fixed)
+        0x00,
+        0x00,
+        0x00,
+        0x19, // dice_value (u32: 4 bytes fixed)
+        0x00,
+        0x02,
+        0xf9,
+        0xb8, // multiplier (u32: 4 bytes fixed)
         0x01, // is_winner (bool: 1 byte)
       ])
 
@@ -411,10 +411,22 @@ describe('ABI-Aware Decoding', () => {
 
     it('should decode from Uint8Array', () => {
       const fullStruct = new Uint8Array([
-        0x00, 0x00, 0x00, 0x00, // bet_type (u32: 4 bytes fixed)
-        0x00, 0x00, 0x00, 0x32, // bet_value (u32: 4 bytes fixed)
-        0x00, 0x00, 0x00, 0x19, // dice_value (u32: 4 bytes fixed)
-        0x00, 0x02, 0xf9, 0xb8, // multiplier (u32: 4 bytes fixed)
+        0x00,
+        0x00,
+        0x00,
+        0x00, // bet_type (u32: 4 bytes fixed)
+        0x00,
+        0x00,
+        0x00,
+        0x32, // bet_value (u32: 4 bytes fixed)
+        0x00,
+        0x00,
+        0x00,
+        0x19, // dice_value (u32: 4 bytes fixed)
+        0x00,
+        0x02,
+        0xf9,
+        0xb8, // multiplier (u32: 4 bytes fixed)
         0x01, // is_winner (bool: 1 byte)
       ])
       const data = [fullStruct]
@@ -442,7 +454,7 @@ describe('ABI-Aware Decoding', () => {
 })
 
 describe('Round-Trip Encoding/Decoding', () => {
-  const abi = diceAbi as ContractABI
+  const abi = loadABI(diceAbi)
 
   it('should encode and decode u32 (top-level)', () => {
     const original = 12345

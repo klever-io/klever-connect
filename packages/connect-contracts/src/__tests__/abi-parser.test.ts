@@ -8,12 +8,13 @@ import { ABIValidator } from '../abi/validator'
 import type { ContractABI } from '../types/abi'
 
 // Load Dice contract ABI for testing
+import { loadABI } from '../utils'
 import diceAbi from '../../examples/dice/dice.abi.json'
 
 describe('ABIParser', () => {
   describe('parse', () => {
     it('should parse valid ABI object', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       expect(abi.name).toBe('Dice')
       expect(abi.endpoints).toHaveLength(2)
       expect(abi.types).toBeDefined()
@@ -27,7 +28,9 @@ describe('ABIParser', () => {
 
     it('should throw on missing name', () => {
       const invalidAbi = { endpoints: [] }
-      expect(() => ABIParser.parse(invalidAbi as ContractABI)).toThrow('ABI missing contract name')
+      expect(() => ABIParser.parse(invalidAbi as unknown as ContractABI)).toThrow(
+        'ABI missing contract name',
+      )
     })
 
     it('should throw on missing endpoints', () => {
@@ -36,22 +39,26 @@ describe('ABIParser', () => {
     })
 
     it('should initialize empty types if missing', () => {
-      const minimalAbi = { name: 'Test', endpoints: [], constructor: { inputs: [], outputs: [] } }
-      const abi = ABIParser.parse(minimalAbi as ContractABI)
+      const minimalAbi = {
+        name: 'Test',
+        endpoints: [],
+        constructor: { name: 'init', inputs: [], outputs: [] },
+      }
+      const abi = ABIParser.parse(minimalAbi as unknown as ContractABI)
       expect(abi.types).toEqual({})
     })
   })
 
   describe('getEndpoint', () => {
     it('should get endpoint by name', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const endpoint = ABIParser.getEndpoint(abi, 'getLastResult')
       expect(endpoint.name).toBe('getLastResult')
       expect(endpoint.mutability).toBe('readonly')
     })
 
     it('should throw on non-existent endpoint', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       expect(() => ABIParser.getEndpoint(abi, 'nonExistent')).toThrow(
         "Endpoint 'nonExistent' not found in ABI",
       )
@@ -60,14 +67,14 @@ describe('ABIParser', () => {
 
   describe('getType', () => {
     it('should get type by name', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const betType = ABIParser.getType(abi, 'Bet')
       expect(betType.type).toBe('struct')
       expect(betType.fields).toHaveLength(5)
     })
 
     it('should throw on non-existent type', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       expect(() => ABIParser.getType(abi, 'NonExistent')).toThrow(
         "Type 'NonExistent' not found in ABI",
       )
@@ -76,13 +83,13 @@ describe('ABIParser', () => {
 
   describe('isReadonly', () => {
     it('should identify readonly endpoints', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const endpoint = ABIParser.getEndpoint(abi, 'getLastResult')
       expect(ABIParser.isReadonly(endpoint)).toBe(true)
     })
 
     it('should identify mutable endpoints', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const endpoint = ABIParser.getEndpoint(abi, 'bet')
       expect(ABIParser.isReadonly(endpoint)).toBe(false)
     })
@@ -90,13 +97,13 @@ describe('ABIParser', () => {
 
   describe('isPayable', () => {
     it('should identify payable endpoints', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const endpoint = ABIParser.getEndpoint(abi, 'bet')
       expect(ABIParser.isPayable(endpoint)).toBe(true)
     })
 
     it('should identify non-payable endpoints', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const endpoint = ABIParser.getEndpoint(abi, 'getLastResult')
       expect(ABIParser.isPayable(endpoint)).toBe(false)
     })
@@ -104,7 +111,7 @@ describe('ABIParser', () => {
 
   describe('getEndpointNames', () => {
     it('should return all endpoint names', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const names = ABIParser.getEndpointNames(abi)
       expect(names).toEqual(['getLastResult', 'bet'])
     })
@@ -112,7 +119,7 @@ describe('ABIParser', () => {
 
   describe('getReadonlyEndpoints', () => {
     it('should return only readonly endpoint names', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const names = ABIParser.getReadonlyEndpoints(abi)
       expect(names).toEqual(['getLastResult'])
     })
@@ -120,7 +127,7 @@ describe('ABIParser', () => {
 
   describe('getMutableEndpoints', () => {
     it('should return only mutable endpoint names', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const names = ABIParser.getMutableEndpoints(abi)
       expect(names).toEqual(['bet'])
     })
@@ -130,13 +137,17 @@ describe('ABIParser', () => {
 describe('ABIValidator', () => {
   describe('validate', () => {
     it('should validate Dice ABI', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       expect(() => ABIValidator.validate(abi)).not.toThrow()
     })
 
     it('should throw on missing name', () => {
-      const invalidAbi = { endpoints: [], types: {}, constructor: { inputs: [], outputs: [] } }
-      expect(() => ABIValidator.validate(invalidAbi as ContractABI)).toThrow(
+      const invalidAbi = {
+        endpoints: [],
+        types: {},
+        constructor: { name: 'init', inputs: [], outputs: [] },
+      }
+      expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         'Invalid ABI: name must be a string',
       )
     })
@@ -146,7 +157,7 @@ describe('ABIValidator', () => {
         name: 123,
         endpoints: [],
         types: {},
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         'Invalid ABI: name must be a string',
@@ -155,7 +166,7 @@ describe('ABIValidator', () => {
 
     it('should throw on missing constructor', () => {
       const invalidAbi = { name: 'Test', endpoints: [], types: {} }
-      expect(() => ABIValidator.validate(invalidAbi as ContractABI)).toThrow(
+      expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         'Invalid ABI: constructor must be an object',
       )
     })
@@ -165,7 +176,7 @@ describe('ABIValidator', () => {
         name: 'Test',
         endpoints: {},
         types: {},
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         'Invalid ABI: endpoints must be an array',
@@ -177,7 +188,7 @@ describe('ABIValidator', () => {
         name: 'Test',
         endpoints: [{ name: 'test', outputs: [] }],
         types: {},
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         'Invalid ABI: test inputs must be an array',
@@ -189,7 +200,7 @@ describe('ABIValidator', () => {
         name: 'Test',
         endpoints: [{ name: 'test', inputs: [] }],
         types: {},
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         'Invalid ABI: test outputs must be an array',
@@ -201,7 +212,7 @@ describe('ABIValidator', () => {
         name: 'Test',
         endpoints: [{ name: 'test', mutability: 'invalid', inputs: [], outputs: [] }],
         types: {},
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         "Invalid ABI: test mutability must be 'readonly' or 'mutable'",
@@ -213,7 +224,7 @@ describe('ABIValidator', () => {
         name: 'Test',
         endpoints: [{ name: 'test', inputs: [{ name: 'param' }], outputs: [] }],
         types: {},
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         'Invalid ABI: test input[0] must have a string type',
@@ -230,7 +241,7 @@ describe('ABIValidator', () => {
             fields: 'invalid',
           },
         },
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         "Invalid ABI: struct 'TestStruct' must have fields array",
@@ -247,7 +258,7 @@ describe('ABIValidator', () => {
             variants: 'invalid',
           },
         },
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
       }
       expect(() => ABIValidator.validate(invalidAbi as unknown as ContractABI)).toThrow(
         "Invalid ABI: enum 'TestEnum' must have variants array",
@@ -255,7 +266,7 @@ describe('ABIValidator', () => {
     })
 
     it('should validate struct fields', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const betType = ABIParser.getType(abi, 'Bet')
       expect(betType.fields).toHaveLength(5)
       expect(betType.fields?.[0].name).toBe('bet_type')
@@ -263,7 +274,7 @@ describe('ABIValidator', () => {
     })
 
     it('should validate enum variants', () => {
-      const abi = ABIParser.parse(diceAbi as ContractABI)
+      const abi = ABIParser.parse(loadABI(diceAbi))
       const betTypeEnum = ABIParser.getType(abi, 'BetType')
       expect(betTypeEnum.variants).toHaveLength(2)
       expect(betTypeEnum.variants?.[0].name).toBe('UNDER')

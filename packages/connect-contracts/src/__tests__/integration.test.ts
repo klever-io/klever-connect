@@ -12,10 +12,11 @@ import { Interface } from '../interface'
 import { parseReceipt } from '../receipt-parser'
 import { ABIEncoder } from '../encoder/abi-encoder'
 import { ABIDecoder } from '../decoder/abi-decoder'
+import { loadABI } from '../utils'
 import diceAbi from '../../examples/dice/dice.abi.json'
-import type { ContractABI } from '../types/abi'
 import type { Provider, Signer } from '../contract'
 import type { TransactionReceipt } from '../receipt-parser'
+import type { Transaction } from '@klever/connect-transactions'
 
 // Mock contract address
 const MOCK_CONTRACT_ADDRESS = 'klv1qqqqqqqqqqqqqpgqfzydpd30f6gy0ylqvgr5wgk3qhkxfms6z8vspns0pz'
@@ -89,13 +90,14 @@ class MockSigner implements Signer {
     this.provider = provider
   }
 
-  async signTransaction(tx: unknown): Promise<unknown> {
+  async signTransaction(tx: Transaction): Promise<Transaction> {
     // Mock signing - just return the transaction
     return tx
   }
 }
 
-// Mock transaction builder result
+// Mock transaction builder result (kept for future use)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockTransaction = {
   RawData: {
     Nonce: 1,
@@ -119,12 +121,12 @@ describe('Integration Tests - Dice Contract', () => {
   beforeEach(() => {
     provider = new MockProvider()
     signer = new MockSigner(provider)
-    contract = new Contract(MOCK_CONTRACT_ADDRESS, diceAbi as ContractABI, signer)
+    contract = new Contract(MOCK_CONTRACT_ADDRESS, loadABI(diceAbi), signer)
   })
 
   describe('Interface', () => {
     it('should parse Dice ABI correctly', () => {
-      const iface = new Interface(diceAbi as ContractABI)
+      const iface = new Interface(loadABI(diceAbi))
 
       expect(iface.name).toBe('Dice')
       expect(iface.endpointCount).toBe(2)
@@ -132,21 +134,21 @@ describe('Integration Tests - Dice Contract', () => {
     })
 
     it('should identify readonly endpoints', () => {
-      const iface = new Interface(diceAbi as ContractABI)
+      const iface = new Interface(loadABI(diceAbi))
 
       expect(iface.isReadonly('getLastResult')).toBe(true)
       expect(iface.isReadonly('bet')).toBe(false)
     })
 
     it('should identify payable endpoints', () => {
-      const iface = new Interface(diceAbi as ContractABI)
+      const iface = new Interface(loadABI(diceAbi))
 
       expect(iface.isPayable('bet')).toBe(true)
       expect(iface.isPayable('getLastResult')).toBe(false)
     })
 
     it('should get endpoint definitions', () => {
-      const iface = new Interface(diceAbi as ContractABI)
+      const iface = new Interface(loadABI(diceAbi))
 
       const getLastResult = iface.getEndpoint('getLastResult')
       expect(getLastResult.name).toBe('getLastResult')
@@ -157,7 +159,7 @@ describe('Integration Tests - Dice Contract', () => {
     })
 
     it('should get type definitions', () => {
-      const iface = new Interface(diceAbi as ContractABI)
+      const iface = new Interface(loadABI(diceAbi))
 
       const betType = iface.getType('Bet')
       expect(betType.type).toBe('struct')
@@ -223,7 +225,7 @@ describe('Integration Tests - Dice Contract', () => {
 
   describe('Encoding & Decoding', () => {
     it('should encode function arguments correctly', () => {
-      const encoder = new ABIEncoder(diceAbi as ContractABI)
+      const encoder = new ABIEncoder(loadABI(diceAbi))
 
       // Encode bet function arguments (bet_type: UNDER, bet_value: 50)
       const encodedArgs = encoder.encodeFunctionArgs('bet', [0, 50])
@@ -234,7 +236,7 @@ describe('Integration Tests - Dice Contract', () => {
     })
 
     it('should decode function results correctly', () => {
-      const decoder = new ABIDecoder(diceAbi as ContractABI)
+      const decoder = new ABIDecoder(loadABI(diceAbi))
 
       // Mock return data for getLastResult (Bet struct as single encoded value)
       const betTypeEncoded = new Uint8Array([0x00, 0x00, 0x00, 0x00]) // bet_type: u32 = 0 (4 bytes)
@@ -265,11 +267,12 @@ describe('Integration Tests - Dice Contract', () => {
     })
 
     it('should encode and decode round-trip correctly', () => {
-      const encoder = new ABIEncoder(diceAbi as ContractABI)
-      const decoder = new ABIDecoder(diceAbi as ContractABI)
+      const encoder = new ABIEncoder(loadABI(diceAbi))
+      const decoder = new ABIDecoder(loadABI(diceAbi))
 
       // Encode bet arguments
       const original = [0, 50]
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const encoded = encoder.encodeFunctionArgs('bet', original)
 
       // Create mock return data (bet function returns Bet struct)
@@ -383,7 +386,7 @@ describe('Integration Tests - Dice Contract', () => {
   describe('ContractFactory', () => {
     it('should create factory with ABI and bytecode', () => {
       const mockBytecode = new Uint8Array([0x00, 0x61, 0x73, 0x6d]) // WASM magic number
-      const factory = new ContractFactory(diceAbi as ContractABI, mockBytecode, signer)
+      const factory = new ContractFactory(loadABI(diceAbi), mockBytecode, signer)
 
       expect(factory.interface.name).toBe('Dice')
       expect(factory.bytecode).toEqual(mockBytecode)
@@ -392,14 +395,14 @@ describe('Integration Tests - Dice Contract', () => {
 
     it('should handle hex string bytecode', () => {
       const hexBytecode = '0061736d' // WASM magic number in hex
-      const factory = new ContractFactory(diceAbi as ContractABI, hexBytecode, signer)
+      const factory = new ContractFactory(loadABI(diceAbi), hexBytecode, signer)
 
       expect(factory.bytecode).toEqual(new Uint8Array([0x00, 0x61, 0x73, 0x6d]))
     })
 
     it('should get deployment transaction data', () => {
       const mockBytecode = new Uint8Array([0x00, 0x61, 0x73, 0x6d])
-      const factory = new ContractFactory(diceAbi as ContractABI, mockBytecode, signer)
+      const factory = new ContractFactory(loadABI(diceAbi), mockBytecode, signer)
 
       const deployTx = factory.getDeployTransaction()
 
@@ -411,7 +414,7 @@ describe('Integration Tests - Dice Contract', () => {
   describe('End-to-End Workflow', () => {
     it('should support complete query workflow', async () => {
       // 1. Create contract instance
-      const contract = new Contract(MOCK_CONTRACT_ADDRESS, diceAbi as ContractABI, provider)
+      const contract = new Contract(MOCK_CONTRACT_ADDRESS, loadABI(diceAbi), provider)
 
       // 2. Call readonly method
       const result = await contract['getLastResult'](MOCK_USER_ADDRESS)
@@ -425,7 +428,7 @@ describe('Integration Tests - Dice Contract', () => {
 
     it('should support contract connection and attachment', () => {
       // 1. Create initial contract
-      const contract1 = new Contract(MOCK_CONTRACT_ADDRESS, diceAbi as ContractABI, provider)
+      const contract1 = new Contract(MOCK_CONTRACT_ADDRESS, loadABI(diceAbi), provider)
 
       // 2. Connect to different signer
       const newSigner = new MockSigner(provider)

@@ -18,6 +18,7 @@ import {
 } from '../encoder/param-encoder'
 import { encodeFunctionCall, encodeConstructor, FunctionEncoder } from '../encoder/function-encoder'
 import type { ContractABI } from '../types/abi'
+import { loadABI } from '../utils'
 import diceAbi from '../../examples/dice/dice.abi.json'
 
 describe('Parameter Encoder', () => {
@@ -209,14 +210,14 @@ describe('Parameter Encoder', () => {
 })
 
 describe('Function Encoder', () => {
-  const abi = diceAbi as ContractABI
+  const abi = loadABI(diceAbi)
 
   describe('encodeFunctionCall', () => {
     it('should encode function with no arguments', () => {
       // Create a test ABI with no-arg function
       const testAbi: ContractABI = {
         name: 'Test',
-        constructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
         endpoints: [{ name: 'noArgs', inputs: [], outputs: [] }],
         types: {},
       }
@@ -241,9 +242,7 @@ describe('Function Encoder', () => {
     })
 
     it('should throw on wrong argument count', () => {
-      expect(() => encodeFunctionCall(abi, 'bet', [encodeU32(0)])).toThrow(
-        'Invalid argument count',
-      )
+      expect(() => encodeFunctionCall(abi, 'bet', [encodeU32(0)])).toThrow('Invalid argument count')
     })
   })
 
@@ -257,6 +256,7 @@ describe('Function Encoder', () => {
       const testAbi: ContractABI = {
         name: 'Test',
         constructor: {
+          name: 'init',
           inputs: [
             { name: 'value', type: 'u32' },
             { name: 'flag', type: 'bool' },
@@ -275,6 +275,7 @@ describe('Function Encoder', () => {
       const testAbi: ContractABI = {
         name: 'Test',
         constructor: {
+          name: 'init',
           inputs: [{ name: 'value', type: 'u32' }],
           outputs: [],
         },

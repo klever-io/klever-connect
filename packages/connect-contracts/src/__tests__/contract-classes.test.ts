@@ -7,10 +7,26 @@ import { Interface } from '../interface'
 import { Contract } from '../contract'
 import { ContractFactory } from '../contract-factory'
 import type { ContractABI } from '../types/abi'
+import type { Provider, Signer } from '../contract'
+import type { Transaction } from '@klever/connect-transactions'
+import { loadABI } from '../utils'
 import diceAbi from '../../examples/dice/dice.abi.json'
 
+// Mock implementations for testing
+const createMockProvider = (): Provider => ({
+  queryContract: async () => ({}),
+  sendRawTransaction: async () => 'mock-hash' as never,
+  waitForTransaction: async () => null,
+})
+
+const createMockSigner = (provider?: Provider): Signer => ({
+  address: 'klv1mock',
+  signTransaction: async (tx: Transaction) => tx,
+  provider: provider || createMockProvider(),
+})
+
 describe('Interface', () => {
-  const abi = diceAbi as ContractABI
+  const abi = loadABI(diceAbi)
 
   describe('constructor', () => {
     it('should create interface from ABI object', () => {
@@ -131,7 +147,7 @@ describe('Interface', () => {
 })
 
 describe('Contract', () => {
-  const abi = diceAbi as ContractABI
+  const abi = loadABI(diceAbi)
   const contractAddress = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
 
   describe('constructor', () => {
@@ -144,17 +160,14 @@ describe('Contract', () => {
     })
 
     it('should create contract with provider', () => {
-      const mockProvider = { queryContract: async () => ({}) }
+      const mockProvider = createMockProvider()
       const contract = new Contract(contractAddress, abi, mockProvider)
       expect(contract.provider).toBe(mockProvider)
       expect(contract.signer).toBeUndefined()
     })
 
     it('should create contract with signer', () => {
-      const mockSigner = {
-        signTransaction: async () => ({}),
-        provider: { queryContract: async () => ({}) },
-      }
+      const mockSigner = createMockSigner()
 
       const contract = new Contract(contractAddress, abi, mockSigner)
       expect(contract.signer).toBe(mockSigner)
@@ -174,7 +187,7 @@ describe('Contract', () => {
   describe('connect and attach', () => {
     it('should connect to new signer', () => {
       const contract = new Contract(contractAddress, abi)
-      const mockSigner = { signTransaction: async () => ({}) }
+      const mockSigner = createMockSigner()
 
       const connected = contract.connect(mockSigner)
       expect(connected.address).toBe(contractAddress)
@@ -201,12 +214,9 @@ describe('Contract', () => {
 })
 
 describe('ContractFactory', () => {
-  const abi = diceAbi as ContractABI
+  const abi = loadABI(diceAbi)
   const bytecode = new Uint8Array([0x01, 0x02, 0x03])
-  const mockSigner = {
-    signTransaction: async () => ({}),
-    provider: { queryContract: async () => ({}) },
-  }
+  const mockSigner = createMockSigner()
 
   describe('constructor', () => {
     it('should create factory with Uint8Array bytecode', () => {
@@ -243,7 +253,7 @@ describe('ContractFactory', () => {
   describe('connect', () => {
     it('should connect to new signer', () => {
       const factory = new ContractFactory(abi, bytecode, mockSigner)
-      const newSigner = { signTransaction: async () => ({}) }
+      const newSigner = createMockSigner()
 
       const newFactory = factory.connect(newSigner)
       expect(newFactory.signer).toBe(newSigner)
@@ -265,6 +275,7 @@ describe('ContractFactory', () => {
       const testAbi: ContractABI = {
         name: 'Test',
         constructor: {
+          name: 'init',
           inputs: [{ name: 'value', type: 'u32' }],
           outputs: [],
         },

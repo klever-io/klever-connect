@@ -63,6 +63,9 @@ export { Interface } from './interface'
 export { Contract } from './contract'
 export { ContractFactory } from './contract-factory'
 
+// Export utility functions
+export { loadABI, isValidABI } from './utils'
+
 // Export receipt parser
 export {
   parseReceipt,
