@@ -1,9 +1,3 @@
 // Global type declarations for Klever extension
-interface Window {
-  kleverWeb?: {
-    // Add known methods/properties of kleverWeb here
-    isKleverWeb?: boolean
-    version?: string
-    // Add more as needed
-  }
-}
+// Import the full type from @klever/connect-wallet to avoid conflicts
+/// <reference types="@klever/connect-wallet" />

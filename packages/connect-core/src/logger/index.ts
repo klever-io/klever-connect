@@ -156,9 +156,9 @@ function getEnvVar(name: string): string | undefined {
   }
 
   // 4. Check window object (browser only)
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
     // Check window.__env__ (common pattern for runtime config)
-    const win = window as unknown as Record<string, unknown>
+    const win = (globalThis as typeof globalThis & { window: Record<string, unknown> }).window
     const envObj = win['__env__'] as Record<string, unknown> | undefined
     if (envObj && typeof envObj === 'object' && name in envObj) {
       return envObj[name] as string | undefined

@@ -353,6 +353,7 @@ export function decodeResults(
       return decoded.value
     })
   } catch (err) {
+    console.error('Error decoding results:', err)
     return data.map((item) => {
       // decode to bytes if string
       const valueBytes = typeof item === 'string' ? decodeBase64(item) : item
@@ -440,6 +441,7 @@ export function decodeResultsWithMetadata(
         raw: item, // Keep original format
       }
     } catch (err) {
+      console.error('Error decoding results with metadata:', err)
       // On error, return hex-encoded raw data
       let valueBytes: Uint8Array
       if (typeof item === 'string') {

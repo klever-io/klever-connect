@@ -14,6 +14,9 @@ import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-ty
 import type { WalletConfig } from '../types/wallet'
 import { BaseWallet } from '../base'
 
+// Ensure window is typed (browser environment only - this file should only run in browser)
+declare const window: Window & typeof globalThis
+
 /**
  * Wallet implementation for browser environments
  *
@@ -251,6 +254,10 @@ export class BrowserWallet extends BaseWallet {
     }
 
     // Extension mode - check for Klever Extension
+    if (typeof window === 'undefined') {
+      throw new WalletError('Klever Extension is only available in browser environments')
+    }
+
     if (!window.kleverWeb) {
       throw new WalletError(
         'Klever Extension not found. Please install it from https://klever.io/extension, or provide a private key.',
@@ -959,7 +966,8 @@ export class BrowserWallet extends BaseWallet {
       const func = payload['function']
       const args = payload['args']
       if (func && args && Array.isArray(args)) {
-        const dataString = args.length > 0 ? `${String(func)}@${args.join('@')}` : String(func)
+        const funcStr = typeof func === 'string' ? func : JSON.stringify(func)
+        const dataString = args.length > 0 ? `${funcStr}@${args.join('@')}` : funcStr
         const callInput =
           typeof Buffer !== 'undefined'
             ? Buffer.from(dataString).toString('base64')

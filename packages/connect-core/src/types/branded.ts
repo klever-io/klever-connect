@@ -167,6 +167,43 @@ export function createTransactionHash(value: string): TransactionHash {
 }
 
 /**
+ * Type guard to check if a string is a valid block hash
+ *
+ * @param value - The string to check
+ * @returns True if the string is a valid block hash
+ *
+ * @example
+ * ```typescript
+ * if (isBlockHash(input)) {
+ *   // input is now typed as BlockHash
+ * }
+ * ```
+ */
+export function isBlockHash(value: string): value is BlockHash {
+  // Block hash is a 64-character hex string
+  return /^[a-f0-9]{64}$/i.test(value)
+}
+
+/**
+ * Creates a BlockHash from a string with validation
+ *
+ * @param value - The hash string to validate and convert
+ * @returns A validated BlockHash
+ * @throws {Error} If the hash is invalid
+ *
+ * @example
+ * ```typescript
+ * const hash = createBlockHash('1234567890abcdef...')
+ * ```
+ */
+export function createBlockHash(value: string): BlockHash {
+  if (!isBlockHash(value)) {
+    throw new Error(`Invalid block hash: ${value}`)
+  }
+  return value
+}
+
+/**
  * Creates a AssetAmount from various numeric types
  *
  * @param value - The amount as bigint, string, or number

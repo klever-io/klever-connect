@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { KleverProvider } from '../provider'
+import { createBlockHash } from '@klever/connect-core'
 
 /**
  * Real Integration Tests - Testnet
@@ -64,7 +65,7 @@ describe('Integration: Testnet Provider', () => {
       expect(recentBlock?.hash).toBeDefined()
 
       // Now fetch the same block by hash
-      const blockByHash = await provider.getBlock(recentBlock!.hash)
+      const blockByHash = await provider.getBlock(createBlockHash(recentBlock!.hash))
 
       expect(blockByHash).toBeDefined()
       expect(blockByHash?.hash).toBe(recentBlock!.hash)
@@ -100,7 +101,7 @@ describe('Integration: Testnet Provider', () => {
 
     it('should return null for invalid block hash', async () => {
       const invalidHash = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-      const block = await provider.getBlock(invalidHash)
+      const block = await provider.getBlock(createBlockHash(invalidHash))
 
       expect(block).toBeNull()
     }, 10000)

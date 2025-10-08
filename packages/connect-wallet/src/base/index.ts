@@ -145,7 +145,7 @@ export abstract class BaseWallet implements Wallet {
       const publicKeyBytes = hexDecode(this._publicKey)
 
       return await verifySignature(messageBytes, signatureBytes, publicKeyBytes)
-    } catch (error) {
+    } catch {
       // If there's any error (invalid format, etc.), return false
       return false
     }

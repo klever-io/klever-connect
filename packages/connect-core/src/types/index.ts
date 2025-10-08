@@ -6,6 +6,9 @@
 // Environment types
 export type Environment = 'browser' | 'node' | 'react-native' | 'unknown'
 
+// Import global type augmentations
+import './environment.d.ts'
+
 export * from './branded'
 export * from './proposals'
 export * from './transactions'

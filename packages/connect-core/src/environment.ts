@@ -46,7 +46,7 @@ export function detectEnvironment(): Environment {
   }
 
   // Check for browser
-  if (typeof window !== 'undefined' && window.document !== undefined) {
+  if (typeof globalThis !== 'undefined' && 'window' in globalThis && 'document' in globalThis) {
     return 'browser'
   }
 

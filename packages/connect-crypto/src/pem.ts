@@ -155,9 +155,10 @@ async function decryptPemBlock(block: PemBlock, password: string): Promise<PemBl
   const encryptionKey = await getEncryptionKey(password)
 
   // Import key for AES-GCM
+  // Cast to ArrayBuffer to satisfy SubtleCrypto type requirements
   const key = await crypto.subtle.importKey(
     'raw',
-    encryptionKey as BufferSource,
+    encryptionKey.buffer as ArrayBuffer,
     { name: 'AES-GCM' },
     false,
     ['decrypt'],
@@ -384,7 +385,7 @@ export async function loadPrivateKeyFromPemFile(
   options: LoadPemOptions = {},
 ): Promise<{ privateKey: Uint8Array; address: string }> {
   // Check if we're in Node.js environment
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
     throw new Error('File operations are only available in Node.js environment')
   }
 
