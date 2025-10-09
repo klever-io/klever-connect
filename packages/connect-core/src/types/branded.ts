@@ -111,6 +111,50 @@ export function isValidAddress(address: string): boolean {
 }
 
 /**
+ * Validates if an address is a smart contract address
+ *
+ * Contract addresses are special Klever addresses that start with 10 zero bytes
+ * (20 zero characters in hex). This function decodes the bech32 address and checks
+ * if the first 10 bytes of the decoded data are all zeros.
+ *
+ * @param address - The address string to validate
+ * @returns True if the address is a valid contract address (klv1 prefix + starts with 10 zero bytes)
+ *
+ * @example
+ * ```typescript
+ * if (isValidContractAddress('klv1qqqqqqqqqqqqqpgqxwklx...')) {
+ *   console.log('Valid contract address')
+ * }
+ *
+ * // Regular addresses will return false
+ * isValidContractAddress('klv1abc123...') // false
+ * ```
+ *
+ * @see {@link isValidAddress} for general address validation
+ */
+export function isValidContractAddress(address: string): boolean {
+  try {
+    const { prefix, data } = bech32Decode(address)
+
+    // Check if it's a valid Klever address first
+    if (prefix !== KLEVER_ADDRESS_PREFIX || data.length !== KLEVER_ADDRESS_LENGTH) {
+      return false
+    }
+
+    // Check if the first 10 bytes are all zeros (contract address marker)
+    for (let i = 0; i < 10; i++) {
+      if (data[i] !== 0) {
+        return false
+      }
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
  * Type guard to check if a string is a valid transaction hash
  *
  * @param value - The string to check
