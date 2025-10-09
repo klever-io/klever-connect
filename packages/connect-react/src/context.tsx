@@ -222,8 +222,14 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
         // Update extension provider if using BrowserWallet (before updating state)
         if (state.wallet && state.wallet instanceof BrowserWallet) {
           const networkConfig = getNetworkConfig(newNetwork)
-          // Update the provider object directly on the extension
+          // Update the extension configuration (NetworkURI)
           state.wallet.updateProvider(networkConfig)
+          // Update the wallet's internal provider (IProvider)
+          state.wallet.updateProvider(newProvider)
+
+          // Dispatch SET_WALLET to ensure React detects the wallet change
+          // This is necessary because we mutated the wallet object
+          dispatch({ type: 'SET_WALLET', wallet: state.wallet, address: state.address || '' })
         }
 
         // Update state atomically - network and provider together
@@ -237,7 +243,7 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
         console.error('Switch network error:', error)
       }
     },
-    [state.wallet, state.currentNetwork, createProviderWithNetwork],
+    [state.wallet, state.currentNetwork, state.address, createProviderWithNetwork],
   )
 
   // Check for extension on mount

@@ -257,8 +257,7 @@ describe('BrowserWallet', () => {
       const signedTx = await wallet.signTransaction(unsignedTx)
 
       expect(signedTx).toBeDefined()
-      expect(signedTx.Signature).toBeDefined()
-      expect(signedTx.Signature?.length).toBeGreaterThan(0)
+      expect(signedTx.isSigned()).toBe(true)
       // Extension receives JSON, not Transaction object
       expect(mockKleverWeb.signTransaction).toHaveBeenCalledWith(unsignedTx.toJSON())
     })
@@ -445,11 +444,13 @@ describe('BrowserWallet', () => {
       expect(mockKleverWeb.provider).toBe(newProvider)
     })
 
-    it('should throw error when updating provider without extension', () => {
+    it('should return early when updating NetworkURI without extension', () => {
       global.window.kleverWeb = undefined
       const wallet = new BrowserWallet(mockProvider, { privateKey: 'a'.repeat(64) })
 
-      expect(() => wallet.updateProvider({})).toThrow('KleverWeb not available')
+      // NetworkURI requires extension to be available - should return early without error
+      const networkConfig = { api: 'https://api.testnet.klever.finance' }
+      expect(() => wallet.updateProvider(networkConfig)).not.toThrow()
     })
   })
 
@@ -498,8 +499,7 @@ describe('BrowserWallet', () => {
 
       const signedTx = await wallet.signTransaction(unsignedTx)
 
-      expect(signedTx.Signature).toBeDefined()
-      expect(signedTx.Signature?.length).toBeGreaterThan(0)
+      expect(signedTx.isSigned()).toBe(true)
     })
 
     it('should use base implementation for sendTransaction in private key mode', async () => {

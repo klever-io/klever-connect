@@ -790,16 +790,71 @@ export class BrowserWallet extends BaseWallet {
   }
 
   /**
-   * Update the extension's provider for network switching
-   * @param provider - The new provider configuration
+   * Update the provider for network switching
+   *
+   * This method updates both the extension's provider configuration (NetworkURI)
+   * and the wallet's internal provider (IProvider) to ensure consistency during
+   * network switches.
+   *
+   * @param provider - Can be either:
+   *   - NetworkURI: Updates only the extension's provider configuration
+   *   - IProvider: Updates the wallet's internal provider for blockchain operations
+   *
+   * @remarks
+   * When switching networks, call this method twice:
+   * 1. First with NetworkURI (network config) to update the extension
+   * 2. Then with IProvider to update the wallet's internal provider
+   *
+   * @example
+   * ```typescript
+   * // Switch to mainnet
+   * const networkConfig = getNetworkConfig('mainnet')
+   * const newProvider = new KleverProvider({ network: 'mainnet' })
+   *
+   * // Update both extension config and internal provider
+   * wallet.updateProvider(networkConfig)  // Extension config
+   * wallet.updateProvider(newProvider)     // Internal provider
+   * ```
    */
-  updateProvider(provider: NetworkURI): void {
-    if (!this._kleverWeb) {
-      throw new WalletError('KleverWeb not available')
+  /**
+   * Type guard to check if provider is an IProvider interface
+   */
+  private isIProvider(provider: NetworkURI | IProvider): provider is IProvider {
+    return (
+      typeof provider === 'object' &&
+      provider !== null &&
+      'getAccount' in provider &&
+      'sendRawTransaction' in provider &&
+      typeof provider.getAccount === 'function' &&
+      typeof provider.sendRawTransaction === 'function'
+    )
+  }
+
+  /**
+   * Type guard to check if provider is a NetworkURI
+   */
+  private isNetworkURI(provider: NetworkURI | IProvider): provider is NetworkURI {
+    return (
+      typeof provider === 'object' && provider !== null && ('api' in provider || 'node' in provider)
+    )
+  }
+
+  updateProvider(provider: NetworkURI | IProvider): void {
+    // Update extension's provider configuration if it's a NetworkURI
+    if (this.isNetworkURI(provider)) {
+      if (!this._kleverWeb) {
+        // return early if extension is not available
+        return
+      }
+      // NetworkURI - update extension configuration
+      this._kleverWeb.provider = provider
     }
 
-    // Directly update the provider object on the extension
-    this._kleverWeb.provider = provider
+    // Update wallet's internal provider if it's an IProvider
+    if (this.isIProvider(provider)) {
+      // IProvider - update internal provider used by wallet methods
+      this._provider = provider
+    }
   }
 
   /**
