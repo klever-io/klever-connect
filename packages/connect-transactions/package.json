@@ -41,5 +41,10 @@
     "@klever/connect-crypto": "workspace:*",
     "@klever/connect-encoding": "workspace:*",
     "@klever/connect-provider": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/klever-io/klever-connect.git",
+    "directory": "packages/connect-transactions"
   }
 }

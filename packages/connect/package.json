@@ -42,5 +42,10 @@
     "@klever/connect-transactions": "workspace:*",
     "@klever/connect-contracts": "workspace:*",
     "@klever/connect-wallet": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/klever-io/klever-connect.git",
+    "directory": "packages/connect"
   }
 }

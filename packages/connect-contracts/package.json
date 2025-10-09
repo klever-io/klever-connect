@@ -42,5 +42,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/klever-io/klever-connect.git",
+    "directory": "packages/connect-contracts"
   }
 }

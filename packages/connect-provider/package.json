@@ -38,5 +38,10 @@
   "dependencies": {
     "@klever/connect-core": "workspace:*",
     "@klever/connect-crypto": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/klever-io/klever-connect.git",
+    "directory": "packages/connect-provider"
   }
 }
