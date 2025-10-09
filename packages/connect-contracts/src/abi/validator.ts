@@ -19,7 +19,7 @@
  *
  * const abi = {
  *   name: 'MyContract',
- *   constructor: { inputs: [], outputs: [] },
+ *   constructor: { name: 'init', inputs: [], outputs: [] },
  *   endpoints: [...],
  *   types: {}
  * }

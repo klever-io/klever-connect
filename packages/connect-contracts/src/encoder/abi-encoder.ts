@@ -139,6 +139,42 @@ export function encodeByType(
     }
     return encodeU64(bigintValue)
   }
+
+  // Handle signed integers (i8, i16, i32, i64)
+  if (type === 'i8') {
+    const numValue = toNumber(value)
+    // Convert signed to unsigned using two's complement
+    const unsigned = numValue < 0 ? numValue + 256 : numValue
+    if (nested) {
+      return encodeFixedInt(unsigned, 1)
+    }
+    return encodeU8(unsigned)
+  }
+  if (type === 'i16') {
+    const numValue = toNumber(value)
+    const unsigned = numValue < 0 ? numValue + 65536 : numValue
+    if (nested) {
+      return encodeFixedInt(unsigned, 2)
+    }
+    return encodeU16(unsigned)
+  }
+  if (type === 'i32') {
+    const numValue = toNumber(value)
+    const unsigned = numValue < 0 ? numValue + 4294967296 : numValue
+    if (nested) {
+      return encodeFixedInt(unsigned, 4)
+    }
+    return encodeU32(unsigned)
+  }
+  if (type === 'i64') {
+    const bigintValue = toBigInt(value)
+    const unsigned = bigintValue < 0n ? bigintValue + 18446744073709551616n : bigintValue
+    if (nested) {
+      return encodeFixedInt(unsigned, 8)
+    }
+    return encodeU64(unsigned)
+  }
+
   if (type === 'bool') {
     // Bool is always 1 byte (no length prefix even when nested)
     return encodeBool(value as boolean)
@@ -194,6 +230,25 @@ export function encodeByType(
   if (type.startsWith('List<') || type.startsWith('Vec<')) {
     const innerType = type.slice(type.indexOf('<') + 1, -1)
     return encodeList(value as unknown[], innerType, abi)
+  }
+
+  // Handle fixed-size arrays: arrayN<T> (e.g., array3<u8>, array16<u8>)
+  if (type.startsWith('array') && type.includes('<')) {
+    const match = type.match(/^array(\d+)<(.+)>$/)
+    if (match) {
+      const size = parseInt(match[1] || '0', 10)
+      const innerType = match[2] || ''
+      return encodeFixedArray(value as unknown[], innerType, size, abi)
+    }
+  }
+
+  // Handle variadic<T>
+  // Note: variadic is handled at the parameter level in encodeArguments
+  // Individual variadic items are encoded as their inner type
+  if (type.startsWith('variadic<')) {
+    const innerType = type.slice(9, -1) // Extract T from variadic<T>
+    // Each variadic item is encoded individually as top-level (nested = false)
+    return encodeByType(value, innerType, abi, nested)
   }
 
   // If type is already Uint8Array, return as-is
@@ -349,6 +404,36 @@ function encodeList(values: unknown[], innerType: string, abi: ContractABI): Uin
 }
 
 /**
+ * Encode fixed-size array (arrayN<T>)
+ */
+function encodeFixedArray(
+  values: unknown[],
+  innerType: string,
+  size: number,
+  abi: ContractABI,
+): Uint8Array {
+  if (values.length !== size) {
+    throw new Error(`Expected array of size ${size}, got ${values.length}`)
+  }
+
+  // Encode each item (nested = true)
+  // No count prefix for fixed-size arrays, just concatenated items
+  const encoded = values.map((v) => encodeByType(v, innerType, abi, true))
+
+  // Concatenate all items
+  const totalLength = encoded.reduce((sum, arr) => sum + arr.length, 0)
+  const result = new Uint8Array(totalLength)
+
+  let offset = 0
+  for (const bytes of encoded) {
+    result.set(bytes, offset)
+    offset += bytes.length
+  }
+
+  return result
+}
+
+/**
  * Encode function arguments based on ABI
  */
 export function encodeArguments(
@@ -356,18 +441,57 @@ export function encodeArguments(
   params: ABIParameter[],
   abi: ContractABI,
 ): Uint8Array[] {
-  if (args.length !== params.length) {
+  // Check if last parameter is variadic (multi_result: true)
+  const hasVariadic = params.length > 0 && params[params.length - 1]?.multi_result === true
+
+  if (!hasVariadic && args.length !== params.length) {
     throw new Error(`Expected ${params.length} arguments, got ${args.length}`)
   }
 
-  return args.map((arg, index) => {
-    const param = params[index]
+  if (hasVariadic && args.length < params.length) {
+    throw new Error(
+      `Expected at least ${params.length} arguments (last is variadic), got ${args.length}`,
+    )
+  }
+
+  const encoded: Uint8Array[] = []
+  let argIndex = 0
+
+  for (let paramIndex = 0; paramIndex < params.length; paramIndex++) {
+    const param = params[paramIndex]
     if (!param) {
-      throw new Error(`Parameter at index ${index} not found`)
+      throw new Error(`Parameter at index ${paramIndex} not found`)
     }
-    // Top-level arguments: nested = false
-    return encodeByType(arg, param.type, abi, false)
-  })
+
+    // If this is a variadic parameter (last parameter with multi_result: true)
+    if (param.multi_result) {
+      // The argument should be an array
+      const arg = args[argIndex]
+      if (!Array.isArray(arg)) {
+        throw new Error(`Variadic parameter '${param.name}' expects an array`)
+      }
+
+      // Encode each item in the array as a separate top-level argument
+      for (const item of arg) {
+        const itemEncoded = encodeByType(item, param.type, abi, false)
+        encoded.push(itemEncoded)
+      }
+      argIndex++
+    } else {
+      // Regular parameter
+      const arg = args[argIndex]
+      if (arg === undefined) {
+        throw new Error(`Argument at index ${argIndex} not found`)
+      }
+
+      // Top-level arguments: nested = false
+      const argEncoded = encodeByType(arg, param.type, abi, false)
+      encoded.push(argEncoded)
+      argIndex++
+    }
+  }
+
+  return encoded
 }
 
 /**

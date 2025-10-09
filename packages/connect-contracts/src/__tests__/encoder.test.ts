@@ -309,3 +309,203 @@ describe('Function Encoder', () => {
     })
   })
 })
+
+describe('ABI-Aware Encoder', () => {
+  describe('Signed integers', () => {
+    it('should encode i8 values', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      // Positive value
+      const pos = encoder.encodeValue(100, 'i8')
+      expect(bytesToHex(pos)).toBe('64')
+
+      // Negative value: -100 → 256 - 100 = 156 = 0x9c
+      const neg = encoder.encodeValue(-100, 'i8')
+      expect(bytesToHex(neg)).toBe('9c')
+
+      // Zero
+      const zero = encoder.encodeValue(0, 'i8')
+      expect(bytesToHex(zero)).toBe('00')
+    })
+
+    it('should encode i16 values', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      // Positive
+      const pos = encoder.encodeValue(1000, 'i16')
+      expect(bytesToHex(pos)).toBe('03e8')
+
+      // Negative: -1000 → 65536 - 1000 = 64536 = 0xfc18
+      const neg = encoder.encodeValue(-1000, 'i16')
+      expect(bytesToHex(neg)).toBe('fc18')
+    })
+
+    it('should encode i32 values', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      // Positive
+      const pos = encoder.encodeValue(100000, 'i32')
+      expect(bytesToHex(pos)).toBe('0186a0')
+
+      // Negative: -100 → 4294967296 - 100 = 4294967196 = 0xffffff9c
+      const neg = encoder.encodeValue(-100, 'i32')
+      expect(bytesToHex(neg)).toBe('ffffff9c')
+    })
+
+    it('should encode i64 values', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      // Positive
+      const pos = encoder.encodeValue(1000000n, 'i64')
+      expect(bytesToHex(pos)).toBe('0f4240')
+
+      // Negative: -1000 → 2^64 - 1000
+      const neg = encoder.encodeValue(-1000n, 'i64')
+      expect(bytesToHex(neg)).toBe('fffffffffffffc18')
+    })
+  })
+
+  describe('Fixed-size arrays', () => {
+    it('should encode array3<u8>', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      // Top-level: [1, 2, 3] - items encoded as nested (fixed 1 byte each for u8)
+      const result = encoder.encodeValue([1, 2, 3], 'array3<u8>')
+      expect(bytesToHex(result)).toBe('010203')
+    })
+
+    it('should encode array2<u32>', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      // [100, 200] - nested encoding uses fixed 4 bytes for u32
+      const result = encoder.encodeValue([100, 200], 'array2<u32>')
+      expect(bytesToHex(result)).toBe('00000064000000c8')
+    })
+
+    it('should throw on wrong array size', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(() => encoder.encodeValue([1, 2], 'array3<u8>')).toThrow(
+        'Expected array of size 3, got 2',
+      )
+    })
+
+    it('should encode array of strings', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      // array2<TokenIdentifier> - strings are nested with length prefix
+      const result = encoder.encodeValue(['ABC', 'DEF'], 'array2<TokenIdentifier>')
+      // 'ABC' = 0x00000003 + 0x414243
+      // 'DEF' = 0x00000003 + 0x444546
+      expect(bytesToHex(result)).toBe('0000000341424300000003444546')
+    })
+  })
+
+  describe('Round-trip encode/decode', () => {
+    it('should round-trip i32 values', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const { ABIDecoder } = await import('../decoder/abi-decoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+
+      const testValue = -100
+      const encoded = encoder.encodeValue(testValue, 'i32')
+      const decoded = decoder.decodeValue(encoded, 'i32')
+
+      expect(decoded).toBe(testValue)
+    })
+
+    it('should round-trip array3<u8>', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const { ABIDecoder } = await import('../decoder/abi-decoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+
+      const testValue = [1, 2, 3]
+      const encoded = encoder.encodeValue(testValue, 'array3<u8>')
+      const decoded = decoder.decodeValue(encoded, 'array3<u8>')
+
+      expect(decoded).toEqual(testValue)
+    })
+  })
+})

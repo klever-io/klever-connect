@@ -110,7 +110,7 @@ export function encodeFunctionCall(
  * @example No arguments
  * ```typescript
  * const abi = {
- *   constructor: { inputs: [], outputs: [] },
+ *   constructor: { name: 'init', inputs: [], outputs: [] },
  *   // ...
  * }
  *

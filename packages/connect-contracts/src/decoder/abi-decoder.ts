@@ -119,6 +119,36 @@ export function decodeByType(
     const result = decodeVariableInt(bytes, offset, nested, 8)
     return { value: result.value, type: 'u64', consumed: result.consumed }
   }
+
+  // Handle signed integers (i8, i16, i32, i64)
+  if (type === 'i8') {
+    const result = decodeVariableInt(bytes, offset, nested, 1)
+    const unsigned = result.value as number
+    // Convert to signed using two's complement
+    const signed = unsigned > 127 ? unsigned - 256 : unsigned
+    return { value: signed, type: 'i8', consumed: result.consumed }
+  }
+  if (type === 'i16') {
+    const result = decodeVariableInt(bytes, offset, nested, 2)
+    const unsigned = result.value as number
+    const signed = unsigned > 32767 ? unsigned - 65536 : unsigned
+    return { value: signed, type: 'i16', consumed: result.consumed }
+  }
+  if (type === 'i32') {
+    const result = decodeVariableInt(bytes, offset, nested, 4)
+    const unsigned = result.value as number
+    const signed = unsigned > 2147483647 ? unsigned - 4294967296 : unsigned
+    return { value: signed, type: 'i32', consumed: result.consumed }
+  }
+  if (type === 'i64') {
+    const result = decodeVariableInt(bytes, offset, nested, 8)
+    const unsigned = result.value as bigint
+    // Convert to signed bigint using two's complement
+    const maxPositive = 9223372036854775807n // 2^63 - 1
+    const signed = unsigned > maxPositive ? unsigned - 18446744073709551616n : unsigned
+    return { value: signed, type: 'i64', consumed: result.consumed }
+  }
+
   if (type === 'bool') {
     // Bool is always 1 byte (no length prefix even when nested)
     if (offset >= bytes.length) {
@@ -179,6 +209,31 @@ export function decodeByType(
   if (type.startsWith('List<') || type.startsWith('Vec<')) {
     const innerType = type.slice(type.indexOf('<') + 1, -1)
     return decodeList(bytes, innerType, abi, offset)
+  }
+
+  // Handle fixed-size arrays: arrayN<T> (e.g., array3<u8>, array16<u8>)
+  if (type.startsWith('array') && type.includes('<')) {
+    const match = type.match(/^array(\d+)<(.+)>$/)
+    if (match) {
+      const size = parseInt(match[1] || '0', 10)
+      const innerType = match[2] || ''
+      return decodeFixedArray(bytes, innerType, size, abi, offset, nested)
+    }
+  }
+
+  // Handle variadic<T>
+  // Note: variadic is handled at the parameter level in decodeResults/decodeResultsWithMetadata
+  // Individual variadic items are decoded as their inner type
+  if (type.startsWith('variadic<')) {
+    const innerType = type.slice(9, -1) // Extract T from variadic<T>
+    // Each variadic item is decoded individually as top-level (nested = false)
+    return decodeByType(bytes, innerType, abi, offset, nested)
+  }
+
+  // Handle unit type ()
+  if (type === '()') {
+    // Unit type has no value and consumes 0 bytes
+    return { value: undefined, type: '()', consumed: 0 }
   }
 
   throw new Error(`Unsupported type for decoding: ${type}`)
@@ -326,6 +381,38 @@ function decodeList(
 }
 
 /**
+ * Decode fixed-size array (arrayN<T>)
+ */
+function decodeFixedArray(
+  bytes: Uint8Array,
+  innerType: string,
+  size: number,
+  abi: ContractABI,
+  offset: number,
+  _nested: boolean,
+): DecodedValue {
+  let currentOffset = offset
+
+  // For top-level arrays, data is just concatenated items without count prefix
+  // For nested arrays, items are also just concatenated (no length prefix for the array itself)
+  const items: unknown[] = []
+
+  // Decode exactly 'size' items
+  for (let i = 0; i < size; i++) {
+    // Each item in a fixed-size array is encoded as nested (with length prefixes for variable types)
+    const decoded = decodeByType(bytes, innerType, abi, currentOffset, true)
+    items.push(decoded.value)
+    currentOffset += decoded.consumed
+  }
+
+  return {
+    value: items,
+    type: 'array',
+    consumed: currentOffset - offset,
+  }
+}
+
+/**
  * Decode function results based on ABI
  */
 export function decodeResults(
@@ -333,6 +420,11 @@ export function decodeResults(
   params: ABIParameter[],
   abi: ContractABI,
 ): unknown[] {
+  // multi_result support
+  if (params.length === 1 && params[0]?.multi_result) {
+    params = parseParams(params, data)
+  }
+
   if (data.length !== params.length) {
     throw new Error(`Expected ${params.length} return values, got ${data.length}`)
   }
@@ -396,12 +488,65 @@ export type StringEncoding = 'base64' | 'hex'
  * )
  * ```
  */
+/**
+ * Parse multi<T1,T2,T3> to extract inner types
+ */
+function parseMultiType(type: string): string[] {
+  const match = type.match(/^multi<(.+)>$/)
+  if (!match) return []
+
+  const innerTypes = match[1]
+  if (!innerTypes) return []
+
+  // Simple comma-split (doesn't handle nested generics yet, but works for basic types)
+  return innerTypes.split(',').map((t) => t.trim())
+}
+
+function parseParams(params: ABIParameter[], data: Uint8Array[] | string[]): ABIParameter[] {
+  const paramType = params[0]?.type
+  if (!paramType) {
+    return params
+  }
+
+  // Check if it's variadic<multi<...>>
+  if (paramType.startsWith('variadic<multi<')) {
+    // Extract multi<...> from variadic<multi<...>>
+    const multiType = paramType.slice(9, -1) // Remove 'variadic<' and '>'
+    const innerTypes = parseMultiType(multiType)
+
+    if (innerTypes.length > 0) {
+      // Expand params: each inner type becomes a separate param
+      // Repeat for each group in data (data.length should be divisible by innerTypes.length)
+      const numGroups = Math.floor(data.length / innerTypes.length)
+      params = []
+      for (let i = 0; i < numGroups; i++) {
+        for (const innerType of innerTypes) {
+          params.push({ type: innerType, multi_result: false })
+        }
+      }
+    } else {
+      // Fallback: treat as simple variadic
+      params = Array(data.length).fill(params[0])
+    }
+  } else {
+    // Simple variadic<T>: extend params type to the data length
+    params = Array(data.length).fill(params[0])
+  }
+
+  return params
+}
+
 export function decodeResultsWithMetadata(
   data: Uint8Array[] | string[],
   params: ABIParameter[],
   abi: ContractABI,
   encoding: StringEncoding = 'base64',
 ): DecodedReturnData {
+  // multi_result support
+  if (params.length === 1 && params[0]?.multi_result) {
+    params = parseParams(params, data)
+  }
+
   if (data.length !== params.length) {
     throw new Error(`Expected ${params.length} return values, got ${data.length}`)
   }

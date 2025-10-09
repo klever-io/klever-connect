@@ -227,7 +227,7 @@ export interface ABIParameter {
   /** Type of the parameter (e.g., "Address", "BigUint", "u64", custom types) */
   type: string
   /** Whether this parameter accepts multiple values (variadic) */
-  multi?: boolean
+  multi_result?: boolean
   /** Whether this parameter is optional */
   optional?: boolean
 }

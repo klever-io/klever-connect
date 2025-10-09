@@ -257,8 +257,8 @@ describe('Result Decoder', () => {
           framework: { name: 'klever-sc', version: '1.0' },
         },
         name: 'Test',
-        constructor: { inputs: [], outputs: [] },
-        upgradeConstructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
         endpoints: [
           {
             name: 'testFunction',
@@ -311,8 +311,8 @@ describe('Result Decoder', () => {
           framework: { name: 'klever-sc', version: '1.0' },
         },
         name: 'Test',
-        constructor: { inputs: [], outputs: [] },
-        upgradeConstructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
         endpoints: [
           {
             name: 'getValue',
@@ -353,8 +353,8 @@ describe('Result Decoder', () => {
           framework: { name: 'klever-sc', version: '0.45.0' },
         },
         name: 'Dice',
-        constructor: { inputs: [], outputs: [] },
-        upgradeConstructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
         endpoints: [
           {
             name: 'bet',
@@ -413,8 +413,8 @@ describe('Result Decoder', () => {
           framework: { name: 'klever-sc', version: '0.45.0' },
         },
         name: 'Dice',
-        constructor: { inputs: [], outputs: [] },
-        upgradeConstructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
         endpoints: [
           {
             name: 'bet',
@@ -471,8 +471,8 @@ describe('Result Decoder', () => {
           framework: { name: 'klever-sc', version: '0.45.0' },
         },
         name: 'Dice',
-        constructor: { inputs: [], outputs: [] },
-        upgradeConstructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
         endpoints: [
           {
             name: 'bet',
@@ -524,8 +524,8 @@ describe('Result Decoder', () => {
           framework: { name: 'klever-sc', version: '1.0' },
         },
         name: 'Test',
-        constructor: { inputs: [], outputs: [] },
-        upgradeConstructor: { inputs: [], outputs: [] },
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
         endpoints: [
           {
             name: 'getValue',
@@ -565,6 +565,328 @@ describe('Result Decoder', () => {
       const hex = ''
       const base64 = hexToBase64(hex)
       expect(base64).toBe('')
+    })
+  })
+
+  describe('variadic parameters', () => {
+    it('should decode variadic TokenIdentifier from base64', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getAllKnownTokens',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [
+              {
+                type: 'variadic<TokenIdentifier>',
+                multi_result: true,
+              },
+            ],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // Real example from user: 2 tokens
+      const returnData = ['RVRIUkNPSU4tMjJZUw==', 'RVRIR0dDT0lOLVdPQjE=']
+
+      const result = decoder.decodeFunctionResultsWithMetadata('getAllKnownTokens', returnData)
+
+      expect(result.raw).toEqual(returnData)
+      expect(result.values).toHaveLength(2)
+
+      const expectedResults = ['ETHRCOIN-22YS', 'ETHGGCOIN-WOB1']
+      for (let i = 0; i < expectedResults.length; i++) {
+        expect(result.values[i]?.type).toBe('variadic<TokenIdentifier>')
+        expect(result.values[i]?.value).toBe(expectedResults[i])
+      }
+
+      // Raw should be an array for variadic
+      expect(Array.isArray(result.raw)).toBe(true)
+      expect(result.raw).toEqual(returnData)
+    })
+
+    it('should decode single variadic TokenIdentifier value', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getToken',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ type: 'variadic<TokenIdentifier>', multi_result: true }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // Single value (hex from user example: 45544852434f494e2d54454f42)
+      const tokenHex = '45544852434f494e2d54454f42'
+      const tokenBase64 = hexToBase64(tokenHex)
+
+      const result = decoder.decodeFunctionResultsWithMetadata('getToken', [tokenBase64])
+
+      expect(result.values).toHaveLength(1)
+      const token = result.values[0]
+      expect(token?.type).toBe('variadic<TokenIdentifier>')
+      expect(token?.value).toBe('ETHRCOIN-TEOB')
+    })
+
+    it('should decode empty variadic parameter', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getTokens',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ type: 'variadic<TokenIdentifier>', multi_result: true }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // Empty array - no return data
+      const result = decoder.decodeFunctionResultsWithMetadata('getTokens', [])
+
+      expect(result.values).toHaveLength(0)
+      expect(result.raw).toEqual([])
+    })
+
+    // Note: multi_result is meant to be the ONLY parameter in outputs
+    // It's not designed to work with mixed parameters
+
+    it('should decode variadic u32 values', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getNumbers',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ type: 'variadic<u32>', multi_result: true }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      const returnData = [
+        encodeBase64(new Uint8Array([0x01])), // 1
+        encodeBase64(new Uint8Array([0x02])), // 2
+        encodeBase64(new Uint8Array([0x03])), // 3
+      ]
+
+      const result = decoder.decodeFunctionResultsWithMetadata('getNumbers', returnData)
+
+      expect(result.values).toHaveLength(3)
+      expect(result.values[0]?.type).toBe('variadic<u32>')
+      expect(result.values[0]?.value).toBe(1)
+      expect(result.values[1]?.value).toBe(2)
+      expect(result.values[2]?.value).toBe(3)
+    })
+
+    it('should decode variadic with multi<T1,T2,T3>', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'multi_result_vec',
+            mutability: 'mutable',
+            inputs: [],
+            outputs: [
+              {
+                type: 'variadic<multi<u32,bool,()>>',
+                multi_result: true,
+              },
+            ],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // Example: 2 items, each with (u32, bool, unit)
+      // Item 1: u32=100 (4 bytes: 00000064), bool=true (1 byte: 01), unit=() (0 bytes)
+      // Item 2: u32=200 (4 bytes: 000000c8), bool=false (1 byte: 00), unit=() (0 bytes)
+      const returnData = [
+        encodeBase64(new Uint8Array([0x00, 0x00, 0x00, 0x64])), // u32 = 100
+        encodeBase64(new Uint8Array([0x01])), // bool = true
+        encodeBase64(new Uint8Array([])), // unit = ()
+        encodeBase64(new Uint8Array([0x00, 0x00, 0x00, 0xc8])), // u32 = 200
+        encodeBase64(new Uint8Array([0x00])), // bool = false
+        encodeBase64(new Uint8Array([])), // unit = ()
+      ]
+
+      const result = decoder.decodeFunctionResultsWithMetadata('multi_result_vec', returnData)
+
+      // Should have 6 decoded values (2 items × 3 types each)
+      expect(result.values).toHaveLength(6)
+
+      // First item's values
+      expect(result.values[0]?.type).toBe('u32')
+      expect(result.values[0]?.value).toBe(100)
+      expect(result.values[1]?.type).toBe('bool')
+      expect(result.values[1]?.value).toBe(true)
+      expect(result.values[2]?.type).toBe('()')
+      expect(result.values[2]?.value).toBe(undefined) // unit type
+
+      // Second item's values
+      expect(result.values[3]?.type).toBe('u32')
+      expect(result.values[3]?.value).toBe(200)
+      expect(result.values[4]?.type).toBe('bool')
+      expect(result.values[4]?.value).toBe(false)
+      expect(result.values[5]?.type).toBe('()')
+      expect(result.values[5]?.value).toBe(undefined) // unit type
+    })
+
+    it('should decode variadic with decodeFunctionResults (no metadata)', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getTokens',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ type: 'variadic<TokenIdentifier>', multi_result: true }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      const returnData = ['RVRIUkNPSU4tMjJZUw==', 'RVRIR0dDT0lOLVdPQjE=']
+
+      const results = decoder.decodeFunctionResults('getTokens', returnData)
+
+      expect(results).toHaveLength(2)
+      expect(results[0]).toBe('ETHRCOIN-22YS')
+      expect(results[1]).toBe('ETHGGCOIN-WOB1')
+    })
+  })
+
+  describe('multi-output endpoints (no variadic)', () => {
+    it('should decode multiple separate outputs', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'multi_result_4',
+            mutability: 'mutable',
+            inputs: [],
+            outputs: [
+              { name: 'multi-too-few-1', type: 'i32' },
+              { name: 'multi-too-few-2', type: 'array3<u8>' },
+              { type: 'bytes' },
+              { type: 'OnlyShowsUpAsNested03' },
+            ],
+          },
+        ],
+        kdaAttributes: [],
+        types: {
+          OnlyShowsUpAsNested03: {
+            type: 'struct',
+            fields: [{ name: 'field1', type: 'u32' }],
+          },
+        },
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // Example data:
+      // i32 = -100 (signed), array3<u8> = [1, 2, 3], bytes = [0xaa, 0xbb], struct = {field1: 42}
+      const returnData = [
+        encodeBase64(new Uint8Array([0xff, 0xff, 0xff, 0x9c])), // i32 = -100
+        encodeBase64(new Uint8Array([0x01, 0x02, 0x03])), // array3<u8>
+        encodeBase64(new Uint8Array([0xaa, 0xbb])), // bytes
+        encodeBase64(new Uint8Array([0x00, 0x00, 0x00, 0x2a])), // struct {field1: 42}
+      ]
+
+      const result = decoder.decodeFunctionResultsWithMetadata('multi_result_4', returnData)
+
+      expect(result.values).toHaveLength(4)
+
+      // i32 = -100
+      expect(result.values[0]?.type).toBe('i32')
+      expect(result.values[0]?.value).toBe(-100)
+
+      // array3<u8> = [1, 2, 3]
+      expect(result.values[1]?.type).toBe('array3<u8>')
+      expect(result.values[1]?.value).toEqual([1, 2, 3])
+
+      // bytes = [0xaa, 0xbb]
+      expect(result.values[2]?.type).toBe('bytes')
+      expect(result.values[2]?.value).toEqual(new Uint8Array([0xaa, 0xbb]))
+
+      // struct {field1: 42}
+      expect(result.values[3]?.type).toBe('OnlyShowsUpAsNested03')
+      const struct = result.values[3]?.value as any
+      expect(struct.field1).toBe(42)
     })
   })
 })

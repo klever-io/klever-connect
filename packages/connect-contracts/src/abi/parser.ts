@@ -87,7 +87,7 @@ export class ABIParser {
    * ```typescript
    * const abiObject = {
    *   name: 'MyContract',
-   *   constructor: { inputs: [], outputs: [] },
+   *   constructor: { name: 'init', inputs: [], outputs: [] },
    *   endpoints: [...],
    *   types: {}
    * }
