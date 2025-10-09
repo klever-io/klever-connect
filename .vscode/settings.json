@@ -31,5 +31,6 @@
     "**/.turbo": true,
     "pnpm-lock.yaml": true
   },
-  "vitest.workspaceConfig": "vitest.workspace.ts"
+  "vitest.workspaceConfig": "vitest.workspace.ts",
+  "cSpell.words": ["typedoc", "typhonjs"]
 }

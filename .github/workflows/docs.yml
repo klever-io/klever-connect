@@ -35,15 +35,14 @@ jobs:
 
       - name: Generate API documentation
         run: |
-          # Install typedoc globally
-          pnpm add -g typedoc
-
-          # Generate docs for each package
+          # Generate docs for each package with DMT theme
           for pkg in packages/*/; do
             if [ -f "$pkg/package.json" ]; then
               echo "Generating docs for $pkg"
               cd "$pkg"
-              typedoc --out ../../docs/api/$(basename $pkg) src/index.ts || true
+              pnpm exec typedoc --options ../../typedoc.json \
+                      --out ../../docs/api/$(basename $pkg) \
+                      src/index.ts || true
               cd ../..
             fi
           done

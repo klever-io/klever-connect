@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Klever Connect SDK - Documentation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+          sans-serif;
+        background: linear-gradient(135deg, #24262b 0%, #32353c 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+      }
+
+      .container {
+        background: white;
+        border-radius: 16px;
+        padding: 3rem;
+        max-width: 600px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #aa33b5 0%, #8e2a9a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      p {
+        color: #666;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+      }
+
+      .links {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      a {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #aa33b5 0%, #8e2a9a 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(170, 51, 181, 0.4);
+      }
+
+      .secondary {
+        background: white;
+        color: #aa33b5;
+        border: 2px solid #aa33b5;
+      }
+
+      .secondary:hover {
+        background: #f7f7f7;
+        box-shadow: 0 10px 20px rgba(170, 51, 181, 0.2);
+      }
+
+      .version {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #eee;
+        color: #999;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📚 Klever Connect SDK</h1>
+      <p>TypeScript SDK for Klever Blockchain - Documentation & API Reference</p>
+
+      <div class="links">
+        <a href="./api/connect/" id="mainLink"> 📖 View API Documentation </a>
+        <a href="https://github.com/klever-io/klever-connect" class="secondary">
+          💻 View on GitHub
+        </a>
+        <a href="https://www.npmjs.com/package/@klever/connect" class="secondary">
+          📦 View on npm
+        </a>
+      </div>
+
+      <div class="version">SDK Version: 0.1.0 (Beta)</div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "plugin": ["@typhonjs-typedoc/typedoc-theme-dmt"],
+  "theme": "default-modern",
+  "dmtLinksService": {
+    "GitHub": "https://github.com/klever-io/klever-connect",
+    "NPM": "https://www.npmjs.com/package/@klever/connect"
+  },
+  "dmtNavigation": {
+    "style": "compact"
+  },
+  "dmtSearch": {
+    "limit": 20
+  }
+}
