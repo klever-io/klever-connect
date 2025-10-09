@@ -59,20 +59,32 @@ describe('Branded Types', () => {
   })
 
   describe('isValidContractAddress', () => {
-    it('should validate contract addresses with 10 leading zero bytes', () => {
-      // Contract address: klv1 + 10 zero bytes (20 q's in bech32) + remaining bytes
-      const contractAddress = 'klv1qqqqqqqqqqqqqqqqqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs2s0e3q98'
-      expect(isValidContractAddress(contractAddress)).toBe(true)
+    it('should validate contract addresses with 8 zero bytes + VM version 5,0', () => {
+      // Valid contract address: 8 zeros + VM version 5 at byte 8 + 0 at byte 9
+      const contractAddress1 = 'klv1qqqqqqqqqqqqqpgqhe7lg537aszyv48xpuhqh2jykx986wnd932qrd2478'
+      expect(isValidContractAddress(contractAddress1)).toBe(true)
 
-      // Another contract address with different data after the 10 zeros
-      const contractAddress2 = 'klv1qqqqqqqqqqqqqqqq7h608uh37rh7am0va04wn688umj7fclzu8sqfkayht'
+      // Another valid contract address
+      const contractAddress2 = 'klv1qqqqqqqqqqqqqpgqqypqxpq9e0la8m4xymxrthek25r0kv93uwysysdf2c'
       expect(isValidContractAddress(contractAddress2)).toBe(true)
     })
 
-    it('should reject regular addresses that do not start with 10 zero bytes', () => {
-      // Regular address that doesn't start with 10 zero bytes
-      const regularAddress = 'klv1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqergd3c8g7rusqw75vj2'
+    it('should reject regular addresses that do not start with 8 zero bytes', () => {
+      // Regular address that doesn't start with 8 zero bytes
+      const regularAddress = 'klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj'
       expect(isValidContractAddress(regularAddress)).toBe(false)
+    })
+
+    it('should reject addresses with 8 zeros but wrong VM version', () => {
+      // 8 zeros but VM version is 1 (not 5)
+      const invalidVMVersion = 'klv1qqqqqqqqqqqqqqgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdtr49'
+      expect(isValidContractAddress(invalidVMVersion)).toBe(false)
+    })
+
+    it('should reject addresses with correct VM version but byte 9 is not 0', () => {
+      // 8 zeros, VM version 5, but byte 9 is 1 (not 0)
+      const invalidByte9 = 'klv1qqqqqqqqqqqqqpgpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk39wrg'
+      expect(isValidContractAddress(invalidByte9)).toBe(false)
     })
 
     it('should reject invalid addresses', () => {
@@ -82,7 +94,7 @@ describe('Branded Types', () => {
     })
 
     it('should reject addresses with wrong prefix', () => {
-      const wrongPrefix = 'eth1qqqqqqqqqqqqqqqqqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs2s0e3q98'
+      const wrongPrefix = 'eth1qqqqqqqqqqqqqpgqhe7lg537aszyv48xpuhqh2jykx986wnd932qrd2478'
       expect(isValidContractAddress(wrongPrefix)).toBe(false)
     })
   })

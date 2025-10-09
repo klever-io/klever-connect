@@ -141,11 +141,16 @@ export function isValidContractAddress(address: string): boolean {
       return false
     }
 
-    // Check if the first 10 bytes are all zeros (contract address marker)
-    for (let i = 0; i < 10; i++) {
+    // Check if the first 8 bytes are all zeros (contract address marker)
+    for (let i = 0; i < 8; i++) {
       if (data[i] !== 0) {
         return false
       }
+    }
+
+    // check VM version or other contract-specific validations here
+    if (data[8] !== 5 || data[9] !== 0) {
+      return false
     }
 
     return true
