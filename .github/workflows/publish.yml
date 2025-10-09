@@ -1,0 +1,77 @@
+name: Publish Packages
+
+# Manual publish workflow using Changesets
+# Only triggered manually for security
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write # For npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Check NPM token
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "❌ NPM_TOKEN secret is not set"
+            echo "Please add NPM_TOKEN to repository secrets"
+            exit 1
+          fi
+          echo "✅ NPM_TOKEN is configured"
+
+      - name: Publish to npm
+        run: pnpm publish -r --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Create GitHub Release
+        run: |
+          # Get version from main package
+          VERSION=$(node -p "require('./packages/connect/package.json').version")
+
+          # Create release
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --verify-tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create summary
+        run: |
+          echo "## 🎉 Packages Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Successfully published to npm!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 View on npm" >> $GITHUB_STEP_SUMMARY
+          echo "- [@klever/connect](https://www.npmjs.com/package/@klever/connect)" >> $GITHUB_STEP_SUMMARY
