@@ -82,9 +82,17 @@ git checkout -b docs/what-you-are-documenting
 - Update documentation as needed
 - Follow existing code style
 
+> **Note**: A pre-commit hook will check that your staged files are formatted and linted. If checks fail, the commit will be blocked. Run `pnpm format` and `pnpm lint --fix` to fix issues before committing.
+
 ### 3. Run Checks
 
 ```bash
+# Format code
+pnpm format
+
+# Check formatting (without writing)
+pnpm format:check
+
 # Type check
 pnpm typecheck
 
@@ -218,7 +226,7 @@ export function createAddress(value: string): string {
 - Document parameters and return types
 - Add security warnings where appropriate
 
-```typescript
+````typescript
 /**
  * Signs a transaction with the wallet's private key
  *
@@ -234,7 +242,7 @@ export function createAddress(value: string): string {
  * ```
  */
 async signTransaction(tx: Transaction): Promise<Transaction>
-```
+````
 
 ## Testing Guidelines
 

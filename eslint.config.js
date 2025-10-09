@@ -55,5 +55,5 @@ export default tseslint.config(
       '**/*.spec.ts',
       '**/__tests__/**',
     ],
-  }
+  },
 )

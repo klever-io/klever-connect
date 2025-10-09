@@ -74,9 +74,11 @@ pnpm build
 <!-- If this is a breaking change, describe the impact and migration path -->
 
 **Impact:**
+
 <!-- Describe what breaks and why -->
 
 **Migration Guide:**
+
 ```typescript
 // Before
 // old code example

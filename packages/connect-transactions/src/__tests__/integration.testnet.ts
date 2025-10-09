@@ -47,7 +47,7 @@ describe('Integration: Testnet Provider', () => {
     it('should fetch account data from testnet', async () => {
       // Use a known testnet address (can be any valid address)
       const testAddress = createKleverAddress(
-        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
+        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
       )
 
       const account = await provider.getAccount(testAddress)
@@ -207,7 +207,7 @@ describe('Integration: Testnet Provider', () => {
   describe('Nonce management with real provider', () => {
     it('should fetch current nonce from testnet for account', async () => {
       const testAddress = createKleverAddress(
-        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
+        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
       )
 
       const account = await provider.getAccount(testAddress)

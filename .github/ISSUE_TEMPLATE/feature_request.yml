@@ -1,7 +1,7 @@
 name: ✨ Feature Request
 description: Suggest a new feature or enhancement
-title: "[Feature]: "
-labels: ["enhancement", "needs-triage"]
+title: '[Feature]: '
+labels: ['enhancement', 'needs-triage']
 body:
   - type: markdown
     attributes:
@@ -52,16 +52,16 @@ body:
       description: Which package(s) should have this feature?
       multiple: true
       options:
-        - "@klever/connect"
-        - "@klever/connect-core"
-        - "@klever/connect-wallet"
-        - "@klever/connect-transactions"
-        - "@klever/connect-provider"
-        - "@klever/connect-contracts"
-        - "@klever/connect-crypto"
-        - "@klever/connect-encoding"
-        - "@klever/connect-react"
-        - "New package"
+        - '@klever/connect'
+        - '@klever/connect-core'
+        - '@klever/connect-wallet'
+        - '@klever/connect-transactions'
+        - '@klever/connect-provider'
+        - '@klever/connect-contracts'
+        - '@klever/connect-crypto'
+        - '@klever/connect-encoding'
+        - '@klever/connect-react'
+        - 'New package'
     validations:
       required: true
 
@@ -71,9 +71,9 @@ body:
       label: Priority
       description: How important is this feature to you?
       options:
-        - "Low - Nice to have"
-        - "Medium - Would improve my workflow"
-        - "High - Blocking my project"
+        - 'Low - Nice to have'
+        - 'Medium - Would improve my workflow'
+        - 'High - Blocking my project'
     validations:
       required: true
 
