@@ -246,7 +246,15 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
     [state.wallet, state.currentNetwork, state.address, createProviderWithNetwork],
   )
 
+  // Store debug flag in ref to avoid re-running effect when it changes
+  const debugRef = React.useRef(config?.debug ?? false)
+  React.useEffect(() => {
+    debugRef.current = config?.debug ?? false
+  }, [config?.debug])
+
   // Check for extension on mount with polling
+  // Note: Empty dependency array intentional - should only run once on mount
+  // Uses debugRef.current to access latest debug value without triggering re-runs
   React.useEffect((): (() => void) => {
     let attempts = 0
     const MAX_ATTEMPTS = 10
@@ -263,7 +271,7 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
         const hasExtension =
           typeof window !== 'undefined' && 'kleverWeb' in window && window.kleverWeb !== undefined
 
-        if (config?.debug) {
+        if (debugRef.current) {
           console.log(
             `[KleverProvider] Extension check attempt ${attempts + 1}/${MAX_ATTEMPTS}:`,
             hasExtension,
@@ -284,14 +292,14 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
           }, delay)
         } else {
           // Max attempts reached - extension not found
-          if (config?.debug) {
+          if (debugRef.current) {
             console.log('[KleverProvider] Extension not detected after max attempts')
           }
           dispatch({ type: 'SET_EXTENSION_INSTALLED', installed: false })
           dispatch({ type: 'SET_SEARCHING_EXTENSION', searching: false })
         }
       } catch (error) {
-        if (config?.debug) {
+        if (debugRef.current) {
           console.error('[KleverProvider] Extension check error:', error)
         }
         dispatch({ type: 'SET_EXTENSION_INSTALLED', installed: false })
