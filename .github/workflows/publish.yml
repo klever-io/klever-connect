@@ -1,6 +1,7 @@
 name: Publish Packages
 
-# Manual publish workflow using Changesets
+# Manual publish workflow - publishes packages to npm
+# Should be run AFTER versioning packages via "Version Packages" workflow
 # Only triggered manually for security
 on:
   workflow_dispatch:

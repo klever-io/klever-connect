@@ -1,37 +1,27 @@
-name: Release
+name: Version Packages
 
-# Manual release workflow - trigger via GitHub UI
+# Manual workflow to version packages based on changesets
+# Run this after merging PRs with changesets to develop
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version bump type'
-        required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-      packages:
-        description: 'Packages to publish (comma-separated, or "all")'
-        required: true
-        default: 'all'
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
-  release:
+  version:
+    name: Version Packages
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: pnpm/action-setup@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
           version: 10
 
@@ -40,64 +30,66 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
+      - name: Check for Changesets
+        id: check-changesets
+        run: |
+          if [ -z "$(find .changeset -name '*.md' ! -name 'README.md' -type f)" ]; then
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No changeset files found in .changeset/ directory"
+          else
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "✅ Found changeset files:"
+            find .changeset -name '*.md' ! -name 'README.md' -type f -exec basename {} \;
+          fi
+
+      - name: Version Packages
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        run: pnpm run version
+
+      - name: Build Packages
+        if: steps.check-changesets.outputs.has_changesets == 'true'
         run: pnpm build
 
-      - name: Run tests
+      - name: Run Tests
+        if: steps.check-changesets.outputs.has_changesets == 'true'
         run: pnpm test
 
-      - name: Bump versions
-        run: |
-          if [ "${{ github.event.inputs.packages }}" = "all" ]; then
-            pnpm -r exec -- npm version ${{ github.event.inputs.version }} --no-git-tag-version
-          else
-            IFS=',' read -ra PKGS <<< "${{ github.event.inputs.packages }}"
-            for pkg in "${PKGS[@]}"; do
-              pnpm --filter "@klever/${pkg}" exec -- npm version ${{ github.event.inputs.version }} --no-git-tag-version
-            done
-          fi
-
-      - name: Commit version changes
+      - name: Commit Version Changes
+        if: steps.check-changesets.outputs.has_changesets == 'true'
         run: |
           git add .
-          git commit -m "chore: release ${{ github.event.inputs.version }} version" || echo "No changes to commit"
+          git commit -m "chore: version packages" || echo "No changes to commit"
           git push
 
-      - name: Publish to npm (dry-run for review)
+      - name: Create Summary
         run: |
-          echo "📦 Packages that would be published:"
-          if [ "${{ github.event.inputs.packages }}" = "all" ]; then
-            pnpm -r publish --dry-run --access public --no-git-checks
+          echo "## 📦 Version Packages Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check-changesets.outputs.has_changesets }}" == "true" ]; then
+            echo "✅ Packages versioned successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📋 Changes" >> $GITHUB_STEP_SUMMARY
+            echo "- Updated package.json versions" >> $GITHUB_STEP_SUMMARY
+            echo "- Generated/updated CHANGELOG.md files" >> $GITHUB_STEP_SUMMARY
+            echo "- Deleted consumed changeset files" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Merge develop to master" >> $GITHUB_STEP_SUMMARY
+            echo "2. Trigger the 'Publish Packages' workflow from master branch" >> $GITHUB_STEP_SUMMARY
           else
-            IFS=',' read -ra PKGS <<< "${{ github.event.inputs.packages }}"
-            for pkg in "${PKGS[@]}"; do
-              pnpm --filter "@klever/${pkg}" publish --dry-run --access public --no-git-checks
-            done
+            echo "⚠️ No changesets found - nothing to version" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Make sure changesets are created with PRs using:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "pnpm changeset" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi
-
-      - name: Create summary
-        run: |
-          echo "## 📦 Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version bump**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Packages**: ${{ github.event.inputs.packages }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### ⚠️ Next Steps (Manual)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "1. Review the version changes in the commit" >> $GITHUB_STEP_SUMMARY
-          echo "2. Create git tags for released packages" >> $GITHUB_STEP_SUMMARY
-          echo "3. Run publish command manually:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "pnpm -r publish --access public" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
