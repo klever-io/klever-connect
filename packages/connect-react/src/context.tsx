@@ -246,25 +246,80 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
     [state.wallet, state.currentNetwork, state.address, createProviderWithNetwork],
   )
 
-  // Check for extension on mount
-  React.useEffect((): void => {
-    const checkExtension = async (): Promise<void> => {
-      dispatch({ type: 'SET_SEARCHING_EXTENSION', searching: true })
+  // Store debug flag in ref to avoid re-running effect when it changes
+  const debugRef = React.useRef(config?.debug ?? false)
+  React.useEffect(() => {
+    debugRef.current = config?.debug ?? false
+  }, [config?.debug])
+
+  // Check for extension on mount with polling
+  // Note: Empty dependency array intentional - should only run once on mount
+  // Uses debugRef.current to access latest debug value without triggering re-runs
+  React.useEffect((): (() => void) => {
+    let attempts = 0
+    const MAX_ATTEMPTS = 10
+    const INITIAL_DELAY = 50 // Start with 50ms
+    const MAX_DELAY = 1000 // Cap at 1 second
+    let timeoutId: NodeJS.Timeout | null = null
+    let cancelled = false
+
+    const checkExtension = (): void => {
+      if (cancelled) return
 
       try {
         // Check if window.kleverWeb exists (Klever extension)
         const hasExtension =
           typeof window !== 'undefined' && 'kleverWeb' in window && window.kleverWeb !== undefined
 
-        dispatch({ type: 'SET_EXTENSION_INSTALLED', installed: hasExtension })
-      } catch {
+        if (debugRef.current) {
+          console.log(
+            `[KleverProvider] Extension check attempt ${attempts + 1}/${MAX_ATTEMPTS}:`,
+            hasExtension,
+          )
+        }
+
+        if (hasExtension) {
+          // Extension found - stop searching
+          dispatch({ type: 'SET_EXTENSION_INSTALLED', installed: true })
+          dispatch({ type: 'SET_SEARCHING_EXTENSION', searching: false })
+        } else if (attempts < MAX_ATTEMPTS) {
+          // Extension not found yet - schedule next check with exponential backoff
+          attempts++
+          const delay = Math.min(INITIAL_DELAY * Math.pow(1.5, attempts - 1), MAX_DELAY)
+
+          timeoutId = setTimeout(() => {
+            checkExtension()
+          }, delay)
+        } else {
+          // Max attempts reached - extension not found
+          if (debugRef.current) {
+            console.log('[KleverProvider] Extension not detected after max attempts')
+          }
+          dispatch({ type: 'SET_EXTENSION_INSTALLED', installed: false })
+          dispatch({ type: 'SET_SEARCHING_EXTENSION', searching: false })
+        }
+      } catch (error) {
+        if (debugRef.current) {
+          console.error('[KleverProvider] Extension check error:', error)
+        }
         dispatch({ type: 'SET_EXTENSION_INSTALLED', installed: false })
-      } finally {
         dispatch({ type: 'SET_SEARCHING_EXTENSION', searching: false })
       }
     }
 
-    void checkExtension()
+    // Start searching
+    dispatch({ type: 'SET_SEARCHING_EXTENSION', searching: true })
+
+    // Start checking immediately
+    checkExtension()
+
+    // Cleanup function to cancel pending timeouts
+    return () => {
+      cancelled = true
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+      }
+    }
   }, [])
 
   // Auto-connect on mount if configured
