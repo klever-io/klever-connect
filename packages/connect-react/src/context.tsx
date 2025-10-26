@@ -160,9 +160,11 @@ export function KleverProvider({ children, config }: KleverProviderProps): React
       wallet.on('accountChanged', (data: unknown) => {
         const eventData = data as { address: string }
         const newAddress = eventData.address
+        // Use state.address to get the current address from React state, not the closure variable
+        const currentAddress = state.address
 
         // Only update if address actually changed
-        if (newAddress !== address) {
+        if (newAddress !== currentAddress) {
           // Validate address - KLV addresses should be 62 characters
           if (newAddress && newAddress.startsWith('klv') && newAddress.length === 62) {
             dispatch({ type: 'SET_WALLET', wallet, address: newAddress })
