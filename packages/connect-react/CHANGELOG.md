@@ -1,5 +1,19 @@
 # @klever/connect-react
 
+## 0.1.2
+
+### Patch Changes
+
+- f2bac27: Fix connect-react account change state
+- 4ee03b5: Update vite to fix security vulnerability GHSA-93m4-6634-74q7
+- Updated dependencies [4ee03b5]
+  - @klever/connect@0.1.1
+  - @klever/connect-contracts@0.1.1
+  - @klever/connect-core@0.1.1
+  - @klever/connect-provider@0.1.1
+  - @klever/connect-transactions@0.1.1
+  - @klever/connect-wallet@0.1.1
+
 ## 0.1.1
 
 ### Patch Changes

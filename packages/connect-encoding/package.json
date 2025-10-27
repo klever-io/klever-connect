@@ -1,6 +1,6 @@
 {
   "name": "@klever/connect-encoding",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Encoding and decoding utilities for Klever Connect SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

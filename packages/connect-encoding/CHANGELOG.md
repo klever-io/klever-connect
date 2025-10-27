@@ -1,5 +1,11 @@
 # @klever/connect-encoding
 
+## 0.1.1
+
+### Patch Changes
+
+- 4ee03b5: Update vite to fix security vulnerability GHSA-93m4-6634-74q7
+
 ## 0.1.0
 
 ### Minor Changes
