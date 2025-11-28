@@ -1,7 +1,7 @@
 // Export types
 export * from './types'
 
-// Export wallet implementations
+export { Wallet } from './wallet'
 export { BrowserWallet } from './browser'
 export { NodeWallet } from './node'
 
