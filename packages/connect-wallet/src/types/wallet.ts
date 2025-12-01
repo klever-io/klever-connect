@@ -20,7 +20,7 @@ export interface WalletConfig {
   provider?: IProvider
 }
 
-export interface Wallet {
+export interface IWallet {
   readonly address: string
   readonly publicKey?: string
   readonly provider?: IProvider
@@ -67,6 +67,8 @@ export type WalletEvent = 'connect' | 'disconnect' | 'accountChanged'
 
 export type WalletEventHandler = (data: unknown) => void
 
+export type Wallet = IWallet
+
 export interface WalletFactory {
-  createWallet(config?: WalletConfig): Promise<Wallet>
+  createWallet(config?: WalletConfig): Promise<IWallet>
 }

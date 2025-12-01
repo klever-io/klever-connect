@@ -1,5 +1,5 @@
 import type { KleverProvider, NetworkName, Network } from '@klever/connect-provider'
-import type { Wallet } from '@klever/connect-wallet'
+import type { IWallet } from '@klever/connect-wallet'
 
 /**
  * Configuration options for KleverProvider
@@ -39,7 +39,7 @@ export interface KleverConfig {
  */
 export interface KleverState {
   /** Connected wallet instance (undefined if not connected) */
-  wallet?: Wallet
+  wallet?: IWallet
   /** KleverProvider instance for blockchain queries */
   provider: KleverProvider
   /** Connected wallet address (undefined if not connected) */

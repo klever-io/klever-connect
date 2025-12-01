@@ -1,7 +1,7 @@
-import { randomBytes } from '@noble/hashes/utils'
+import { hexDecode, hexEncode } from '@klever/connect-encoding'
 import { scrypt } from '@noble/hashes/scrypt'
 import { sha256 } from '@noble/hashes/sha2'
-import { hexEncode, hexDecode } from '@klever/connect-encoding'
+import { randomBytes } from '@noble/hashes/utils'
 import { PrivateKeyImpl } from './keys'
 import type { PrivateKey } from './types'
 
@@ -42,10 +42,10 @@ export const DEFAULT_SCRYPT_PARAMS = {
 
 function generateUUID(): string {
   const bytes = randomBytes(16)
-  const b6 = bytes[6] & 0x0f
-  const b8 = bytes[8] & 0x3f
-  bytes[6] = b6 | 0x40
-  bytes[8] = b8 | 0x80
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80
 
   const hex = hexEncode(bytes)
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`
