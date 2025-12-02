@@ -87,7 +87,8 @@ async function aes128CtrEncrypt(
 ): Promise<Uint8Array> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key as BufferSource,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    key as any,
     { name: 'AES-CTR' },
     false,
     ['encrypt'],
@@ -96,11 +97,13 @@ async function aes128CtrEncrypt(
   const encrypted = await crypto.subtle.encrypt(
     {
       name: 'AES-CTR',
-      counter: iv as BufferSource,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      counter: iv as any,
       length: 128,
     },
     cryptoKey,
-    data as BufferSource,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data as any,
   )
 
   return new Uint8Array(encrypted)
@@ -114,7 +117,8 @@ async function aes128CtrDecrypt(
 ): Promise<Uint8Array> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key as BufferSource,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    key as any,
     { name: 'AES-CTR' },
     false,
     ['decrypt'],
@@ -123,11 +127,13 @@ async function aes128CtrDecrypt(
   const decrypted = await crypto.subtle.decrypt(
     {
       name: 'AES-CTR',
-      counter: iv as BufferSource,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      counter: iv as any,
       length: 128,
     },
     cryptoKey,
-    ciphertext as BufferSource,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ciphertext as any,
   )
 
   return new Uint8Array(decrypted)
