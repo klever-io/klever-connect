@@ -80,9 +80,10 @@ describe('hd-wallet', () => {
     })
 
     it('should return false for mnemonic with wrong checksum', () => {
-      const validMnemonic = generateMnemonicPhrase()
+      const validMnemonic =
+        'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
       const words = validMnemonic.split(' ')
-      words[words.length - 1] = 'abandon'
+      words[words.length - 1] = 'zoo'
       const invalidMnemonic = words.join(' ')
 
       expect(isValidMnemonic(invalidMnemonic)).toBe(false)
