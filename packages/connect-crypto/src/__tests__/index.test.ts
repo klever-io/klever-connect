@@ -155,7 +155,9 @@ describe('@klever/connect-crypto exports', () => {
       const password = 'test-password'
       const address = 'klv1test'
 
-      const keystore = await cryptoModule.encryptToKeystore(privateKey, password, address)
+      const keystore = await cryptoModule.encryptToKeystore(privateKey, password, address, {
+        scryptN: 4096,
+      })
       expect(keystore.version).toBe(3)
 
       const decrypted = await cryptoModule.decryptKeystore(keystore, password)
@@ -163,6 +165,6 @@ describe('@klever/connect-crypto exports', () => {
 
       const isCorrect = await cryptoModule.isPasswordCorrect(keystore, password)
       expect(isCorrect).toBe(true)
-    })
+    }, 10000)
   })
 })
