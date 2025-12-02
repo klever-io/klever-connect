@@ -52,6 +52,33 @@ function generateUUID(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`
 }
 
+/**
+ * Constant-time comparison of two Uint8Arrays to prevent timing attacks.
+ *
+ * @remarks
+ * This function compares two byte arrays in constant time, meaning the execution
+ * time does not depend on where the arrays differ. This is crucial for security
+ * when comparing MACs, signatures, or other cryptographic values to prevent
+ * timing side-channel attacks.
+ *
+ * @param a - First byte array
+ * @param b - Second byte array
+ * @returns true if arrays are equal, false otherwise
+ */
+function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    diff |= a[i]! ^ b[i]!
+  }
+
+  return diff === 0
+}
+
 // Encrypts data using AES-128-CTR
 async function aes128CtrEncrypt(
   data: Uint8Array,
@@ -60,7 +87,7 @@ async function aes128CtrEncrypt(
 ): Promise<Uint8Array> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key.buffer as ArrayBuffer,
+    key as BufferSource,
     { name: 'AES-CTR' },
     false,
     ['encrypt'],
@@ -69,11 +96,11 @@ async function aes128CtrEncrypt(
   const encrypted = await crypto.subtle.encrypt(
     {
       name: 'AES-CTR',
-      counter: iv.buffer as ArrayBuffer,
+      counter: iv as BufferSource,
       length: 128,
     },
     cryptoKey,
-    data.buffer as ArrayBuffer,
+    data as BufferSource,
   )
 
   return new Uint8Array(encrypted)
@@ -87,7 +114,7 @@ async function aes128CtrDecrypt(
 ): Promise<Uint8Array> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key.buffer as ArrayBuffer,
+    key as BufferSource,
     { name: 'AES-CTR' },
     false,
     ['decrypt'],
@@ -96,11 +123,11 @@ async function aes128CtrDecrypt(
   const decrypted = await crypto.subtle.decrypt(
     {
       name: 'AES-CTR',
-      counter: iv.buffer as ArrayBuffer,
+      counter: iv as BufferSource,
       length: 128,
     },
     cryptoKey,
-    ciphertext.buffer as ArrayBuffer,
+    ciphertext as BufferSource,
   )
 
   return new Uint8Array(decrypted)
@@ -157,6 +184,13 @@ export async function encryptToKeystore(
   address: string,
   options: EncryptOptions = {},
 ): Promise<Keystore> {
+  // Password validation
+  if (!password || password.length === 0) {
+    throw new Error('Password cannot be empty')
+  }
+  if (password.length < 8) {
+    throw new Error('Password must be at least 8 characters')
+  }
   const {
     scryptN = DEFAULT_SCRYPT_PARAMS.n,
     scryptR = DEFAULT_SCRYPT_PARAMS.r,
@@ -302,14 +336,7 @@ export async function decryptKeystore(
   const computedMac = sha256(macData)
 
   // Constant-time comparison to prevent timing attacks
-  let macMatch = true
-  for (let i = 0; i < macBytes.length; i++) {
-    if (macBytes[i] !== computedMac[i]) {
-      macMatch = false
-    }
-  }
-
-  if (!macMatch) {
+  if (!constantTimeEqual(macBytes, computedMac)) {
     throw new Error('Invalid password or corrupted keystore (MAC verification failed)')
   }
 
@@ -383,13 +410,7 @@ export async function isPasswordCorrect(
     macData.set(ciphertextBytes, derivedKey.length - 16)
     const computedMac = sha256(macData)
 
-    for (let i = 0; i < macBytes.length; i++) {
-      if (macBytes[i] !== computedMac[i]) {
-        return false
-      }
-    }
-
-    return true
+    return constantTimeEqual(macBytes, computedMac)
   } catch {
     return false
   }
