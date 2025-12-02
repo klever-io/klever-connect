@@ -290,6 +290,16 @@ export class NodeWallet extends BaseWallet {
   }
 
   /**
+   * Get the private key for internal use by child classes
+   *
+   * @returns The private key instance or undefined if not set
+   * @internal
+   */
+  protected getPrivateKey(): PrivateKey | undefined {
+    return this._privateKey
+  }
+
+  /**
    * Set or change the private key
    *
    * **Security Note:**

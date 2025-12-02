@@ -68,10 +68,11 @@ export class Wallet extends NodeWallet {
    * ```
    */
   get privateKey(): string {
-    if (!this['_privateKey']) {
+    const pk = this.getPrivateKey()
+    if (!pk) {
       throw new WalletError('Private key not available - wallet may not be connected')
     }
-    return this['_privateKey'].toHex()
+    return pk.toHex()
   }
 
   /**
@@ -220,10 +221,11 @@ export class Wallet extends NodeWallet {
    * ```
    */
   async encrypt(password: string, options?: EncryptOptions): Promise<Keystore> {
-    if (!this.isConnected() || !this['_privateKey']) {
+    const pk = this.getPrivateKey()
+    if (!this.isConnected() || !pk) {
       throw new WalletError('Wallet must be connected to encrypt')
     }
 
-    return encryptToKeystore(this['_privateKey'], password, this.address, options)
+    return encryptToKeystore(pk, password, this.address, options)
   }
 }
