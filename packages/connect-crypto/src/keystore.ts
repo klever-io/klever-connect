@@ -77,8 +77,7 @@ async function aes256GcmEncrypt(
 ): Promise<{ ciphertext: Uint8Array; tag: Uint8Array }> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    key as any,
+    key as BufferSource,
     { name: 'AES-GCM' },
     false,
     ['encrypt'],
@@ -87,13 +86,11 @@ async function aes256GcmEncrypt(
   const encrypted = await crypto.subtle.encrypt(
     {
       name: 'AES-GCM',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      iv: iv as any,
+      iv: iv as BufferSource,
       tagLength: 128,
     },
     cryptoKey,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data as any,
+    data as BufferSource,
   )
   const encryptedArray = new Uint8Array(encrypted)
   const ciphertext = encryptedArray.slice(0, -16) // Ciphertext (all except last 16 bytes)
@@ -124,8 +121,7 @@ async function aes256GcmDecrypt(
 ): Promise<Uint8Array> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    key as any,
+    key as BufferSource,
     { name: 'AES-GCM' },
     false,
     ['decrypt'],
@@ -138,13 +134,11 @@ async function aes256GcmDecrypt(
   const decrypted = await crypto.subtle.decrypt(
     {
       name: 'AES-GCM',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      iv: iv as any,
+      iv: iv as BufferSource,
       tagLength: 128, // Must match the tagLength used during encryption
     },
     cryptoKey,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    combined as any,
+    combined as BufferSource,
   )
 
   return new Uint8Array(decrypted)

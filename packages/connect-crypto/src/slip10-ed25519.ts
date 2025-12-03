@@ -48,6 +48,20 @@ export function getMasterKeyFromSeed(seed: Uint8Array): { key: Uint8Array; chain
   }
 }
 
+/**
+Derive a child key from parent key and chain code
+*
+@remarks
+Important: Ed25519 SLIP-10 requires all path components to be hardened.
+Non-hardened components will derive keys but the results will NOT be compatible
+with other SLIP-10 Ed25519 implementations. Always use paths like
+m/44'/690'/0'/0'/0' (all components ending with ').
+@param parentKey - Parent private key (32 bytes)
+@param chainCode - Parent chain code (32 bytes)
+@param component - Path component with index and hardened flag
+@returns Derived child key and chain code
+*/
+
 export function deriveChildKey(
   parentKey: Uint8Array,
   chainCode: Uint8Array,
