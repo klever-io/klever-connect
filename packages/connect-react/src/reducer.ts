@@ -1,10 +1,10 @@
-import type { IWallet } from '@klever/connect-wallet'
+import type { Wallet } from '@klever/connect-wallet'
 import { getNetworkName } from '@klever/connect-provider'
 import type { KleverProvider, Network, NetworkName } from '@klever/connect-provider'
 import type { KleverState } from './types'
 
 export type KleverAction =
-  | { type: 'SET_WALLET'; wallet: IWallet; address: string }
+  | { type: 'SET_WALLET'; wallet: Wallet; address: string }
   | { type: 'SET_CONNECTING'; isConnecting: boolean }
   | { type: 'SET_ERROR'; error: Error }
   | { type: 'DISCONNECT' }
