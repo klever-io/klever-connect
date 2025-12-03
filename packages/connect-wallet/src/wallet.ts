@@ -37,7 +37,7 @@ import { NodeWallet } from './node'
  * const keystoreWallet = await Wallet.fromEncryptedJson(keystore, 'password')
  * ```
  */
-export class Wallet extends NodeWallet {
+export class DefaultWallet extends NodeWallet {
   /**
    * Creates a new Wallet instance from a private key.
    *
@@ -68,11 +68,11 @@ export class Wallet extends NodeWallet {
    * ```
    */
   get privateKey(): string {
-    const pk = this.getPrivateKey()
-    if (!pk) {
+    const pkBytes = this.getPrivateKey()
+    if (!pkBytes) {
       throw new WalletError('Private key not available - wallet may not be connected')
     }
-    return pk.toHex()
+    return hexEncode(pkBytes)
   }
 
   /**
@@ -91,10 +91,10 @@ export class Wallet extends NodeWallet {
    * const customWallet = await Wallet.createRandom(myProvider)
    * ```
    */
-  static async createRandom(provider?: IProvider): Promise<Wallet> {
+  static async createRandom(provider?: IProvider): Promise<DefaultWallet> {
     const keyPair = await cryptoProvider.generateKeyPair()
     const privateKeyHex = hexEncode(keyPair.privateKey.bytes)
-    return new Wallet(privateKeyHex, provider)
+    return new DefaultWallet(privateKeyHex, provider)
   }
 
   /**
@@ -116,7 +116,7 @@ export class Wallet extends NodeWallet {
    *
    * // Convert with custom derivation path
    * const privateKey2 = Wallet.mnemonicToPrivateKey('abandon abandon abandon...', {
-   *   path: "m/44'/690'/0'/0/1"
+   *   path: "m/44'/690'/0'/0'/1'"
    * })
    *
    * // Convert with passphrase
@@ -145,7 +145,7 @@ export class Wallet extends NodeWallet {
    *
    * // Create with custom derivation path
    * const wallet2 = await Wallet.fromMnemonic('abandon abandon abandon...', undefined, {
-   *   path: "m/44'/690'/0'/0/1"
+   *   path: "m/44'/690'/0'/0'/1'"
    * })
    *
    * // Create with passphrase
@@ -158,9 +158,9 @@ export class Wallet extends NodeWallet {
     mnemonic: string,
     provider?: IProvider,
     options?: MnemonicToKeyOptions,
-  ): Promise<Wallet> {
-    const privateKeyHex = Wallet.mnemonicToPrivateKey(mnemonic, options)
-    return new Wallet(privateKeyHex, provider)
+  ): Promise<DefaultWallet> {
+    const privateKeyHex = DefaultWallet.mnemonicToPrivateKey(mnemonic, options)
+    return new DefaultWallet(privateKeyHex, provider)
   }
 
   /**
@@ -189,10 +189,10 @@ export class Wallet extends NodeWallet {
     json: Keystore | string,
     password: string,
     provider?: IProvider,
-  ): Promise<Wallet> {
+  ): Promise<DefaultWallet> {
     const privateKey = await decryptKeystore(json, password)
     const privateKeyHex = hexEncode(privateKey.bytes)
-    return new Wallet(privateKeyHex, provider)
+    return new DefaultWallet(privateKeyHex, provider)
   }
 
   /**
