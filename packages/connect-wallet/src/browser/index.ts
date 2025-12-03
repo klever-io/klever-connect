@@ -9,7 +9,13 @@ import type {
 } from '@klever/connect-provider'
 import { Transaction } from '@klever/connect-transactions'
 import type { PrivateKey, Signature } from '@klever/connect-crypto'
-import { cryptoProvider, SignatureImpl } from '@klever/connect-crypto'
+import {
+  cryptoProvider,
+  SignatureImpl,
+  encryptToKeystore,
+  type EncryptOptions,
+  type Keystore,
+} from '@klever/connect-crypto'
 import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-types'
 import type { WalletConfig } from '../types/wallet'
 import { BaseWallet } from '../base'
@@ -1188,5 +1194,62 @@ export class BrowserWallet extends BaseWallet {
 
     // Use the default implementation
     return super.transfer(params)
+  }
+
+  /**
+   * Encrypts the wallet's private key to a keystore format
+   *
+   * **Only available in private key mode** - extension mode wallets cannot be encrypted
+   * as the private key is stored in the browser extension.
+   *
+   * Creates an encrypted keystore (Web3 Secret Storage format) that can be
+   * saved and later decrypted using `WalletFactory.fromEncryptedJson()`.
+   *
+   * **Security Notes:**
+   * - Use a strong password with mixed characters, numbers, and symbols
+   * - The scryptN parameter controls encryption strength vs speed
+   * - Higher scryptN = more secure but slower (default: 262144)
+   * - Never store the password with the keystore
+   *
+   * @param password - The password to encrypt the keystore
+   * @param options - Optional scrypt parameters for encryption strength
+   * @param options.scryptN - Work factor (default: 262144, min: 4096)
+   * @returns A promise that resolves to the encrypted keystore object
+   *
+   * @throws {WalletError} If wallet is not connected or in extension mode
+   *
+   * @example
+   * ```typescript
+   * // Private key mode only
+   * const wallet = new BrowserWallet(provider, { privateKey: '0x123...' })
+   * await wallet.connect()
+   *
+   * // Encrypt with default parameters
+   * const keystore = await wallet.encrypt('my-secure-password')
+   *
+   * // Save to localStorage or download as file
+   * localStorage.setItem('wallet', JSON.stringify(keystore))
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Encrypt with custom parameters (faster, for testing)
+   * const testKeystore = await wallet.encrypt('password', {
+   *   scryptN: 4096  // Faster but less secure
+   * })
+   * ```
+   */
+  async encrypt(password: string, options?: EncryptOptions): Promise<Keystore> {
+    if (this._mode === 'extension') {
+      throw new WalletError(
+        'Cannot encrypt extension wallet - private key is stored in the browser extension',
+      )
+    }
+
+    if (!this.isConnected() || !this._privateKey) {
+      throw new WalletError('Wallet must be connected to encrypt')
+    }
+
+    return encryptToKeystore(this._privateKey, password, this._address, options)
   }
 }

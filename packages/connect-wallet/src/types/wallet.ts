@@ -7,7 +7,7 @@ import type {
   TransferRequest,
 } from '@klever/connect-provider'
 import type { Transaction } from '@klever/connect-transactions'
-import type { Signature } from '@klever/connect-crypto'
+import type { Signature, Keystore, EncryptOptions } from '@klever/connect-crypto'
 
 // Re-export for convenience (single source of truth is @klever/connect-provider)
 export type { TransferRequest }
@@ -56,6 +56,15 @@ export interface Wallet {
   // Account info
   getBalance(): Promise<bigint>
   getNonce(): Promise<number>
+
+  // Keystore encryption
+  /**
+   * Encrypts the wallet's private key to a keystore format
+   * @param password - The password to encrypt the keystore
+   * @param options - Optional scrypt parameters for encryption strength
+   * @returns A promise that resolves to the encrypted keystore object
+   */
+  encrypt?(password: string, options?: EncryptOptions): Promise<Keystore>
 
   // Events
   on(event: WalletEvent, handler: WalletEventHandler): void

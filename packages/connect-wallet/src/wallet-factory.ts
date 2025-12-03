@@ -1,6 +1,14 @@
 import { detectEnvironment } from '@klever/connect-core'
 import type { IProvider } from '@klever/connect-provider'
 import { KleverProvider } from '@klever/connect-provider'
+import {
+  cryptoProvider,
+  mnemonicToPrivateKey as mnemonicToKey,
+  decryptKeystore,
+  type MnemonicToKeyOptions,
+  type Keystore,
+} from '@klever/connect-crypto'
+import { hexEncode } from '@klever/connect-encoding'
 
 import { BrowserWallet } from './browser'
 import { NodeWallet } from './node'
@@ -158,6 +166,204 @@ export class WalletFactory implements IWalletFactory {
       throw new Error('Private key is required for Node.js environment')
     }
     return new NodeWallet(this.provider, privateKey)
+  }
+
+  /**
+   * Create a new wallet with a randomly generated private key
+   *
+   * Creates a wallet appropriate for the current environment:
+   * - Node.js → NodeWallet with random key
+   * - Browser → BrowserWallet in private key mode with random key
+   *
+   * **Important:**
+   * - Save the private key securely - it cannot be recovered if lost
+   * - Never share the private key with anyone
+   * - Use environment variables or secure key management in production
+   *
+   * @param provider - Optional custom provider (defaults to factory's provider)
+   * @returns A promise that resolves to a new Wallet instance
+   *
+   * @example
+   * ```typescript
+   * const factory = new WalletFactory()
+   * const wallet = await factory.createRandom()
+   * await wallet.connect()
+   * console.log('New address:', wallet.address)
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With custom provider
+   * const testProvider = new KleverProvider({ network: 'testnet' })
+   * const wallet = await factory.createRandom(testProvider)
+   * ```
+   */
+  async createRandom(provider?: IProvider): Promise<Wallet> {
+    const walletProvider = provider || this.provider
+    const keyPair = await cryptoProvider.generateKeyPair()
+    const privateKeyHex = hexEncode(keyPair.privateKey.bytes)
+
+    const environment = detectEnvironment()
+
+    switch (environment) {
+      case 'browser':
+        return new BrowserWallet(walletProvider, { privateKey: privateKeyHex })
+
+      case 'node':
+        return new NodeWallet(walletProvider, privateKeyHex)
+
+      case 'react-native':
+        throw new Error('React Native wallet not implemented yet')
+
+      default:
+        throw new Error(`Unsupported environment: ${environment}`)
+    }
+  }
+
+  /**
+   * Converts a BIP39 mnemonic phrase to a private key (hex string)
+   *
+   * This is a utility method that derives a private key from a mnemonic without
+   * creating a wallet instance. Useful when you only need the private key.
+   *
+   * @param mnemonic - The BIP39 mnemonic phrase (12-24 words)
+   * @param options - Optional derivation path and passphrase
+   * @returns The private key as a hexadecimal string
+   *
+   * @example
+   * ```typescript
+   * const factory = new WalletFactory()
+   * const privateKey = factory.mnemonicToPrivateKey('abandon abandon abandon...')
+   * console.log('Private key:', privateKey)
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With custom derivation path
+   * const privateKey = factory.mnemonicToPrivateKey('abandon abandon abandon...', {
+   *   path: "m/44'/690'/0'/0'/1'"
+   * })
+   * ```
+   */
+  mnemonicToPrivateKey(mnemonic: string, options?: MnemonicToKeyOptions): string {
+    const privateKey = mnemonicToKey(mnemonic, options)
+    return hexEncode(privateKey.bytes)
+  }
+
+  /**
+   * Create a wallet from a BIP39 mnemonic phrase
+   *
+   * Creates a wallet appropriate for the current environment:
+   * - Node.js → NodeWallet with derived key
+   * - Browser → BrowserWallet in private key mode with derived key
+   *
+   * @param mnemonic - The BIP39 mnemonic phrase (12-24 words)
+   * @param provider - Optional custom provider (defaults to factory's provider)
+   * @param options - Optional derivation path and passphrase
+   * @returns A promise that resolves to a new Wallet instance
+   *
+   * @example
+   * ```typescript
+   * const factory = new WalletFactory()
+   * const wallet = await factory.fromMnemonic('abandon abandon abandon...')
+   * await wallet.connect()
+   * console.log('Address:', wallet.address)
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With custom derivation path
+   * const wallet = await factory.fromMnemonic('abandon abandon abandon...', undefined, {
+   *   path: "m/44'/690'/0'/0'/1'"
+   * })
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With passphrase
+   * const wallet = await factory.fromMnemonic('abandon abandon abandon...', undefined, {
+   *   passphrase: 'my-secret-passphrase'
+   * })
+   * ```
+   */
+  async fromMnemonic(
+    mnemonic: string,
+    provider?: IProvider,
+    options?: MnemonicToKeyOptions,
+  ): Promise<Wallet> {
+    const walletProvider = provider || this.provider
+    const privateKeyHex = this.mnemonicToPrivateKey(mnemonic, options)
+
+    const environment = detectEnvironment()
+
+    switch (environment) {
+      case 'browser':
+        return new BrowserWallet(walletProvider, { privateKey: privateKeyHex })
+
+      case 'node':
+        return new NodeWallet(walletProvider, privateKeyHex)
+
+      case 'react-native':
+        throw new Error('React Native wallet not implemented yet')
+
+      default:
+        throw new Error(`Unsupported environment: ${environment}`)
+    }
+  }
+
+  /**
+   * Create a wallet from an encrypted keystore (Web3 Secret Storage)
+   *
+   * Creates a wallet appropriate for the current environment:
+   * - Node.js → NodeWallet with decrypted key
+   * - Browser → BrowserWallet in private key mode with decrypted key
+   *
+   * @param json - The keystore object or JSON string
+   * @param password - The password to decrypt the keystore
+   * @param provider - Optional custom provider (defaults to factory's provider)
+   * @returns A promise that resolves to a new Wallet instance
+   *
+   * @throws Error if password is incorrect or keystore is invalid
+   *
+   * @example
+   * ```typescript
+   * const factory = new WalletFactory()
+   * const wallet = await factory.fromEncryptedJson(keystore, 'my-password')
+   * await wallet.connect()
+   * console.log('Loaded wallet address:', wallet.address)
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // From JSON string
+   * const keystoreJson = await fs.readFile('keystore.json', 'utf-8')
+   * const wallet = await factory.fromEncryptedJson(keystoreJson, 'my-password')
+   * ```
+   */
+  async fromEncryptedJson(
+    json: Keystore | string,
+    password: string,
+    provider?: IProvider,
+  ): Promise<Wallet> {
+    const walletProvider = provider || this.provider
+    const privateKey = await decryptKeystore(json, password)
+    const privateKeyHex = hexEncode(privateKey.bytes)
+
+    const environment = detectEnvironment()
+
+    switch (environment) {
+      case 'browser':
+        return new BrowserWallet(walletProvider, { privateKey: privateKeyHex })
+
+      case 'node':
+        return new NodeWallet(walletProvider, privateKeyHex)
+
+      case 'react-native':
+        throw new Error('React Native wallet not implemented yet')
+
+      default:
+        throw new Error(`Unsupported environment: ${environment}`)
+    }
   }
 }
 
