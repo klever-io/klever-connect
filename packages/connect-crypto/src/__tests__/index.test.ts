@@ -158,7 +158,7 @@ describe('@klever/connect-crypto exports', () => {
       const keystore = await cryptoModule.encryptToKeystore(privateKey, password, address, {
         scryptN: 4096,
       })
-      expect(keystore.version).toBe(3)
+      expect(keystore.version).toBe(1)
 
       const decrypted = await cryptoModule.decryptKeystore(keystore, password)
       expect(decrypted.toHex()).toBe(privateKey.toHex())

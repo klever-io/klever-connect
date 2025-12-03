@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { encryptToKeystore, decryptKeystore, isPasswordCorrect } from '../keystore'
-import { PrivateKeyImpl } from '../keys'
 import { hexDecode } from '@klever/connect-encoding'
+import { describe, expect, it } from 'vitest'
+import { PrivateKeyImpl } from '../keys'
+import { decryptKeystore, encryptToKeystore, isPasswordCorrect } from '../keystore'
 
 describe('keystore', () => {
   const testPrivateKeyHex = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'
@@ -14,12 +14,12 @@ describe('keystore', () => {
       const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
 
       expect(keystore).toBeDefined()
-      expect(keystore.version).toBe(3)
+      expect(keystore.version).toBe(1)
       expect(keystore.id).toBeDefined()
       expect(keystore.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
       expect(keystore.address).toBe('test123456789abcdef')
       expect(keystore.crypto).toBeDefined()
-      expect(keystore.crypto.cipher).toBe('aes-128-ctr')
+      expect(keystore.crypto.cipher).toBe('aes-256-gcm')
       expect(keystore.crypto.kdf).toBe('scrypt')
     })
 

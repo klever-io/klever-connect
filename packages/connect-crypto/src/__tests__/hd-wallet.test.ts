@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  generateMnemonicPhrase,
-  isValidMnemonic,
-  mnemonicToPrivateKey,
-  deriveMultipleKeys,
   buildDerivationPath,
   DEFAULT_DERIVATION_PATH,
+  deriveMultipleKeys,
+  generateMnemonicPhrase,
+  isValidMnemonic,
   KLEVER_COIN_TYPE,
+  mnemonicToPrivateKey,
 } from '../hd-wallet'
 
 describe('hd-wallet', () => {
@@ -188,25 +188,25 @@ describe('hd-wallet', () => {
     it('should build default path (0/0/0)', () => {
       const path = buildDerivationPath()
 
-      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/0'/0/0`)
+      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/0'/0'/0'`)
     })
 
     it('should build path with custom account', () => {
       const path = buildDerivationPath(5)
 
-      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/5'/0/0`)
+      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/5'/0'/0'`)
     })
 
     it('should build path with custom account and change', () => {
       const path = buildDerivationPath(2, 1)
 
-      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/2'/1/0`)
+      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/2'/1'/0'`)
     })
 
     it('should build path with custom account, change, and index', () => {
       const path = buildDerivationPath(3, 0, 10)
 
-      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/3'/0/10`)
+      expect(path).toBe(`m/44'/${KLEVER_COIN_TYPE}'/3'/0'/10'`)
     })
 
     it('should use KLEVER_COIN_TYPE constant', () => {
