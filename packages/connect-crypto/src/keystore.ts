@@ -1,20 +1,20 @@
 import { hexDecode, hexEncode } from '@klever/connect-encoding'
 import { scrypt } from '@noble/hashes/scrypt'
-import { sha256 } from '@noble/hashes/sha2'
 import { randomBytes } from '@noble/hashes/utils'
 import { PrivateKeyImpl } from './keys'
 import type { PrivateKey } from './types'
 
 export interface Keystore {
-  version: 3
+  version: 1
   id: string
   address: string
   crypto: {
     ciphertext: string
     cipherparams: {
       iv: string
+      tag: string
     }
-    cipher: 'aes-128-ctr'
+    cipher: 'aes-256-gcm'
     kdf: 'scrypt'
     kdfparams: {
       dklen: number
@@ -23,7 +23,6 @@ export interface Keystore {
       r: number
       p: number
     }
-    mac: string
   }
 }
 
@@ -53,112 +52,126 @@ function generateUUID(): string {
 }
 
 /**
- * Constant-time comparison of two Uint8Arrays to prevent timing attacks.
+ * Encrypts data using AES-256-GCM
  *
  * @remarks
- * This function compares two byte arrays in constant time, meaning the execution
- * time does not depend on where the arrays differ. This is crucial for security
- * when comparing MACs, signatures, or other cryptographic values to prevent
- * timing side-channel attacks.
+ * AES-256-GCM provides both confidentiality and authenticity in a single operation.
+ * The authentication tag is automatically generated and returned separately.
  *
- * @param a - First byte array
- * @param b - Second byte array
- * @returns true if arrays are equal, false otherwise
+ * **IV Requirements (Critical for Security):**
+ * - Must be 96 bits (12 bytes) for optimal GCM performance
+ * - Must be UNIQUE for every encryption with the same key
+ * - Must be generated using a cryptographically secure random number generator
+ * - Does NOT need to be secret (can be transmitted in the clear)
+ * - NEVER reuse an IV with the same key (catastrophic security failure)
+ *
+ * @param data - Data to encrypt
+ * @param key - 256-bit (32 byte) encryption key
+ * @param iv - Initialization vector (must be 12 bytes, unique per encryption)
+ * @returns Object containing ciphertext and authentication tag
  */
-function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.length !== b.length) {
-    return false
-  }
-
-  let diff = 0
-  for (let i = 0; i < a.length; i++) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    diff |= a[i]! ^ b[i]!
-  }
-
-  return diff === 0
-}
-
-// Encrypts data using AES-128-CTR
-async function aes128CtrEncrypt(
+async function aes256GcmEncrypt(
   data: Uint8Array,
   key: Uint8Array,
   iv: Uint8Array,
-): Promise<Uint8Array> {
+): Promise<{ ciphertext: Uint8Array; tag: Uint8Array }> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     key as any,
-    { name: 'AES-CTR' },
+    { name: 'AES-GCM' },
     false,
     ['encrypt'],
   )
 
   const encrypted = await crypto.subtle.encrypt(
     {
-      name: 'AES-CTR',
+      name: 'AES-GCM',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      counter: iv as any,
-      length: 128,
+      iv: iv as any,
+      tagLength: 128,
     },
     cryptoKey,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data as any,
   )
+  const encryptedArray = new Uint8Array(encrypted)
+  const ciphertext = encryptedArray.slice(0, -16) // Ciphertext (all except last 16 bytes)
+  const tag = encryptedArray.slice(-16) // Authentication tag (last 16 bytes)
 
-  return new Uint8Array(encrypted)
+  return { ciphertext, tag }
 }
 
-// Decrypts data using AES-128-CTR mode
-async function aes128CtrDecrypt(
+/**
+ * Decrypts data using AES-256-GCM and verifies authenticity
+ *
+ * @remarks
+ * AES-256-GCM automatically verifies the authentication tag during decryption.
+ * If the tag is invalid (wrong password or tampered data), decryption will fail.
+ *
+ * @param ciphertext - Encrypted data
+ * @param key - 256-bit (32 byte) decryption key
+ * @param iv - Initialization vector used during encryption
+ * @param tag - Authentication tag for verification
+ * @returns Decrypted plaintext data
+ * @throws Error if authentication fails (wrong password or tampered data)
+ */
+async function aes256GcmDecrypt(
   ciphertext: Uint8Array,
   key: Uint8Array,
   iv: Uint8Array,
+  tag: Uint8Array,
 ): Promise<Uint8Array> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     key as any,
-    { name: 'AES-CTR' },
+    { name: 'AES-GCM' },
     false,
     ['decrypt'],
   )
 
+  const combined = new Uint8Array(ciphertext.length + tag.length)
+  combined.set(ciphertext, 0)
+  combined.set(tag, ciphertext.length) // Append 16-byte tag at the end
+
   const decrypted = await crypto.subtle.decrypt(
     {
-      name: 'AES-CTR',
+      name: 'AES-GCM',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      counter: iv as any,
-      length: 128,
+      iv: iv as any,
+      tagLength: 128, // Must match the tagLength used during encryption
     },
     cryptoKey,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ciphertext as any,
+    combined as any,
   )
 
   return new Uint8Array(decrypted)
 }
 
 /**
- * Encrypts a private key to Web3 Secret Storage Definition (version 3) keystore format.
+ * Encrypts a private key into a Klever Keystore V1 format.
  *
  * @remarks
- * This function uses the scrypt key derivation function (KDF) with AES-128-CTR encryption
- * to securely encrypt a private key with a password. The resulting keystore is compatible
- * with Web3 wallet standards and can be safely stored or exported.
+ * This function uses the scrypt key derivation function (KDF) with AES-256-GCM authenticated
+ * encryption to securely encrypt a private key with a password.
  *
  * Security features:
  * - Scrypt KDF with configurable parameters (default N=262144 for strong security)
- * - AES-128-CTR encryption
- * - SHA-256 MAC for integrity verification
- * - Random salt and IV generation
+ * - AES-256-GCM authenticated encryption
+ * - 256-bit encryption key (stronger than AES-128)
+ * - Built-in authentication tag for integrity verification
+ * - Cryptographically random 12-byte IV (unique per encryption, per AES-GCM spec)
+ * - Random 32-byte salt for scrypt KDF
  *
  * @param privateKey - The private key to encrypt
- * @param password - Password to protect the keystore
+ * @param password - Password to protect the keystore (minimum 8 characters)
  * @param address - The wallet address associated with this key
  * @param options - Optional scrypt parameters (N, r, p) for custom security levels
  * @returns A promise that resolves to the encrypted keystore object
  *
+ * @throws Error if password is empty or less than 8 characters
  * @throws Error if scryptN is not a power of 2
  * @throws Error if scryptR or scryptP are not positive numbers
  *
@@ -185,7 +198,7 @@ async function aes128CtrDecrypt(
  * ```
  */
 export async function encryptToKeystore(
-  privateKey: PrivateKey,
+  privateKey: PrivateKey | Uint8Array,
   password: string,
   address: string,
   options: EncryptOptions = {},
@@ -212,9 +225,9 @@ export async function encryptToKeystore(
 
   // Generate random salt and IV
   const salt = randomBytes(32)
-  const iv = randomBytes(16)
+  const iv = randomBytes(12) // AES-GCM spec recommends 96-bit (12-byte) IV
 
-  // Derive key from password using scrypt
+  // Derive 32-byte key from password using scrypt
   const derivedKey = scrypt(password, salt, {
     N: scryptN,
     r: scryptR,
@@ -222,28 +235,26 @@ export async function encryptToKeystore(
     dkLen: DEFAULT_SCRYPT_PARAMS.dklen,
   })
 
-  // Use first 16 bytes for encryption
-  const encryptionKey = derivedKey.slice(0, 16)
+  // Use all 32 bytes for encryption
+  const encryptionKey = derivedKey
+
+  // Get private key bytes
+  const privateKeyBytes = privateKey instanceof Uint8Array ? privateKey : privateKey.bytes
 
   // Encrypt private key
-  const ciphertext = await aes128CtrEncrypt(privateKey.bytes, encryptionKey, iv)
-
-  // Calculate MAC for integrity verification
-  const macData = new Uint8Array(derivedKey.length - 16 + ciphertext.length)
-  macData.set(derivedKey.slice(16), 0)
-  macData.set(ciphertext, derivedKey.length - 16)
-  const mac = sha256(macData)
+  const { ciphertext, tag } = await aes256GcmEncrypt(privateKeyBytes, encryptionKey, iv)
 
   const keystore: Keystore = {
-    version: 3,
+    version: 1,
     id: generateUUID(),
     address: address.replace(/^klv1?/, ''),
     crypto: {
       ciphertext: hexEncode(ciphertext),
       cipherparams: {
         iv: hexEncode(iv),
+        tag: hexEncode(tag),
       },
-      cipher: 'aes-128-ctr',
+      cipher: 'aes-256-gcm',
       kdf: 'scrypt',
       kdfparams: {
         dklen: DEFAULT_SCRYPT_PARAMS.dklen,
@@ -252,7 +263,6 @@ export async function encryptToKeystore(
         r: scryptR,
         p: scryptP,
       },
-      mac: hexEncode(mac),
     },
   }
 
@@ -260,27 +270,27 @@ export async function encryptToKeystore(
 }
 
 /**
- * Decrypts a keystore to retrieve the private key.
+ * Decrypts a Klever Keystore V1 to retrieve the private key.
  *
  * @remarks
- * This function decrypts a keystore encrypted with the Web3 Secret Storage Definition
- * (version 3) standard. It verifies the password using MAC authentication before
- * decrypting the private key.
+ * This function decrypts a keystore encrypted with Klever's V1 format using AES-256-GCM
+ * authenticated encryption. The authentication tag is automatically verified during
+ * decryption, ensuring both the password is correct and the keystore hasn't been tampered with.
  *
  * Supported formats:
- * - Version 3 keystores only
- * - AES-128-CTR cipher
+ * - Version 1 keystores only
+ * - AES-256-GCM cipher
  * - Scrypt KDF
  *
  * @param keystore - The keystore object or JSON string to decrypt
  * @param password - The password used to encrypt the keystore
  * @returns A promise that resolves to the decrypted private key
  *
- * @throws Error if keystore version is not 3
- * @throws Error if cipher is not 'aes-128-ctr'
+ * @throws Error if keystore version is not 1
+ * @throws Error if cipher is not 'aes-256-gcm'
  * @throws Error if KDF is not 'scrypt'
- * @throws Error if password is incorrect (MAC verification failed)
- * @throws Error if keystore is corrupted
+ * @throws Error if password is incorrect (GCM authentication failed)
+ * @throws Error if keystore is corrupted or tampered with
  * @throws Error if decrypted private key length is not 32 bytes
  *
  * @example
@@ -291,7 +301,7 @@ export async function encryptToKeystore(
  * const privateKey = await decryptKeystore(keystore, 'my-secure-password')
  *
  * // Decrypt from JSON string
- * const keystoreJson = '{"version":3,"id":"...","crypto":{...}}'
+ * const keystoreJson = '{"version":1,"id":"...","crypto":{...}}'
  * const privateKey2 = await decryptKeystore(keystoreJson, 'password')
  *
  * // Use the decrypted private key
@@ -307,11 +317,11 @@ export async function decryptKeystore(
   const ks: Keystore = typeof keystore === 'string' ? JSON.parse(keystore) : keystore
 
   // Validate keystore format
-  if (ks.version !== 3) {
+  if (ks.version !== 1) {
     throw new Error('Unsupported keystore version: ' + String(ks.version))
   }
 
-  if (ks.crypto.cipher !== 'aes-128-ctr') {
+  if (ks.crypto.cipher !== 'aes-256-gcm') {
     throw new Error('Unsupported cipher: ' + String(ks.crypto.cipher))
   }
 
@@ -319,13 +329,13 @@ export async function decryptKeystore(
     throw new Error('Unsupported KDF: ' + String(ks.crypto.kdf))
   }
 
-  const { ciphertext, cipherparams, kdfparams, mac } = ks.crypto
+  const { ciphertext, cipherparams, kdfparams } = ks.crypto
 
   // Decode hex strings
   const ciphertextBytes = hexDecode(ciphertext)
   const iv = hexDecode(cipherparams.iv)
+  const tag = hexDecode(cipherparams.tag)
   const salt = hexDecode(kdfparams.salt)
-  const macBytes = hexDecode(mac)
 
   // Derive key from password
   const derivedKey = scrypt(password, salt, {
@@ -335,20 +345,11 @@ export async function decryptKeystore(
     dkLen: kdfparams.dklen,
   })
 
-  // Verify MAC to check password correctness
-  const macData = new Uint8Array(derivedKey.length - 16 + ciphertextBytes.length)
-  macData.set(derivedKey.slice(16), 0)
-  macData.set(ciphertextBytes, derivedKey.length - 16)
-  const computedMac = sha256(macData)
-
-  // Constant-time comparison to prevent timing attacks
-  if (!constantTimeEqual(macBytes, computedMac)) {
-    throw new Error('Invalid password or corrupted keystore (MAC verification failed)')
-  }
-
-  // Decrypt private key
-  const encryptionKey = derivedKey.slice(0, 16)
-  const privateKeyBytes = await aes128CtrDecrypt(ciphertextBytes, encryptionKey, iv)
+  // Decrypt private key with AES-256-GCM
+  // GCM automatically verifies the authentication tag, throwing an error if
+  // the password is wrong or the keystore has been tampered with
+  const encryptionKey = derivedKey
+  const privateKeyBytes = await aes256GcmDecrypt(ciphertextBytes, encryptionKey, iv, tag)
 
   if (privateKeyBytes.length !== 32) {
     throw new Error(`Invalid private key length: ${privateKeyBytes.length}`)
@@ -358,16 +359,12 @@ export async function decryptKeystore(
 }
 
 /**
- * Checks if a password is correct for a keystore without performing full decryption.
+ * Checks if a password is correct for a keystore.
  *
  * @remarks
- * This function verifies if a password is correct by checking the MAC (Message
- * Authentication Code) without actually decrypting the private key. This is useful
- * for password validation before attempting decryption, which can be computationally
- * expensive due to scrypt.
- *
- * Note: Even though this doesn't decrypt, it still runs the full scrypt KDF which
- * can take some time with default parameters.
+ * This function verifies if a password is correct by attempting to decrypt the keystore.
+ * With AES-256-GCM, authentication is performed during decryption, so we must actually
+ * decrypt to verify the password..
  *
  * @param keystore - The keystore object or JSON string to check
  * @param password - The password to verify
@@ -375,7 +372,7 @@ export async function decryptKeystore(
  *
  * @example
  * ```typescript
- * // Verify password before decryption
+ * // Verify password before using the private key
  * const isValid = await isPasswordCorrect(keystore, 'my-password')
  * if (isValid) {
  *   const privateKey = await decryptKeystore(keystore, 'my-password')
@@ -395,28 +392,8 @@ export async function isPasswordCorrect(
   password: string,
 ): Promise<boolean> {
   try {
-    const ks: Keystore = typeof keystore === 'string' ? JSON.parse(keystore) : keystore
-
-    const { ciphertext, kdfparams, mac } = ks.crypto
-    const ciphertextBytes = hexDecode(ciphertext)
-    const salt = hexDecode(kdfparams.salt)
-    const macBytes = hexDecode(mac)
-
-    // Derive key from password
-    const derivedKey = scrypt(password, salt, {
-      N: kdfparams.n,
-      r: kdfparams.r,
-      p: kdfparams.p,
-      dkLen: kdfparams.dklen,
-    })
-
-    // Verify MAC matches
-    const macData = new Uint8Array(derivedKey.length - 16 + ciphertextBytes.length)
-    macData.set(derivedKey.slice(16), 0)
-    macData.set(ciphertextBytes, derivedKey.length - 16)
-    const computedMac = sha256(macData)
-
-    return constantTimeEqual(macBytes, computedMac)
+    await decryptKeystore(keystore, password)
+    return true
   } catch {
     return false
   }
