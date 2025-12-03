@@ -5,7 +5,7 @@ import { PrivateKeyImpl } from './keys'
 import type { PrivateKey } from './types'
 
 // Default BIP44 derivation path for Klever
-export const DEFAULT_DERIVATION_PATH = "m/44'/690'/0'/0/0"
+export const DEFAULT_DERIVATION_PATH = "m/44'/690'/0'/0'/0'"
 
 // Klever's registered coin type in BIP44
 export const KLEVER_COIN_TYPE = 690
@@ -82,7 +82,7 @@ export function isValidMnemonic(mnemonic: string): boolean {
  *
  * // Derive with custom path and passphrase
  * const key2 = mnemonicToPrivateKey('your mnemonic phrase here', {
- *   path: "m/44'/690'/0'/0/1",
+ *   path: "m/44'/690'/0'/0'/1'",
  *   passphrase: 'optional-passphrase'
  * })
  * ```
@@ -124,7 +124,7 @@ export function mnemonicToPrivateKey(
  * @remarks
  * This function takes the base derivation path and increments the last index
  * to generate multiple keys sequentially. For example, if the path is
- * "m/44'/690'/0'/0/0", it will generate keys at indices 0, 1, 2, etc.
+ * "m/44'/690'/0'/0'/0'", it will generate keys at indices 0', 1', 2', etc.
  *
  * @param mnemonic - The BIP39 mnemonic phrase
  * @param count - Number of keys to derive (must be at least 1)
@@ -138,13 +138,13 @@ export function mnemonicToPrivateKey(
  * ```typescript
  * // Derive 5 sequential keys starting from default path
  * const keys = deriveMultipleKeys('your mnemonic here', 5)
- * // Generates keys at: m/44'/690'/0'/0/0, m/44'/690'/0'/0/1, ..., m/44'/690'/0'/0/4
+ * // Generates keys at: m/44'/690'/0'/0'/0', m/44'/690'/0'/0'/1', ..., m/44'/690'/0'/0'/4'
  *
  * // Derive with custom starting path
  * const keys2 = deriveMultipleKeys('your mnemonic here', 3, {
- *   path: "m/44'/690'/0'/0/10"
+ *   path: "m/44'/690'/0'/0'/10'"
  * })
- * // Generates keys at: m/44'/690'/0'/0/10, m/44'/690'/0'/0/11, m/44'/690'/0'/0/12
+ * // Generates keys at: m/44'/690'/0'/0'/10', m/44'/690'/0'/0'/11', m/44'/690'/0'/0'/12'
  * ```
  */
 export function deriveMultipleKeys(
@@ -183,14 +183,14 @@ export function deriveMultipleKeys(
  *
  * @remarks
  * Constructs a derivation path following the BIP44 standard:
- * m/44'/coin_type'/account'/change/index
+ * m/44'/coin_type'/account'/change'/index'
  *
  * Where:
  * - 44' is the BIP44 purpose (hardened)
- * - coin_type is Klever's registered coin type (690)
+ * - coin_type is Klever's registered coin type (690, hardened)
  * - account' is the account index (hardened)
- * - change is 0 for external (receiving) or 1 for internal (change) addresses
- * - index is the address index
+ * - change' is 0' for external (receiving) or 1' for internal (change) addresses (hardened)
+ * - index' is the address index (hardened)
  *
  * @param account - Account index (default: 0, must be non-negative integer)
  * @param change - Chain type: 0 for external, 1 for internal (default: 0)
@@ -205,15 +205,15 @@ export function deriveMultipleKeys(
  * ```typescript
  * // Build default path
  * const path1 = buildDerivationPath()
- * // Returns: "m/44'/690'/0'/0/0"
+ * // Returns: "m/44'/690'/0'/0'/0'"
  *
  * // Build path for second account, first address
  * const path2 = buildDerivationPath(1, 0, 0)
- * // Returns: "m/44'/690'/1'/0/0"
+ * // Returns: "m/44'/690'/1'/0'/0'"
  *
  * // Build path for change address
  * const path3 = buildDerivationPath(0, 1, 5)
- * // Returns: "m/44'/690'/0'/1/5"
+ * // Returns: "m/44'/690'/0'/1'/5'"
  * ```
  */
 export function buildDerivationPath(
@@ -231,5 +231,5 @@ export function buildDerivationPath(
     throw new Error('Index must be a non-negative integer')
   }
 
-  return `m/44'/${KLEVER_COIN_TYPE}'/${account}'/${change}/${index}`
+  return `m/44'/${KLEVER_COIN_TYPE}'/${account}'/${change}'/${index}'`
 }

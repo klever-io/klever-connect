@@ -103,10 +103,10 @@ describe('hd-wallet', () => {
 
     it('should derive private key with custom path', () => {
       const privateKey1 = mnemonicToPrivateKey(testMnemonic, {
-        path: "m/44'/690'/0'/0/0",
+        path: "m/44'/690'/0'/0'/0'",
       })
       const privateKey2 = mnemonicToPrivateKey(testMnemonic, {
-        path: "m/44'/690'/0'/0/1",
+        path: "m/44'/690'/0'/0'/1'",
       })
 
       expect(privateKey1.toHex()).not.toBe(privateKey2.toHex())
@@ -146,12 +146,12 @@ describe('hd-wallet', () => {
 
     it('should derive keys sequentially from index', () => {
       const keys = deriveMultipleKeys(testMnemonic, 3, {
-        path: "m/44'/690'/0'/0/0",
+        path: "m/44'/690'/0'/0'/0'",
       })
 
-      const key0 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0/0" })
-      const key1 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0/1" })
-      const key2 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0/2" })
+      const key0 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0'/0'" })
+      const key1 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0'/1'" })
+      const key2 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0'/2'" })
 
       expect(keys[0].toHex()).toBe(key0.toHex())
       expect(keys[1].toHex()).toBe(key1.toHex())
@@ -160,11 +160,11 @@ describe('hd-wallet', () => {
 
     it('should derive keys starting from custom index', () => {
       const keys = deriveMultipleKeys(testMnemonic, 2, {
-        path: "m/44'/690'/0'/0/5",
+        path: "m/44'/690'/0'/0'/5'",
       })
 
-      const key5 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0/5" })
-      const key6 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0/6" })
+      const key5 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0'/5'" })
+      const key6 = mnemonicToPrivateKey(testMnemonic, { path: "m/44'/690'/0'/0'/6'" })
 
       expect(keys[0].toHex()).toBe(key5.toHex())
       expect(keys[1].toHex()).toBe(key6.toHex())
@@ -244,7 +244,7 @@ describe('hd-wallet', () => {
 
   describe('DEFAULT_DERIVATION_PATH', () => {
     it('should be a valid BIP44 path', () => {
-      expect(DEFAULT_DERIVATION_PATH).toBe("m/44'/690'/0'/0/0")
+      expect(DEFAULT_DERIVATION_PATH).toBe("m/44'/690'/0'/0'/0'")
     })
   })
 

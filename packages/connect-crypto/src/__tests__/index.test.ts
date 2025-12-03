@@ -44,7 +44,7 @@ describe('@klever/connect-crypto exports', () => {
 
     it('should export DEFAULT_DERIVATION_PATH', () => {
       expect(cryptoModule).toHaveProperty('DEFAULT_DERIVATION_PATH')
-      expect(cryptoModule.DEFAULT_DERIVATION_PATH).toBe("m/44'/690'/0'/0/0")
+      expect(cryptoModule.DEFAULT_DERIVATION_PATH).toBe("m/44'/690'/0'/0'/0'")
     })
 
     it('should export KLEVER_COIN_TYPE', () => {
