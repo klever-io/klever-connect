@@ -1,7 +1,7 @@
 // Export types
 export * from './types'
 
-export { Wallet } from './wallet'
+export { DefaultWallet } from './wallet'
 export { BrowserWallet } from './browser'
 export { NodeWallet } from './node'
 

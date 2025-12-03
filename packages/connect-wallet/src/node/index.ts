@@ -295,8 +295,8 @@ export class NodeWallet extends BaseWallet {
    * @returns The private key instance or undefined if not set
    * @internal
    */
-  protected getPrivateKey(): PrivateKey | undefined {
-    return this._privateKey
+  protected getPrivateKey(): Uint8Array | undefined {
+    return this._privateKey ? new Uint8Array(this._privateKey.bytes) : undefined
   }
 
   /**
