@@ -1,8 +1,8 @@
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from '@scure/bip39'
 import { wordlist } from '@scure/bip39/wordlists/english'
-import { HDKey } from '@scure/bip32'
 import { PrivateKeyImpl } from './keys'
 import type { PrivateKey } from './types'
+import { deriveEd25519PrivateKey } from './slip10-ed25519'
 
 // Default BIP44 derivation path for Klever
 export const DEFAULT_DERIVATION_PATH = "m/44'/690'/0'/0'/0'"
@@ -66,7 +66,8 @@ export function isValidMnemonic(mnemonic: string): boolean {
 }
 
 /**
- * Converts a mnemonic phrase to a private key using BIP32/BIP44 derivation.
+ * Converts a mnemonic phrase to a private key using SLIP-0010 Ed25519 derivation.
+ *
  *
  * @param mnemonic - The BIP39 mnemonic phrase
  * @param options - Options including derivation path and passphrase
@@ -100,22 +101,14 @@ export function mnemonicToPrivateKey(
   // Convert mnemonic to seed
   const seed = mnemonicToSeedSync(mnemonic, passphrase)
 
-  // Create master HD key from seed
-  const masterKey = HDKey.fromMasterSeed(seed)
-
-  // Derive child key at specified path
-  const childKey = masterKey.derive(path)
-
-  if (!childKey.privateKey) {
-    throw new Error('Failed to derive private key from path')
-  }
+  const privateKeyBytes = deriveEd25519PrivateKey(seed, path)
 
   // Ensure key is 32 bytes (256 bits)
-  if (childKey.privateKey.length !== 32) {
-    throw new Error(`Invalid derived key length: ${childKey.privateKey.length}`)
+  if (privateKeyBytes.length !== 32) {
+    throw new Error(`Invalid derived key length: ${privateKeyBytes.length}`)
   }
 
-  return PrivateKeyImpl.fromBytes(childKey.privateKey)
+  return PrivateKeyImpl.fromBytes(privateKeyBytes)
 }
 
 /**
