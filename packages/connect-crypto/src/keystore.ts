@@ -349,13 +349,17 @@ export async function decryptKeystore(
   // GCM automatically verifies the authentication tag, throwing an error if
   // the password is wrong or the keystore has been tampered with
   const encryptionKey = derivedKey
-  const privateKeyBytes = await aes256GcmDecrypt(ciphertextBytes, encryptionKey, iv, tag)
+  try {
+    const privateKeyBytes = await aes256GcmDecrypt(ciphertextBytes, encryptionKey, iv, tag)
 
-  if (privateKeyBytes.length !== 32) {
-    throw new Error(`Invalid private key length: ${privateKeyBytes.length}`)
+    if (privateKeyBytes.length !== 32) {
+      throw new Error(`Invalid private key length: ${privateKeyBytes.length}`)
+    }
+
+    return PrivateKeyImpl.fromBytes(privateKeyBytes)
+  } catch {
+    throw new Error('Invalid password or corrupted keystore (authentication failed)')
   }
-
-  return PrivateKeyImpl.fromBytes(privateKeyBytes)
 }
 
 /**

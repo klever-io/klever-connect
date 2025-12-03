@@ -1,8 +1,8 @@
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from '@scure/bip39'
 import { wordlist } from '@scure/bip39/wordlists/english'
 import { PrivateKeyImpl } from './keys'
-import type { PrivateKey } from './types'
 import { deriveEd25519PrivateKey } from './slip10-ed25519'
+import type { PrivateKey } from './types'
 
 // Default BIP44 derivation path for Klever
 export const DEFAULT_DERIVATION_PATH = "m/44'/690'/0'/0'/0'"
@@ -153,6 +153,8 @@ export function deriveMultipleKeys(
 
   // Extract base path and starting index from derivation path
   const pathParts = path.split('/')
+  const lastPart = pathParts[pathParts.length - 1] || '0'
+  const isHardened = lastPart.endsWith("'")
   const basePath = pathParts.slice(0, -1).join('/')
   const startIndex = parseInt(pathParts[pathParts.length - 1] || '0', 10)
 
@@ -160,7 +162,8 @@ export function deriveMultipleKeys(
 
   // Generate keys by incrementing the last index
   for (let i = 0; i < count; i++) {
-    const derivationPath = `${basePath}/${startIndex + i}`
+    const indexSuffix = isHardened ? "'" : ''
+    const derivationPath = `${basePath}/${startIndex + i}${indexSuffix}`
     const key =
       passphrase !== undefined
         ? mnemonicToPrivateKey(mnemonic, { path: derivationPath, passphrase })
