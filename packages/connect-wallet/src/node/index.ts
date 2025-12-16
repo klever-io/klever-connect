@@ -1,6 +1,11 @@
 import { WalletError, isNode, isValidAddress } from '@klever/connect-core'
 import type { PrivateKey, Signature } from '@klever/connect-crypto'
-import { cryptoProvider } from '@klever/connect-crypto'
+import {
+  cryptoProvider,
+  encryptToKeystore,
+  type EncryptOptions,
+  type Keystore,
+} from '@klever/connect-crypto'
 import { hexEncode } from '@klever/connect-encoding'
 import type { IProvider } from '@klever/connect-provider'
 import type { Transaction } from '@klever/connect-transactions'
@@ -290,6 +295,16 @@ export class NodeWallet extends BaseWallet {
   }
 
   /**
+   * Get the private key for internal use by child classes
+   *
+   * @returns The private key instance or undefined if not set
+   * @internal
+   */
+  protected getPrivateKey(): Uint8Array | undefined {
+    return this._privateKey ? new Uint8Array(this._privateKey.bytes) : undefined
+  }
+
+  /**
    * Set or change the private key
    *
    * **Security Note:**
@@ -364,5 +379,52 @@ export class NodeWallet extends BaseWallet {
     const keyPair = await cryptoProvider.generateKeyPair()
     const privateKeyHex = hexEncode(keyPair.privateKey.bytes)
     return new NodeWallet(provider, privateKeyHex)
+  }
+
+  /**
+   * Encrypts the wallet's private key to a keystore format
+   *
+   * Creates an encrypted keystore (Web3 Secret Storage format) that can be
+   * saved to disk and later decrypted using `WalletFactory.fromEncryptedJson()`.
+   *
+   * **Security Notes:**
+   * - Use a strong password with mixed characters, numbers, and symbols
+   * - The scryptN parameter controls encryption strength vs speed
+   * - Higher scryptN = more secure but slower (default: 262144)
+   * - Never store the password with the keystore file
+   *
+   * @param password - The password to encrypt the keystore
+   * @param options - Optional scrypt parameters for encryption strength
+   * @param options.scryptN - Work factor (default: 262144, min: 4096)
+   * @returns A promise that resolves to the encrypted keystore object
+   *
+   * @throws {WalletError} If wallet is not connected
+   *
+   * @example
+   * ```typescript
+   * const wallet = await NodeWallet.generate(provider)
+   * await wallet.connect()
+   *
+   * // Encrypt with default parameters (most secure)
+   * const keystore = await wallet.encrypt('my-secure-password')
+   *
+   * // Save to file
+   * await fs.writeFile('keystore.json', JSON.stringify(keystore, null, 2))
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Encrypt with custom parameters (faster, for testing)
+   * const testKeystore = await wallet.encrypt('password', {
+   *   scryptN: 4096  // Faster but less secure
+   * })
+   * ```
+   */
+  async encrypt(password: string, options?: EncryptOptions): Promise<Keystore> {
+    if (!this.isConnected() || !this._privateKey) {
+      throw new WalletError('Wallet must be connected to encrypt')
+    }
+
+    return encryptToKeystore(this._privateKey, password, this._address, options)
   }
 }
