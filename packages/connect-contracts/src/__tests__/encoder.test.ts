@@ -765,6 +765,23 @@ describe('ABI-Aware Encoder', () => {
       )
     })
 
+    it('should throw on invalid hex characters', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      // Contains 'zz' which are not valid hex characters
+      const hexInput = 'zz00000000000000000000000000000000000000000000000000000000000000'
+      expect(() => encoder.encodeValue(hexInput, 'array32<u8>')).toThrow(
+        'Invalid hex string: contains non-hexadecimal characters',
+      )
+    })
+
     it('should encode array4<u8> from Uint8Array', async () => {
       const { ABIEncoder } = await import('../encoder/abi-encoder')
       const mockABI: ContractABI = {

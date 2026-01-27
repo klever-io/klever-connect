@@ -422,6 +422,9 @@ function encodeFixedArray(
         `Expected hex string of ${size * 2} characters (${size} bytes), got ${hex.length}`,
       )
     }
+    if (!/^[0-9a-fA-F]*$/.test(hex)) {
+      throw new Error('Invalid hex string: contains non-hexadecimal characters')
+    }
     const result = new Uint8Array(size)
     for (let i = 0; i < size; i++) {
       result[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
