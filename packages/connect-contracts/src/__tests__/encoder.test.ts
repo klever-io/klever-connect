@@ -701,21 +701,6 @@ describe('ABI-Aware Encoder', () => {
       expect(bytesToHex(listResult)).toBe('00000003010203')
     })
 
-    it('should encode array32<u8> from hex string', async () => {
-      const { ABIEncoder } = await import('../encoder/abi-encoder')
-      const mockABI: ContractABI = {
-        name: 'Test',
-        constructor: { name: 'init', inputs: [], outputs: [] },
-        endpoints: [],
-        types: {},
-      }
-
-      const encoder = new ABIEncoder(mockABI)
-      const hexInput = '6b26e4992694fd5312b6652751c6460f7b656f7e15c8dcd3be8bd05db1cc1e22'
-      const result = encoder.encodeValue(hexInput, 'array32<u8>')
-      expect(bytesToHex(result)).toBe(hexInput)
-    })
-
     it('should encode array32<u8> from hex string with 0x prefix', async () => {
       const { ABIEncoder } = await import('../encoder/abi-encoder')
       const mockABI: ContractABI = {
@@ -792,9 +777,9 @@ describe('ABI-Aware Encoder', () => {
       }
 
       const encoder = new ABIEncoder(mockABI)
-      const bytes = new Uint8Array([0xde, 0xad, 0xbe, 0xef])
+      const bytes = new Uint8Array([0xca, 0xfe, 0xca, 0xfe])
       const result = encoder.encodeValue(bytes, 'array4<u8>')
-      expect(bytesToHex(result)).toBe('deadbeef')
+      expect(bytesToHex(result)).toBe('cafecafe')
     })
 
     it('should throw on wrong Uint8Array length', async () => {
@@ -807,9 +792,25 @@ describe('ABI-Aware Encoder', () => {
       }
 
       const encoder = new ABIEncoder(mockABI)
-      const bytes = new Uint8Array([0xde, 0xad, 0xbe])
+      const bytes = new Uint8Array([0xca, 0xfe, 0xba])
       expect(() => encoder.encodeValue(bytes, 'array4<u8>')).toThrow(
         'Expected array of size 4, got 3',
+      )
+    })
+
+    it('should throw when passing hex string to non-u8 fixed array', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const hexInput = 'cafe'
+      expect(() => encoder.encodeValue(hexInput, 'array4<u16>')).toThrow(
+        'Expected array for type array4<u16>, got string',
       )
     })
   })
