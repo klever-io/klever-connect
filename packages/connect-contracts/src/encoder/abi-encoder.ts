@@ -434,12 +434,10 @@ function encodeFixedArray(
 
   // Handle Uint8Array input for u8 arrays
   if (innerType === 'u8' && values instanceof Uint8Array) {
-    if ((values as unknown as Uint8Array).length !== size) {
-      throw new Error(
-        `Expected array of size ${size}, got ${(values as unknown as Uint8Array).length}`,
-      )
+    if (values.length !== size) {
+      throw new Error(`Expected array of size ${size}, got ${values.length}`)
     }
-    return values as unknown as Uint8Array
+    return values
   }
 
   // Handle array input
