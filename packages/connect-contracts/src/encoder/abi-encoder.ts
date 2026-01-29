@@ -408,16 +408,14 @@ function encodeList(values: unknown[], innerType: string, abi: ContractABI): Uin
  * Encode fixed-size array (arrayN<T>)
  */
 function encodeFixedArray(
-  values: unknown[],
+  values: unknown[] | string | Uint8Array,
   innerType: string,
   size: number,
   abi: ContractABI,
 ): Uint8Array {
   // Handle hex string input for u8 arrays (common for hashes, etc.)
   if (innerType === 'u8' && typeof values === 'string') {
-    const hex = (values as unknown as string).startsWith('0x')
-      ? (values as unknown as string).slice(2)
-      : (values as unknown as string)
+    const hex = values.startsWith('0x') ? values.slice(2) : values
     if (hex.length !== size * 2) {
       throw new Error(
         `Expected hex string of ${size * 2} characters (${size} bytes), got ${hex.length}`,
