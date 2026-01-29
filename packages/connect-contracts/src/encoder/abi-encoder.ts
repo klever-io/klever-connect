@@ -53,6 +53,7 @@ import {
   encodeAddress,
   encodeString,
   encodeBytes,
+  hexToBytes,
 } from './param-encoder'
 
 /**
@@ -425,11 +426,7 @@ function encodeFixedArray(
     if (!/^[0-9a-fA-F]*$/.test(hex)) {
       throw new Error('Invalid hex string: contains non-hexadecimal characters')
     }
-    const result = new Uint8Array(size)
-    for (let i = 0; i < size; i++) {
-      result[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
-    }
-    return result
+    return hexToBytes(hex)
   }
 
   // Handle Uint8Array input for u8 arrays
