@@ -1,5 +1,12 @@
 # @klever/connect
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [d869790]
+  - @klever/connect-contracts@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

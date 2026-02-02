@@ -1,6 +1,6 @@
 {
   "name": "@klever/connect-contracts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Smart contract interaction for Klever blockchain",
   "author": "Klever",
   "license": "MIT",

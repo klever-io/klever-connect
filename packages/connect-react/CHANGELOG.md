@@ -1,5 +1,13 @@
 # @klever/connect-react
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [d869790]
+  - @klever/connect-contracts@0.1.2
+  - @klever/connect@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes

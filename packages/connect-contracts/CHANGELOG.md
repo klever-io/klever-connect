@@ -1,5 +1,11 @@
 # @klever/connect-contracts
 
+## 0.1.2
+
+### Patch Changes
+
+- d869790: Fix encoding of `arrayN<u8>` types in ABI encoder to accept hex strings and `Uint8Array` inputs, with proper validation for length and hex characters
+
 ## 0.1.1
 
 ### Patch Changes
