@@ -53,6 +53,7 @@ import {
   encodeAddress,
   encodeString,
   encodeBytes,
+  hexToBytes,
 } from './param-encoder'
 
 /**
@@ -407,11 +408,38 @@ function encodeList(values: unknown[], innerType: string, abi: ContractABI): Uin
  * Encode fixed-size array (arrayN<T>)
  */
 function encodeFixedArray(
-  values: unknown[],
+  values: unknown[] | string | Uint8Array,
   innerType: string,
   size: number,
   abi: ContractABI,
 ): Uint8Array {
+  // Handle hex string input for u8 arrays (common for hashes, etc.)
+  if (innerType === 'u8' && typeof values === 'string') {
+    const hex = values.startsWith('0x') ? values.slice(2) : values
+    if (hex.length !== size * 2) {
+      throw new Error(
+        `Expected hex string of ${size * 2} characters (${size} bytes), got ${hex.length}`,
+      )
+    }
+    if (!/^[0-9a-fA-F]*$/.test(hex)) {
+      throw new Error('Invalid hex string: contains non-hexadecimal characters')
+    }
+    return hexToBytes(hex)
+  }
+
+  // Handle Uint8Array input for u8 arrays
+  if (innerType === 'u8' && values instanceof Uint8Array) {
+    if (values.length !== size) {
+      throw new Error(`Expected array of size ${size}, got ${values.length}`)
+    }
+    return values
+  }
+
+  // Handle array input
+  if (!Array.isArray(values)) {
+    throw new Error(`Expected array for type array${size}<${innerType}>, got ${typeof values}`)
+  }
+
   if (values.length !== size) {
     throw new Error(`Expected array of size ${size}, got ${values.length}`)
   }
