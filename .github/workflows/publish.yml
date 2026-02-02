@@ -60,6 +60,12 @@ jobs:
           # Get version from main package
           VERSION=$(node -p "require('./packages/connect/package.json').version")
 
+          # Skip if release already exists
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Release v$VERSION already exists, skipping"
+            exit 0
+          fi
+
           # Create release
           gh release create "v$VERSION" \
             --title "v$VERSION" \
