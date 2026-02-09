@@ -378,7 +378,7 @@ export function decodeBytes(bytes: Uint8Array, offset = 0, hasLengthPrefix = fal
  * Decode base64 string to bytes
  *
  * Decodes a base64-encoded string to a Uint8Array.
- * Works in both browser and Node.js environments.
+ * Works in both browser and Node.js environments using atob.
  *
  * @param base64 - Base64-encoded string
  * @returns Decoded bytes
@@ -406,26 +406,20 @@ export function decodeBytes(bytes: Uint8Array, offset = 0, hasLengthPrefix = fal
  * ```
  */
 export function decodeBase64(base64: string): Uint8Array {
-  // Use native atob in browser, Buffer in Node
-  if (typeof globalThis !== 'undefined' && 'atob' in globalThis) {
-    const atob = (globalThis as typeof globalThis & { atob: (str: string) => string }).atob
-    const binaryString = atob(base64)
-    const bytes = new Uint8Array(binaryString.length)
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i)
-    }
-    return bytes
-  } else {
-    // Node.js environment
-    return new Uint8Array(Buffer.from(base64, 'base64'))
+  // Use atob (available in browsers and modern Node.js)
+  const binaryString = atob(base64)
+  const bytes = new Uint8Array(binaryString.length)
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i)
   }
+  return bytes
 }
 
 /**
  * Encode bytes to base64
  *
  * Encodes a Uint8Array to a base64 string.
- * Works in both browser and Node.js environments.
+ * Works in both browser and Node.js environments using btoa.
  *
  * @param bytes - Bytes to encode
  * @returns Base64-encoded string
@@ -451,16 +445,13 @@ export function decodeBase64(base64: string): Uint8Array {
  * ```
  */
 export function encodeBase64(bytes: Uint8Array): string {
-  if (typeof globalThis !== 'undefined' && 'btoa' in globalThis) {
-    const btoa = (globalThis as typeof globalThis & { btoa: (str: string) => string }).btoa
-    const binaryString = Array.from(bytes)
-      .map((byte) => String.fromCharCode(byte))
-      .join('')
-    return btoa(binaryString)
-  } else {
-    // Node.js environment
-    return Buffer.from(bytes).toString('base64')
+  // Convert Uint8Array to binary string
+  let binaryString = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binaryString += String.fromCharCode(bytes[i] as number)
   }
+  // Use btoa (available in browsers and modern Node.js)
+  return btoa(binaryString)
 }
 
 function encodeBech32(data: Uint8Array): string {

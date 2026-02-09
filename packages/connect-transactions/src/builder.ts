@@ -18,7 +18,7 @@ import type {
 import { isValidAddress } from '@klever/connect-core'
 import { Transaction } from './transaction'
 
-import { bech32Decode } from '@klever/connect-encoding'
+import { bech32Decode, base64Encode } from '@klever/connect-encoding'
 import type { AmountLike } from '@klever/connect-provider'
 import type { IKDAFee } from '@klever/connect-encoding'
 
@@ -1034,7 +1034,8 @@ export class TransactionBuilder {
     if (this._permissionId !== undefined) request.permissionId = this._permissionId
     // if smart contract transaction, request data must be converted to base64 if not already
     if (this.contracts.some((c) => c.contractType === 63) && this._data !== undefined) {
-      request.data = this._data.map((d) => Buffer.from(d, 'utf-8').toString('base64'))
+      const encoder = new TextEncoder()
+      request.data = this._data.map((d) => base64Encode(encoder.encode(d)))
     } else if (this._data !== undefined) {
       request.data = this._data
     }

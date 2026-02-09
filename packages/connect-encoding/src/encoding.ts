@@ -168,6 +168,8 @@ export function bech32Decode(address: string): { prefix: string; data: Uint8Arra
  * protocols or storing binary data in JSON/text formats. It represents binary data
  * using 64 printable ASCII characters.
  *
+ * This implementation is browser-compatible, using btoa in browser environments.
+ *
  * @param data - The binary data to encode as a Uint8Array
  * @returns The Base64 encoded string representation
  *
@@ -184,7 +186,13 @@ export function bech32Decode(address: string): { prefix: string; data: Uint8Arra
  * ```
  */
 export function base64Encode(data: Uint8Array): string {
-  return Buffer.from(data).toString('base64')
+  // Convert Uint8Array to binary string
+  let binaryString = ''
+  for (let i = 0; i < data.length; i++) {
+    binaryString += String.fromCharCode(data[i] as number)
+  }
+  // Use btoa (available in browsers and modern Node.js)
+  return btoa(binaryString)
 }
 
 /**
@@ -192,6 +200,8 @@ export function base64Encode(data: Uint8Array): string {
  *
  * Handles standard Base64 encoding with padding. Useful for decoding data
  * received from APIs or stored in text formats.
+ *
+ * This implementation is browser-compatible, using atob in browser environments.
  *
  * @param str - The Base64 encoded string to decode
  * @returns The decoded binary data as a Uint8Array
@@ -211,5 +221,11 @@ export function base64Encode(data: Uint8Array): string {
  * ```
  */
 export function base64Decode(str: string): Uint8Array {
-  return Buffer.from(str, 'base64')
+  // Use atob (available in browsers and modern Node.js)
+  const binaryString = atob(str)
+  const bytes = new Uint8Array(binaryString.length)
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i)
+  }
+  return bytes
 }

@@ -6,7 +6,7 @@ import {
   type ITransaction,
   ContractType,
 } from '@klever/connect-encoding'
-import { hexEncode, hashBlake2b } from '@klever/connect-encoding'
+import { hexEncode, hexDecode, hashBlake2b } from '@klever/connect-encoding'
 
 /**
  * Transaction class representing a Klever blockchain transaction
@@ -259,7 +259,7 @@ export class Transaction extends ProtoTransaction {
    * ```
    */
   static fromHex(hex: string): Transaction {
-    const bytes = Buffer.from(hex, 'hex')
+    const bytes = hexDecode(hex)
     const decoded = ProtoTransaction.decode(bytes)
     return new Transaction(decoded)
   }

@@ -7,6 +7,7 @@
 import type { ContractABI, ABIParameter, ABITypeDefinition } from '../types/abi'
 import { ABIParser } from '../abi/parser'
 import { decodeAddress, decodeString, decodeBytes, decodeBase64 } from './result-decoder'
+import { hexEncode } from '@klever/connect-encoding'
 
 /**
  * Decoded value with metadata
@@ -450,7 +451,7 @@ export function decodeResults(
       // decode to bytes if string
       const valueBytes = typeof item === 'string' ? decodeBase64(item) : item
       // encode Uint8Array to hex for easier debugging
-      return Buffer.from(valueBytes).toString('hex')
+      return hexEncode(valueBytes)
     })
   }
 }
@@ -606,7 +607,7 @@ export function decodeResultsWithMetadata(
 
       return {
         type: param.type,
-        value: Buffer.from(valueBytes).toString('hex'),
+        value: hexEncode(valueBytes),
         raw: item, // Keep original format
       }
     }
