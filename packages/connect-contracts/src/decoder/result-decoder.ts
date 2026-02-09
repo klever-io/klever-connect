@@ -42,7 +42,11 @@
  * ```
  */
 
-import { bech32Encode } from '@klever/connect-encoding'
+import {
+  bech32Encode,
+  base64Encode as base64EncodeUtil,
+  base64Decode as base64DecodeUtil,
+} from '@klever/connect-encoding'
 import type { DecodedResult } from '../types/contract'
 
 /**
@@ -378,7 +382,7 @@ export function decodeBytes(bytes: Uint8Array, offset = 0, hasLengthPrefix = fal
  * Decode base64 string to bytes
  *
  * Decodes a base64-encoded string to a Uint8Array.
- * Works in both browser and Node.js environments using atob.
+ * Uses @scure/base for consistent cross-platform support.
  *
  * @param base64 - Base64-encoded string
  * @returns Decoded bytes
@@ -406,20 +410,14 @@ export function decodeBytes(bytes: Uint8Array, offset = 0, hasLengthPrefix = fal
  * ```
  */
 export function decodeBase64(base64: string): Uint8Array {
-  // Use atob (available in browsers and modern Node.js)
-  const binaryString = atob(base64)
-  const bytes = new Uint8Array(binaryString.length)
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i)
-  }
-  return bytes
+  return base64DecodeUtil(base64)
 }
 
 /**
  * Encode bytes to base64
  *
  * Encodes a Uint8Array to a base64 string.
- * Works in both browser and Node.js environments using btoa.
+ * Uses @scure/base for consistent cross-platform support.
  *
  * @param bytes - Bytes to encode
  * @returns Base64-encoded string
@@ -445,13 +443,7 @@ export function decodeBase64(base64: string): Uint8Array {
  * ```
  */
 export function encodeBase64(bytes: Uint8Array): string {
-  // Convert Uint8Array to binary string
-  let binaryString = ''
-  for (let i = 0; i < bytes.length; i++) {
-    binaryString += String.fromCharCode(bytes[i] as number)
-  }
-  // Use btoa (available in browsers and modern Node.js)
-  return btoa(binaryString)
+  return base64EncodeUtil(bytes)
 }
 
 function encodeBech32(data: Uint8Array): string {

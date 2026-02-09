@@ -1,4 +1,4 @@
-import { base58, bech32 } from '@scure/base'
+import { base58, base64, bech32 } from '@scure/base'
 
 const KLEVER_ADDRESS_PREFIX = 'klv'
 const KLEVER_ADDRESS_LENGTH = 32
@@ -86,13 +86,16 @@ export function hexEncode(data: Uint8Array): string {
  * ```
  */
 export function hexDecode(hex: string): Uint8Array {
-  if (hex.length % 2 !== 0) {
+  // Strip 0x prefix if present
+  const cleanHex = hex.startsWith('0x') || hex.startsWith('0X') ? hex.slice(2) : hex
+
+  if (cleanHex.length % 2 !== 0) {
     throw new Error('Hex string must have even length')
   }
 
-  const bytes = new Uint8Array(hex.length / 2)
+  const bytes = new Uint8Array(cleanHex.length / 2)
   for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(hex.substr(i * 2, 2), 16)
+    bytes[i] = parseInt(cleanHex.substring(i * 2, i * 2 + 2), 16)
   }
   return bytes
 }
@@ -168,7 +171,7 @@ export function bech32Decode(address: string): { prefix: string; data: Uint8Arra
  * protocols or storing binary data in JSON/text formats. It represents binary data
  * using 64 printable ASCII characters.
  *
- * This implementation is browser-compatible, using btoa in browser environments.
+ * Uses @scure/base for consistent cross-platform support.
  *
  * @param data - The binary data to encode as a Uint8Array
  * @returns The Base64 encoded string representation
@@ -186,13 +189,7 @@ export function bech32Decode(address: string): { prefix: string; data: Uint8Arra
  * ```
  */
 export function base64Encode(data: Uint8Array): string {
-  // Convert Uint8Array to binary string
-  let binaryString = ''
-  for (let i = 0; i < data.length; i++) {
-    binaryString += String.fromCharCode(data[i] as number)
-  }
-  // Use btoa (available in browsers and modern Node.js)
-  return btoa(binaryString)
+  return base64.encode(data)
 }
 
 /**
@@ -201,7 +198,7 @@ export function base64Encode(data: Uint8Array): string {
  * Handles standard Base64 encoding with padding. Useful for decoding data
  * received from APIs or stored in text formats.
  *
- * This implementation is browser-compatible, using atob in browser environments.
+ * Uses @scure/base for consistent cross-platform support.
  *
  * @param str - The Base64 encoded string to decode
  * @returns The decoded binary data as a Uint8Array
@@ -221,11 +218,5 @@ export function base64Encode(data: Uint8Array): string {
  * ```
  */
 export function base64Decode(str: string): Uint8Array {
-  // Use atob (available in browsers and modern Node.js)
-  const binaryString = atob(str)
-  const bytes = new Uint8Array(binaryString.length)
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i)
-  }
-  return bytes
+  return base64.decode(str)
 }
