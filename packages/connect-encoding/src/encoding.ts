@@ -95,7 +95,12 @@ export function hexDecode(hex: string): Uint8Array {
 
   const bytes = new Uint8Array(cleanHex.length / 2)
   for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(cleanHex.substring(i * 2, i * 2 + 2), 16)
+    const byteStr = cleanHex.substring(i * 2, i * 2 + 2)
+    const byteValue = parseInt(byteStr, 16)
+    if (Number.isNaN(byteValue)) {
+      throw new Error(`Hex string contains non-hex characters at position ${i * 2}: "${byteStr}"`)
+    }
+    bytes[i] = byteValue
   }
   return bytes
 }
