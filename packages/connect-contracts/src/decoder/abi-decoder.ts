@@ -112,7 +112,7 @@ export function decodeByType(
     const result = decodeVariableInt(bytes, offset, nested, 2)
     return { value: result.value as number, type: 'u16', consumed: result.consumed }
   }
-  if (type === 'u32') {
+  if (type === 'u32' || type === 'usize') {
     const result = decodeVariableInt(bytes, offset, nested, 4)
     return { value: result.value as number, type: 'u32', consumed: result.consumed }
   }
@@ -135,7 +135,7 @@ export function decodeByType(
     const signed = unsigned > 32767 ? unsigned - 65536 : unsigned
     return { value: signed, type: 'i16', consumed: result.consumed }
   }
-  if (type === 'i32') {
+  if (type === 'i32' || type === 'isize') {
     const result = decodeVariableInt(bytes, offset, nested, 4)
     const unsigned = result.value as number
     const signed = unsigned > 2147483647 ? unsigned - 4294967296 : unsigned
@@ -150,7 +150,7 @@ export function decodeByType(
     return { value: signed, type: 'i64', consumed: result.consumed }
   }
 
-  if (type === 'bool') {
+  if (type === 'bool' || type === 'boolean') {
     // Bool is always 1 byte (no length prefix even when nested)
     if (offset >= bytes.length) {
       throw new Error('Insufficient bytes to decode bool')
@@ -229,6 +229,16 @@ export function decodeByType(
     const innerType = type.slice(9, -1) // Extract T from variadic<T>
     // Each variadic item is decoded individually as top-level (nested = false)
     return decodeByType(bytes, innerType, abi, offset, nested)
+  }
+
+  // Handle hex passthrough — return raw bytes as hex string
+  if (type === 'hex') {
+    const length = bytes.length - offset
+    const hexBytes = bytes.slice(offset, offset + length)
+    const hex = Array.from(hexBytes)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    return { value: hex, type: 'hex', consumed: length }
   }
 
   // Handle unit type ()

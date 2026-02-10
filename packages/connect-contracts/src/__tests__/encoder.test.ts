@@ -397,6 +397,111 @@ describe('ABI-Aware Encoder', () => {
     })
   })
 
+  describe('Type aliases', () => {
+    it('should encode usize as u32', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(bytesToHex(encoder.encodeValue(100, 'usize'))).toBe(
+        bytesToHex(encoder.encodeValue(100, 'u32')),
+      )
+      expect(bytesToHex(encoder.encodeValue(0, 'usize'))).toBe('00')
+      expect(bytesToHex(encoder.encodeValue(0xffffffff, 'usize'))).toBe('ffffffff')
+    })
+
+    it('should encode isize as i32', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(bytesToHex(encoder.encodeValue(100, 'isize'))).toBe(
+        bytesToHex(encoder.encodeValue(100, 'i32')),
+      )
+      expect(bytesToHex(encoder.encodeValue(-100, 'isize'))).toBe(
+        bytesToHex(encoder.encodeValue(-100, 'i32')),
+      )
+      expect(bytesToHex(encoder.encodeValue(-100, 'isize'))).toBe('ffffff9c')
+    })
+
+    it('should encode boolean as bool', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(bytesToHex(encoder.encodeValue(true, 'boolean'))).toBe('01')
+      expect(bytesToHex(encoder.encodeValue(false, 'boolean'))).toBe('00')
+      expect(bytesToHex(encoder.encodeValue(true, 'boolean'))).toBe(
+        bytesToHex(encoder.encodeValue(true, 'bool')),
+      )
+    })
+  })
+
+  describe('Hex passthrough', () => {
+    it('should encode hex string as-is', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      const result = encoder.encodeValue('cafebabe', 'hex')
+      expect(bytesToHex(result)).toBe('cafebabe')
+    })
+
+    it('should encode hex string with 0x prefix', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      const result = encoder.encodeValue('0xdeadbeef', 'hex')
+      expect(bytesToHex(result)).toBe('deadbeef')
+    })
+
+    it('should encode empty hex string', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      const result = encoder.encodeValue('', 'hex')
+      expect(bytesToHex(result)).toBe('')
+    })
+  })
+
   describe('Fixed-size arrays (encodeFixedArray)', () => {
     it('should encode array3<u8>', async () => {
       const { ABIEncoder } = await import('../encoder/abi-encoder')
