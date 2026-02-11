@@ -1,10 +1,13 @@
 import { blake2b } from '@noble/hashes/blake2'
+import { hexEncode } from './encoding'
 
 /**
  * Encodes a string to hexadecimal format with '0x' prefix
  *
  * Converts a UTF-8 string to its hexadecimal representation. The output
  * always starts with '0x' prefix for Ethereum-style compatibility.
+ *
+ * This implementation is browser-compatible.
  *
  * @param value - The string to encode to hexadecimal
  * @returns The hexadecimal string with '0x' prefix
@@ -20,7 +23,9 @@ import { blake2b } from '@noble/hashes/blake2'
  * ```
  */
 export function encodeHex(value: string): string {
-  return '0x' + Buffer.from(value).toString('hex')
+  // Convert UTF-8 string to bytes using TextEncoder (browser-compatible)
+  const bytes = new TextEncoder().encode(value)
+  return '0x' + hexEncode(bytes)
 }
 
 /**

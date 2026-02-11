@@ -65,6 +65,7 @@ import type { Transaction } from '@klever/connect-transactions'
 import type { KleverAddress, Network } from '@klever/connect-core'
 import type { TransactionHash } from '@klever/connect-core'
 import type { TransactionSubmitResult, ITransactionResponse } from '@klever/connect-provider'
+import { base64Encode } from '@klever/connect-encoding'
 import {
   EventParser,
   type ContractEvent,
@@ -245,7 +246,7 @@ export class Contract {
       const encodedArgs = this._encodeArguments(args, functionName)
 
       // Convert encoded arguments to base64 strings for API
-      const base64Args = encodedArgs.map((arg) => Buffer.from(arg).toString('base64'))
+      const base64Args = encodedArgs.map((arg) => base64Encode(arg))
 
       // Call queryContract from provider with proper params
       const result = await this.provider.queryContract({
@@ -596,7 +597,7 @@ export class Contract {
 
     // Use the same encoding logic as _createQueryMethod
     const encodedArgs = this._encodeArguments(args, functionName)
-    const base64Args = encodedArgs.map((arg) => Buffer.from(arg).toString('base64'))
+    const base64Args = encodedArgs.map((arg) => base64Encode(arg))
 
     // Call queryContract from provider (same as _createQueryMethod)
     const result = await this.provider.queryContract({

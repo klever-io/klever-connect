@@ -16,6 +16,7 @@ import {
   type EncryptOptions,
   type Keystore,
 } from '@klever/connect-crypto'
+import { hexEncode, base64Encode } from '@klever/connect-encoding'
 import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-types'
 import type { WalletConfig } from '../types/wallet'
 import { BaseWallet } from '../base'
@@ -460,8 +461,7 @@ export class BrowserWallet extends BaseWallet {
     }
 
     try {
-      const messageStr =
-        typeof message === 'string' ? message : Buffer.from(message).toString('hex')
+      const messageStr = typeof message === 'string' ? message : hexEncode(message)
 
       const signatureStr = await this._kleverWeb.signMessage(messageStr)
       // Extension returns hex or base64 - try both
@@ -1029,10 +1029,8 @@ export class BrowserWallet extends BaseWallet {
       if (func && args && Array.isArray(args)) {
         const funcStr = typeof func === 'string' ? func : JSON.stringify(func)
         const dataString = args.length > 0 ? `${funcStr}@${args.join('@')}` : funcStr
-        const callInput =
-          typeof Buffer !== 'undefined'
-            ? Buffer.from(dataString).toString('base64')
-            : btoa(dataString)
+        // Use base64Encode for consistent cross-platform encoding
+        const callInput = base64Encode(new TextEncoder().encode(dataString))
         return [callInput]
       }
     } else {
