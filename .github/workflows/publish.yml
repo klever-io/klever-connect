@@ -55,7 +55,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
 
-      - name: Create GitHub Release
+      - name: Create Tag and GitHub Release
         run: |
           # Get version from main package
           VERSION=$(node -p "require('./packages/connect/package.json').version")
@@ -64,6 +64,13 @@ jobs:
           if gh release view "v$VERSION" > /dev/null 2>&1; then
             echo "Release v$VERSION already exists, skipping"
             exit 0
+          fi
+
+          # Create and push tag if it doesn't exist
+          if ! git rev-parse "v$VERSION" > /dev/null 2>&1; then
+            git tag "v$VERSION"
+            git push origin "v$VERSION"
+            echo "Created tag v$VERSION"
           fi
 
           # Create release
