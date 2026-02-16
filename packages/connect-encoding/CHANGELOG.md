@@ -1,5 +1,11 @@
 # @klever/connect-encoding
 
+## 0.1.2
+
+### Patch Changes
+
+- 637a53e: Replace Node.js Buffer API with browser-compatible alternatives for Web/Node compatibility
+
 ## 0.1.1
 
 ### Patch Changes

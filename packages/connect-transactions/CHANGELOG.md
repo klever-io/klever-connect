@@ -1,5 +1,16 @@
 # @klever/connect-transactions
 
+## 0.1.2
+
+### Patch Changes
+
+- 637a53e: Replace Node.js Buffer API with browser-compatible alternatives for Web/Node compatibility
+- Updated dependencies [637a53e]
+  - @klever/connect-encoding@0.1.2
+  - @klever/connect-core@0.1.2
+  - @klever/connect-crypto@0.1.2
+  - @klever/connect-provider@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

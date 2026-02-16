@@ -1,5 +1,12 @@
 # @klever/connect-provider
 
+## 0.1.2
+
+### Patch Changes
+
+- @klever/connect-core@0.1.2
+- @klever/connect-crypto@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

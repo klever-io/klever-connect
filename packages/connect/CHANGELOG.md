@@ -1,5 +1,18 @@
 # @klever/connect
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [637a53e]
+  - @klever/connect-encoding@0.1.2
+  - @klever/connect-contracts@0.1.3
+  - @klever/connect-transactions@0.1.2
+  - @klever/connect-wallet@0.1.2
+  - @klever/connect-core@0.1.2
+  - @klever/connect-crypto@0.1.2
+  - @klever/connect-provider@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes
