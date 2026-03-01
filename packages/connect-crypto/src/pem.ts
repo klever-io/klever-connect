@@ -66,7 +66,7 @@ function parsePemBlocks(content: string): PemBlock[] {
         currentBlock.bytes = bytes
         blocks.push(currentBlock as PemBlock)
       } catch (error) {
-        throw new Error(`Invalid data in PEM block: ${String(error)}`)
+        throw new Error(`Invalid data in PEM block: ${String(error)}`, { cause: error })
       }
 
       inBlock = false
@@ -190,7 +190,7 @@ async function decryptPemBlock(block: PemBlock, password: string): Promise<PemBl
       bytes: new Uint8Array(plaintext),
     }
   } catch (error) {
-    throw new Error(`Failed to decrypt PEM block: ${String(error)}`)
+    throw new Error(`Failed to decrypt PEM block: ${String(error)}`, { cause: error })
   }
 }
 
@@ -395,6 +395,6 @@ export async function loadPrivateKeyFromPemFile(
     const content = await fs.readFile(filePath, 'utf-8')
     return loadPrivateKeyFromPem(content, options)
   } catch (error) {
-    throw new Error(`Failed to read PEM file: ${String(error)}`)
+    throw new Error(`Failed to read PEM file: ${String(error)}`, { cause: error })
   }
 }
