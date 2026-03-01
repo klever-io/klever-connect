@@ -1,5 +1,19 @@
 # @klever/connect-react
 
+## 0.1.5
+
+### Patch Changes
+
+- 5e09d0a: Fix Dependabot security alerts by updating dependencies and resolving vulnerabilities in transitive packages
+- Updated dependencies [5e09d0a]
+- Updated dependencies [4f27155]
+  - @klever/connect@0.1.4
+  - @klever/connect-core@0.1.3
+  - @klever/connect-provider@0.1.3
+  - @klever/connect-transactions@0.1.3
+  - @klever/connect-contracts@0.1.4
+  - @klever/connect-wallet@0.1.3
+
 ## 0.1.4
 
 ### Patch Changes
