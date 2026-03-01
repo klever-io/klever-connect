@@ -4,7 +4,6 @@
   "description": "Smart contract interaction for Klever blockchain",
   "author": "Klever",
   "license": "MIT",
-  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
