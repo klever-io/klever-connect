@@ -1,0 +1,202 @@
+language: en-US
+tone_instructions: >
+  Be direct and concise. Focus on actionable feedback.
+  Skip compliments and filler — just point out issues and suggest fixes.
+early_access: false
+enable_free_tier: true
+
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: '@coderabbitai summary'
+  poem: false
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  changed_files_summary: true
+  review_status: true
+  abort_on_close: true
+  suggested_labels: true
+  auto_apply_labels: true
+  labeling_instructions:
+    - label: 'core'
+      instructions: 'Apply when changes touch packages/connect-core/'
+    - label: 'crypto'
+      instructions: 'Apply when changes touch packages/connect-crypto/'
+    - label: 'encoding'
+      instructions: 'Apply when changes touch packages/connect-encoding/'
+    - label: 'provider'
+      instructions: 'Apply when changes touch packages/connect-provider/'
+    - label: 'transactions'
+      instructions: 'Apply when changes touch packages/connect-transactions/'
+    - label: 'contracts'
+      instructions: 'Apply when changes touch packages/connect-contracts/'
+    - label: 'wallet'
+      instructions: 'Apply when changes touch packages/connect-wallet/'
+    - label: 'react'
+      instructions: 'Apply when changes touch packages/connect-react/'
+    - label: 'ci'
+      instructions: 'Apply when changes touch .github/workflows/ or CI configuration files'
+    - label: 'docs'
+      instructions: 'Apply when changes are documentation-only (README, CLAUDE.md, examples, JSDoc)'
+    - label: 'security'
+      instructions: 'Apply when changes involve cryptographic operations, key management, or signing'
+    - label: 'breaking-change'
+      instructions: 'Apply when changes modify public API signatures, remove exports, or change type definitions'
+
+  path_filters:
+    - '!dist/**'
+    - '!node_modules/**'
+    - '!**/dist/**'
+    - '!**/node_modules/**'
+    - '!**/*.lock'
+    - '!pnpm-lock.yaml'
+    - '!coverage/**'
+    - '!**/coverage/**'
+    - '!**/generated/**'
+
+  path_instructions:
+    - path: 'packages/connect-core/src/**/*.ts'
+      instructions: >
+        Core types, constants, and error definitions for the SDK.
+        Uses branded types (Address, KLV, TxHash) for type safety — ensure
+        branded type usage is consistent and not bypassed with casts.
+        Error classes must extend KleverError with unique error codes.
+        This package has zero runtime dependencies — flag any new imports
+        from other @klever packages or heavy external dependencies.
+
+    - path: 'packages/connect-encoding/src/**/*.ts'
+      instructions: >
+        Protocol Buffer encoding/decoding layer. Handles serialization
+        of transactions to/from binary format. Must support both Node.js
+        Buffer and browser Uint8Array (web-compatible). Flag any use of
+        Node.js-only APIs without proper polyfills or environment checks.
+
+    - path: 'packages/connect-crypto/src/**/*.ts'
+      instructions: >
+        Cryptographic operations: key generation, signing, HD wallets,
+        keystores. Security-critical code — flag any use of Math.random(),
+        non-constant-time comparisons on secrets, or private key exposure
+        in logs/errors. All crypto operations must use secure random
+        (crypto.getRandomValues or equivalent). Key material must be
+        zeroed after use where possible.
+
+    - path: 'packages/connect-provider/src/**/*.ts'
+      instructions: >
+        Network communication layer with Klever blockchain nodes.
+        HTTP client with caching, retry logic, and multi-network support
+        (mainnet, testnet, devnet). Ensure proper error handling for
+        network failures, timeouts, and rate limiting. API response
+        types must match the actual Klever node API format.
+
+    - path: 'packages/connect-transactions/src/**/*.ts'
+      instructions: >
+        Offline transaction building. Transactions must be constructable
+        without network access. Supports all Klever transaction types
+        (Transfer, Freeze, Unfreeze, Delegate, etc.). Proto encoding
+        is used for serialization. Ensure nonce and chain ID are properly
+        handled. Flag any implicit network calls in builder methods.
+
+    - path: 'packages/connect-contracts/src/**/*.ts'
+      instructions: >
+        Smart contract interaction layer with ABI parsing, parameter
+        encoding/decoding, event parsing, and contract factory.
+        ABI types must be validated before encoding. Parameter encoding
+        must handle all KleverVM types correctly. Flag any missing type
+        coverage or incorrect byte encoding.
+
+    - path: 'packages/connect-wallet/src/**/*.ts'
+      instructions: >
+        Wallet implementations (browser extension, base signer).
+        Must follow the AbstractSigner interface pattern. Browser wallet
+        integration should handle extension not installed, user rejection,
+        and account switching. Never store private keys in localStorage
+        or sessionStorage.
+
+    - path: 'packages/connect-react/src/**/*.{ts,tsx}'
+      instructions: >
+        React hooks and context for dApp development. Hooks must follow
+        React rules (no conditional hooks, proper dependency arrays).
+        Context provider must handle wallet connection lifecycle.
+        Components should be tree-shakeable. Flag any direct DOM
+        manipulation or non-React patterns.
+
+    - path: 'packages/connect/src/**/*.ts'
+      instructions: >
+        Main entry point that re-exports from all packages. Keep the
+        public API surface minimal and well-documented. Ensure all
+        re-exports are properly typed. This package should not contain
+        business logic — only re-exports and convenience wrappers.
+
+    - path: 'packages/**/src/__tests__/**/*.ts'
+      instructions: >
+        Vitest test files. Tests should use proper mocking with vi.mock()
+        and vi.fn(). Do not flag test-only patterns like type assertions
+        or mock casts. Integration tests (*.testnet.ts) may make real
+        network calls — these are excluded from CI. Ensure unit tests
+        do not make actual network requests.
+
+    - path: '.github/workflows/**/*.yml'
+      instructions: >
+        GitHub Actions CI/CD workflows. The CI pipeline runs format,
+        typecheck, lint, build, and test in order. Build must complete
+        before test due to package dependencies. Ensure proper caching
+        of pnpm store and Turbo cache. Security workflows should not
+        expose secrets in logs.
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - develop
+      - master
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: true
+
+  tools:
+    eslint:
+      enabled: true
+    biome:
+      enabled: false
+    shellcheck:
+      enabled: true
+    gitleaks:
+      enabled: true
+    actionlint:
+      enabled: true
+    yamllint:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+
+code_generation:
+  unit_tests:
+    path_instructions:
+      - path: 'packages/**/src/**/*.ts'
+        instructions: >
+          Use Vitest with TypeScript. Mock external dependencies with vi.mock().
+          Use vi.fn() for function mocks. Test files go in src/__tests__/
+          within each package. Use describe/it blocks with clear test names.
+          For crypto tests, use known test vectors. For provider tests, mock
+          HTTP responses. For encoding tests, verify round-trip consistency
+          (encode then decode should return original). For contract tests,
+          include ABI fixtures inline or import from test helpers.
