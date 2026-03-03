@@ -158,19 +158,26 @@ export function decodeByType(
     const value = bytes[offset] === 0x01
     return { value, type: 'bool', consumed: 1 }
   }
-  if (type === 'Address') {
+  if (type === 'Address' || type === 'a' || type === 'A') {
     const result = decodeAddress(bytes, offset)
     return { value: result.value, type: 'Address', consumed: result.consumed || 32 }
   }
 
   // Handle variable-length types
-  if (type === 'bytes') {
+  if (type === 'bytes' || type === 'BoxedBytes' || type === 'Vec<u8>' || type === '&[u8]') {
     const result = decodeBytes(bytes, offset, nested)
     return { value: result.value, type: 'bytes', consumed: result.consumed || bytes.length }
   }
 
   // Handle strings
-  if (type.startsWith('utf-8 string') || type === 'TokenIdentifier' || type === 'KdaTokenType') {
+  if (
+    type.startsWith('utf-8 string') ||
+    type === 'TokenIdentifier' ||
+    type === 'KdaTokenType' ||
+    type === 'String' ||
+    type === '&str' ||
+    type === 'ManagedBuffer'
+  ) {
     const result = decodeString(bytes, offset, nested)
     return { value: result.value, type: 'string', consumed: result.consumed || bytes.length }
   }

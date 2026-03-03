@@ -180,17 +180,24 @@ export function encodeByType(
     // Bool is always 1 byte (no length prefix even when nested)
     return encodeBool(value as boolean)
   }
-  if (type === 'Address') {
+  if (type === 'Address' || type === 'a' || type === 'A') {
     return encodeAddress(value as string)
   }
 
   // Handle variable-length types
-  if (type === 'bytes') {
+  if (type === 'bytes' || type === 'BoxedBytes' || type === 'Vec<u8>' || type === '&[u8]') {
     return encodeBytes(value as Uint8Array, nested)
   }
 
-  // Handle strings (TokenIdentifier, etc.)
-  if (type.startsWith('utf-8 string') || type === 'TokenIdentifier' || type === 'KdaTokenType') {
+  // Handle strings (TokenIdentifier, ManagedBuffer, etc.)
+  if (
+    type.startsWith('utf-8 string') ||
+    type === 'TokenIdentifier' ||
+    type === 'KdaTokenType' ||
+    type === 'String' ||
+    type === '&str' ||
+    type === 'ManagedBuffer'
+  ) {
     return encodeString(value as string, nested)
   }
 

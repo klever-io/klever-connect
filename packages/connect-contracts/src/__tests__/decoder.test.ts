@@ -1037,6 +1037,70 @@ describe('Result Decoder', () => {
     })
   })
 
+  describe('String/Bytes aliases decoding', () => {
+    it('should decode String alias as string', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+
+      for (const type of ['String', '&str', 'ManagedBuffer']) {
+        const encoded = encoder.encodeValue('hello', type)
+        const decoded = decoder.decodeValue(encoded, type)
+        expect(decoded).toBe('hello')
+      }
+    })
+
+    it('should decode bytes aliases as bytes', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+      const data = new Uint8Array([0x01, 0x02, 0x03])
+
+      for (const type of ['BoxedBytes', 'Vec<u8>', '&[u8]']) {
+        const encoded = encoder.encodeValue(data, type)
+        const decoded = decoder.decodeValue(encoded, type) as Uint8Array
+        expect(Array.from(decoded)).toEqual([1, 2, 3])
+      }
+    })
+
+    it('should decode Address aliases', () => {
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // 32-byte zero address
+      const bytes = new Uint8Array(32).fill(0)
+
+      const decodedAddress = decoder.decodeValue(bytes, 'Address')
+      const decodedA = decoder.decodeValue(bytes, 'a')
+      const decodedBigA = decoder.decodeValue(bytes, 'A')
+
+      expect(decodedA).toBe(decodedAddress)
+      expect(decodedBigA).toBe(decodedAddress)
+    })
+  })
+
   describe('multi-output endpoints (no variadic)', () => {
     it('should decode multiple separate outputs', () => {
       const mockABI: ContractABI = {
