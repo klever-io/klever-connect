@@ -2,7 +2,7 @@
  * Tests for Parameter and Function Encoders
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   bytesToHex,
   contractParam,
@@ -523,6 +523,11 @@ describe('ABI-Aware Encoder', () => {
 
   describe('Address aliases', () => {
     it('should accept Address alias types', async () => {
+      const paramEncoder = await import('../encoder/param-encoder')
+      const spy = vi
+        .spyOn(paramEncoder, 'encodeAddress')
+        .mockReturnValue(new Uint8Array(32).fill(0x11))
+
       const { ABIEncoder } = await import('../encoder/abi-encoder')
       const mockABI: ContractABI = {
         name: 'Test',
@@ -534,17 +539,14 @@ describe('ABI-Aware Encoder', () => {
       const encoder = new ABIEncoder(mockABI)
       const testAddress = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
 
-      try {
-        const addressResult = encoder.encodeValue(testAddress, 'Address')
-        const aResult = encoder.encodeValue(testAddress, 'a')
-        const AResult = encoder.encodeValue(testAddress, 'A')
+      const addressResult = encoder.encodeValue(testAddress, 'Address')
+      const aResult = encoder.encodeValue(testAddress, 'a')
+      const AResult = encoder.encodeValue(testAddress, 'A')
 
-        expect(bytesToHex(aResult)).toBe(bytesToHex(addressResult))
-        expect(bytesToHex(AResult)).toBe(bytesToHex(addressResult))
-      } catch (error) {
-        // bech32 decoding may fail in test environment
-        expect(error).toBeDefined()
-      }
+      expect(bytesToHex(aResult)).toBe(bytesToHex(addressResult))
+      expect(bytesToHex(AResult)).toBe(bytesToHex(addressResult))
+      expect(spy).toHaveBeenCalledTimes(3)
+      spy.mockRestore()
     })
 
     it('should reject invalid address on alias types', async () => {

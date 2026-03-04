@@ -5,12 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  glob: '>=13.0.1'
-  '@isaacs/brace-expansion': '>=5.0.1'
-  rollup: '>=4.59.0'
+  glob: 13.0.1
+  '@isaacs/brace-expansion': 5.0.1
+  rollup: 4.59.0
   glob>minimatch: 10.2.3
-  markdown-it: '>=14.1.1'
-  underscore: '>=1.13.8'
+  markdown-it: 14.1.1
+  underscore: 1.13.8
 
 importers:
 
@@ -1845,7 +1845,7 @@ packages:
     resolution: {integrity: sha512-FlCHFwNnutLgVTflOYHPW2pPcl2AACqVzExlkGQNsi4CJgqOHN7YTgDd4LuhgN1BFO3TS0vLAruV1Td6dwWPJA==}
     peerDependencies:
       '@types/markdown-it': '*'
-      markdown-it: '>=14.1.1'
+      markdown-it: 14.1.1
 
   markdown-it@14.1.1:
     resolution: {integrity: sha512-BuU2qnTti9YKgK5N+IeMubp14ZUKUUw7yeJbkjtosvHiP0AZ5c8IAgEMk79D0eC8F23r4Ac/q8cAIFdm2FtyoA==}

@@ -180,7 +180,8 @@ export function encodeByType(
     // Bool is always 1 byte (no length prefix even when nested)
     return encodeBool(value as boolean)
   }
-  if (type === 'Address' || type === 'a' || type === 'A') {
+  const isAddressAlias = type === 'Address' || ((type === 'a' || type === 'A') && !abi.types[type])
+  if (isAddressAlias) {
     return encodeAddress(value as string)
   }
 
@@ -262,7 +263,7 @@ export function encodeByType(
   // Handle hex passthrough — value is used as-is
   if (type === 'hex') {
     const hex = typeof value === 'string' ? value : String(value)
-    return hexToBytes(hex)
+    return encodeBytes(hexToBytes(hex), nested)
   }
 
   // If type is already Uint8Array, return as-is

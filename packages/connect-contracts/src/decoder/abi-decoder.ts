@@ -158,7 +158,8 @@ export function decodeByType(
     const value = bytes[offset] === 0x01
     return { value, type: 'bool', consumed: 1 }
   }
-  if (type === 'Address' || type === 'a' || type === 'A') {
+  const isAddressAlias = type === 'Address' || ((type === 'a' || type === 'A') && !abi.types[type])
+  if (isAddressAlias) {
     const result = decodeAddress(bytes, offset)
     return { value: result.value, type: 'Address', consumed: result.consumed || 32 }
   }
@@ -240,12 +241,16 @@ export function decodeByType(
 
   // Handle hex passthrough — return raw bytes as hex string
   if (type === 'hex') {
-    const length = bytes.length - offset
-    const hexBytes = bytes.slice(offset, offset + length)
-    const hex = Array.from(hexBytes)
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('')
-    return { value: hex, type: 'hex', consumed: length }
+    if (nested) {
+      const result = decodeBytes(bytes, offset, true)
+      return {
+        value: hexEncode(result.value as Uint8Array),
+        type: 'hex',
+        consumed: result.consumed,
+      }
+    }
+    const hex = hexEncode(bytes.slice(offset))
+    return { value: hex, type: 'hex', consumed: bytes.length - offset }
   }
 
   // Handle unit type ()
