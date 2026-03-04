@@ -246,7 +246,7 @@ export function decodeByType(
       return {
         value: hexEncode(result.value as Uint8Array),
         type: 'hex',
-        consumed: result.consumed,
+        consumed: result.consumed || 0,
       }
     }
     const hex = hexEncode(bytes.slice(offset))
