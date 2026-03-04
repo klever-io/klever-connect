@@ -2,7 +2,7 @@
  * Tests for Parameter and Function Encoders
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   bytesToHex,
   contractParam,
@@ -394,6 +394,221 @@ describe('ABI-Aware Encoder', () => {
       // Negative: -1000 → 2^64 - 1000
       const neg = encoder.encodeValue(-1000n, 'i64')
       expect(bytesToHex(neg)).toBe('fffffffffffffc18')
+    })
+  })
+
+  describe('Type aliases', () => {
+    it('should encode usize as u32', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(bytesToHex(encoder.encodeValue(100, 'usize'))).toBe(
+        bytesToHex(encoder.encodeValue(100, 'u32')),
+      )
+      expect(bytesToHex(encoder.encodeValue(0, 'usize'))).toBe('00')
+      expect(bytesToHex(encoder.encodeValue(0xffffffff, 'usize'))).toBe('ffffffff')
+    })
+
+    it('should encode isize as i32', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(bytesToHex(encoder.encodeValue(100, 'isize'))).toBe(
+        bytesToHex(encoder.encodeValue(100, 'i32')),
+      )
+      expect(bytesToHex(encoder.encodeValue(-100, 'isize'))).toBe(
+        bytesToHex(encoder.encodeValue(-100, 'i32')),
+      )
+      expect(bytesToHex(encoder.encodeValue(-100, 'isize'))).toBe('ffffff9c')
+    })
+
+    it('should encode boolean as bool', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(bytesToHex(encoder.encodeValue(true, 'boolean'))).toBe('01')
+      expect(bytesToHex(encoder.encodeValue(false, 'boolean'))).toBe('00')
+      expect(bytesToHex(encoder.encodeValue(true, 'boolean'))).toBe(
+        bytesToHex(encoder.encodeValue(true, 'bool')),
+      )
+    })
+  })
+
+  describe('String/Bytes aliases', () => {
+    it('should encode String as utf-8 string', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(bytesToHex(encoder.encodeValue('hello', 'String'))).toBe('68656c6c6f')
+      expect(bytesToHex(encoder.encodeValue('hello', '&str'))).toBe('68656c6c6f')
+      expect(bytesToHex(encoder.encodeValue('hello', 'ManagedBuffer'))).toBe('68656c6c6f')
+    })
+
+    it('should encode bytes aliases as bytes', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const data = new Uint8Array([0x01, 0x02, 0x03])
+
+      expect(bytesToHex(encoder.encodeValue(data, 'BoxedBytes'))).toBe('010203')
+      expect(bytesToHex(encoder.encodeValue(data, 'Vec<u8>'))).toBe('010203')
+      expect(bytesToHex(encoder.encodeValue(data, '&[u8]'))).toBe('010203')
+    })
+
+    it('should encode string aliases with length prefix when nested', async () => {
+      const { encodeByType } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      // 'Hi' = length 2 + 0x4869
+      expect(bytesToHex(encodeByType('Hi', 'String', mockABI, true))).toBe('000000024869')
+      expect(bytesToHex(encodeByType('Hi', '&str', mockABI, true))).toBe('000000024869')
+      expect(bytesToHex(encodeByType('Hi', 'ManagedBuffer', mockABI, true))).toBe('000000024869')
+    })
+
+    it('should encode bytes aliases with length prefix when nested', async () => {
+      const { encodeByType } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const data = new Uint8Array([0xaa, 0xbb])
+
+      expect(bytesToHex(encodeByType(data, 'BoxedBytes', mockABI, true))).toBe('00000002aabb')
+      expect(bytesToHex(encodeByType(data, 'Vec<u8>', mockABI, true))).toBe('00000002aabb')
+      expect(bytesToHex(encodeByType(data, '&[u8]', mockABI, true))).toBe('00000002aabb')
+    })
+  })
+
+  describe('Address aliases', () => {
+    it('should accept Address alias types', async () => {
+      const paramEncoder = await import('../encoder/param-encoder')
+      const spy = vi
+        .spyOn(paramEncoder, 'encodeAddress')
+        .mockReturnValue(new Uint8Array(32).fill(0x11))
+
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const testAddress = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
+
+      const addressResult = encoder.encodeValue(testAddress, 'Address')
+      const aResult = encoder.encodeValue(testAddress, 'a')
+      const AResult = encoder.encodeValue(testAddress, 'A')
+
+      expect(bytesToHex(aResult)).toBe(bytesToHex(addressResult))
+      expect(bytesToHex(AResult)).toBe(bytesToHex(addressResult))
+      expect(spy).toHaveBeenCalledTimes(3)
+      spy.mockRestore()
+    })
+
+    it('should reject invalid address on alias types', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      expect(() => encoder.encodeValue('eth1invalid', 'a')).toThrow('Invalid Klever address')
+      expect(() => encoder.encodeValue('eth1invalid', 'A')).toThrow('Invalid Klever address')
+    })
+  })
+
+  describe('Hex passthrough', () => {
+    it('should encode hex string as-is', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      const result = encoder.encodeValue('cafebabe', 'hex')
+      expect(bytesToHex(result)).toBe('cafebabe')
+    })
+
+    it('should encode hex string with 0x prefix', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      const result = encoder.encodeValue('0xdeadbeef', 'hex')
+      expect(bytesToHex(result)).toBe('deadbeef')
+    })
+
+    it('should encode empty hex string', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+
+      const result = encoder.encodeValue('', 'hex')
+      expect(bytesToHex(result)).toBe('')
     })
   })
 

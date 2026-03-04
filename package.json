@@ -62,11 +62,12 @@
   },
   "pnpm": {
     "overrides": {
-      "glob": ">=13.0.1",
-      "@isaacs/brace-expansion": ">=5.0.1",
-      "rollup": ">=4.59.0",
+      "glob": "13.0.1",
+      "@isaacs/brace-expansion": "5.0.1",
+      "rollup": "4.59.0",
       "glob>minimatch": "10.2.3",
-      "markdown-it": ">=14.1.1"
+      "markdown-it": "14.1.1",
+      "underscore": "1.13.8"
     }
   }
 }
