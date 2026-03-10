@@ -112,7 +112,7 @@ export function decodeByType(
     const result = decodeVariableInt(bytes, offset, nested, 2)
     return { value: result.value as number, type: 'u16', consumed: result.consumed }
   }
-  if (type === 'u32') {
+  if (type === 'u32' || type === 'usize') {
     const result = decodeVariableInt(bytes, offset, nested, 4)
     return { value: result.value as number, type: 'u32', consumed: result.consumed }
   }
@@ -135,7 +135,7 @@ export function decodeByType(
     const signed = unsigned > 32767 ? unsigned - 65536 : unsigned
     return { value: signed, type: 'i16', consumed: result.consumed }
   }
-  if (type === 'i32') {
+  if (type === 'i32' || type === 'isize') {
     const result = decodeVariableInt(bytes, offset, nested, 4)
     const unsigned = result.value as number
     const signed = unsigned > 2147483647 ? unsigned - 4294967296 : unsigned
@@ -150,7 +150,7 @@ export function decodeByType(
     return { value: signed, type: 'i64', consumed: result.consumed }
   }
 
-  if (type === 'bool') {
+  if (type === 'bool' || type === 'boolean') {
     // Bool is always 1 byte (no length prefix even when nested)
     if (offset >= bytes.length) {
       throw new Error('Insufficient bytes to decode bool')
@@ -158,19 +158,27 @@ export function decodeByType(
     const value = bytes[offset] === 0x01
     return { value, type: 'bool', consumed: 1 }
   }
-  if (type === 'Address') {
+  const isAddressAlias = type === 'Address' || ((type === 'a' || type === 'A') && !abi.types[type])
+  if (isAddressAlias) {
     const result = decodeAddress(bytes, offset)
     return { value: result.value, type: 'Address', consumed: result.consumed || 32 }
   }
 
   // Handle variable-length types
-  if (type === 'bytes') {
+  if (type === 'bytes' || type === 'BoxedBytes' || type === 'Vec<u8>' || type === '&[u8]') {
     const result = decodeBytes(bytes, offset, nested)
     return { value: result.value, type: 'bytes', consumed: result.consumed || bytes.length }
   }
 
   // Handle strings
-  if (type.startsWith('utf-8 string') || type === 'TokenIdentifier' || type === 'KdaTokenType') {
+  if (
+    type.startsWith('utf-8 string') ||
+    type === 'TokenIdentifier' ||
+    type === 'KdaTokenType' ||
+    type === 'String' ||
+    type === '&str' ||
+    type === 'ManagedBuffer'
+  ) {
     const result = decodeString(bytes, offset, nested)
     return { value: result.value, type: 'string', consumed: result.consumed || bytes.length }
   }
@@ -229,6 +237,20 @@ export function decodeByType(
     const innerType = type.slice(9, -1) // Extract T from variadic<T>
     // Each variadic item is decoded individually as top-level (nested = false)
     return decodeByType(bytes, innerType, abi, offset, nested)
+  }
+
+  // Handle hex passthrough — return raw bytes as hex string
+  if (type === 'hex') {
+    if (nested) {
+      const result = decodeBytes(bytes, offset, true)
+      return {
+        value: hexEncode(result.value as Uint8Array),
+        type: 'hex',
+        consumed: result.consumed || 0,
+      }
+    }
+    const hex = hexEncode(bytes.slice(offset))
+    return { value: hex, type: 'hex', consumed: bytes.length - offset }
   }
 
   // Handle unit type ()

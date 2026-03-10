@@ -823,6 +823,284 @@ describe('Result Decoder', () => {
     })
   })
 
+  describe('Type aliases and hex decoding', () => {
+    it('should decode usize as u32', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getSize',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ name: 'value', type: 'usize' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      const data = [encodeBase64(new Uint8Array([0x00, 0x00, 0x00, 0x64]))] // 100
+      const result = decoder.decodeFunctionResultsWithMetadata('getSize', data)
+
+      expect(result.values[0]?.value).toBe(100)
+      expect(result.values[0]?.type).toBe('usize')
+    })
+
+    it('should decode isize as i32', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getIndex',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ name: 'value', type: 'isize' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // -100 in two's complement = 0xffffff9c
+      const data = [encodeBase64(new Uint8Array([0xff, 0xff, 0xff, 0x9c]))]
+      const result = decoder.decodeFunctionResultsWithMetadata('getIndex', data)
+
+      expect(result.values[0]?.value).toBe(-100)
+      expect(result.values[0]?.type).toBe('isize')
+    })
+
+    it('should decode boolean as bool', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getFlag',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ name: 'value', type: 'boolean' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      const trueData = [encodeBase64(new Uint8Array([0x01]))]
+      const trueResult = decoder.decodeFunctionResultsWithMetadata('getFlag', trueData)
+      expect(trueResult.values[0]?.value).toBe(true)
+      expect(trueResult.values[0]?.type).toBe('boolean')
+
+      const falseData = [encodeBase64(new Uint8Array([0x00]))]
+      const falseResult = decoder.decodeFunctionResultsWithMetadata('getFlag', falseData)
+      expect(falseResult.values[0]?.value).toBe(false)
+    })
+
+    it('should decode hex type as hex string passthrough', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getRaw',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ name: 'value', type: 'hex' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      const data = [encodeBase64(new Uint8Array([0xca, 0xfe, 0xba, 0xbe]))]
+      const result = decoder.decodeFunctionResultsWithMetadata('getRaw', data)
+
+      expect(result.values[0]?.value).toBe('cafebabe')
+      expect(result.values[0]?.type).toBe('hex')
+    })
+
+    it('should decode empty hex', () => {
+      const mockABI: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [
+          {
+            name: 'getRaw',
+            mutability: 'readonly',
+            inputs: [],
+            outputs: [{ name: 'value', type: 'hex' }],
+          },
+        ],
+        kdaAttributes: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      const data = [encodeBase64(new Uint8Array([]))]
+      const result = decoder.decodeFunctionResultsWithMetadata('getRaw', data)
+
+      expect(result.values[0]?.value).toBe('')
+    })
+
+    it('should round-trip usize encode/decode', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+
+      const encoded = encoder.encodeValue(42, 'usize')
+      const decoded = decoder.decodeValue(encoded, 'usize')
+      expect(decoded).toBe(42)
+    })
+
+    it('should round-trip isize encode/decode', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+
+      const encoded = encoder.encodeValue(-50, 'isize')
+      const decoded = decoder.decodeValue(encoded, 'isize')
+      expect(decoded).toBe(-50)
+    })
+
+    it('should round-trip hex encode/decode', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+
+      const encoded = encoder.encodeValue('deadbeef', 'hex')
+      const decoded = decoder.decodeValue(encoded, 'hex')
+      expect(decoded).toBe('deadbeef')
+    })
+  })
+
+  describe('String/Bytes aliases decoding', () => {
+    it('should decode String alias as string', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+
+      for (const type of ['String', '&str', 'ManagedBuffer']) {
+        const encoded = encoder.encodeValue('hello', type)
+        const decoded = decoder.decodeValue(encoded, type)
+        expect(decoded).toBe('hello')
+      }
+    })
+
+    it('should decode bytes aliases as bytes', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const decoder = new ABIDecoder(mockABI)
+      const data = new Uint8Array([0x01, 0x02, 0x03])
+
+      for (const type of ['BoxedBytes', 'Vec<u8>', '&[u8]']) {
+        const encoded = encoder.encodeValue(data, type)
+        const decoded = decoder.decodeValue(encoded, type) as Uint8Array
+        expect(Array.from(decoded)).toEqual([1, 2, 3])
+      }
+    })
+
+    it('should decode Address aliases', () => {
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const decoder = new ABIDecoder(mockABI)
+
+      // 32-byte zero address
+      const bytes = new Uint8Array(32).fill(0)
+
+      const decodedAddress = decoder.decodeValue(bytes, 'Address')
+      const decodedA = decoder.decodeValue(bytes, 'a')
+      const decodedBigA = decoder.decodeValue(bytes, 'A')
+
+      expect(decodedA).toBe(decodedAddress)
+      expect(decodedBigA).toBe(decodedAddress)
+    })
+  })
+
   describe('multi-output endpoints (no variadic)', () => {
     it('should decode multiple separate outputs', () => {
       const mockABI: ContractABI = {
