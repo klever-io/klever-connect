@@ -64,17 +64,74 @@ import { parseDeployReceipt, type TransactionReceipt } from './receipt-parser'
  * @see {@link Contract} for interacting with deployed contracts
  * @see {@link Interface} for ABI encoding
  */
+/**
+ * CodeMetadata flags that control contract permissions on the Klever VM.
+ *
+ * All flags default to `true` when not specified.
+ *
+ * @example
+ * ```typescript
+ * // Read-only contract — cannot be upgraded or receive payments
+ * const factory = new ContractFactory(abi, bytecode, wallet, {
+ *   upgradeable: false,
+ *   payable:     false,
+ *   payableBySC: false,
+ * })
+ * ```
+ */
+export interface DeployMetadata {
+  /** Allow the contract owner to upgrade the bytecode after deployment. Default: true */
+  upgradeable?: boolean
+  /** Allow other contracts and off-chain callers to read contract storage. Default: true */
+  readable?: boolean
+  /** Allow the contract to receive KLV / KDA payments from user wallets. Default: true */
+  payable?: boolean
+  /** Allow the contract to receive payments from other smart contracts. Default: true */
+  payableBySC?: boolean
+  /** Klever VM type identifier. Change only if you know what you're doing. Default: '0500' */
+  vmType?: string
+}
+
+/**
+ * Per-deploy overrides accepted as the last argument of `factory.deploy()`.
+ *
+ * @example
+ * ```typescript
+ * // Lock the contract on deploy — cannot be upgraded afterwards
+ * await factory.deploy({ metadata: { upgradeable: false } })
+ *
+ * // With constructor args + override
+ * await factory.deploy(initialValue, { metadata: { payable: false } })
+ * ```
+ */
+export interface DeployOptions {
+  metadata?: DeployMetadata
+}
+
 export class ContractFactory {
   readonly interface: Interface
   readonly bytecode: Uint8Array
   readonly signer: Signer
   readonly provider?: Provider
   private encoder: ABIEncoder
+  private metadata: Required<DeployMetadata>
 
-  constructor(abi: string | ContractABI, bytecode: Uint8Array | string, signer: Signer) {
+  constructor(
+    abi: string | ContractABI,
+    bytecode: Uint8Array | string,
+    signer: Signer,
+    metadata?: DeployMetadata,
+  ) {
     this.interface = new Interface(abi)
     this.signer = signer
     this.encoder = new ABIEncoder(this.interface.abi)
+    this.metadata = {
+      upgradeable: metadata?.upgradeable ?? true,
+      readable: metadata?.readable ?? true,
+      payable: metadata?.payable ?? true,
+      payableBySC: metadata?.payableBySC ?? true,
+      vmType: metadata?.vmType ?? '0500',
+    }
 
     // Get provider from signer if available
     if (signer.provider) {
@@ -139,12 +196,21 @@ export class ContractFactory {
    * `ContractFactory.getDeployedAddress(receipt)` to get the actual address.
    */
   async deploy(...args: unknown[]): Promise<Contract> {
+    let deployOptions: DeployOptions | undefined
+    if (args.length > 0 && this._isDeployOptions(args[args.length - 1])) {
+      deployOptions = args.pop() as DeployOptions
+    }
+
+    const metadata: Required<DeployMetadata> = {
+      ...this.metadata,
+      ...deployOptions?.metadata,
+    }
+
     // Encode constructor arguments using ABI-aware encoder
     const encodedArgs = this._encodeArguments(args)
-    const constructorData = this.interface.encodeConstructor(encodedArgs)
 
     // Prepare deployment data (bytecode + constructor args)
-    const deployData = this._prepareDeployData(constructorData)
+    const deployData = this._prepareDeployData(encodedArgs, metadata)
 
     // Build transaction using TransactionBuilder
     // Note: Provider type mismatch - TransactionBuilder expects IProvider with full interface
@@ -154,9 +220,9 @@ export class ContractFactory {
         new TransactionBuilder(this.provider as any)
       : new TransactionBuilder()
 
-    builder.smartContract({
+    builder.sender(this.signer.address).smartContract({
       scType: 1, // Deploy new contract
-      address: '', // Empty address for deployment
+      address: '',
     })
 
     // Add deployment data
@@ -174,14 +240,11 @@ export class ContractFactory {
       )
     }
 
-    // Sign transaction using signer
-    if (typeof this.signer.signTransaction === 'function') {
-      await this.signer.signTransaction(tx)
-    }
+    // Sign transaction
+    await this.signer.signTransaction(tx)
 
     // Broadcast transaction
-    // Note: TransactionBuilder.build() may handle broadcasting
-    // If not, we need to call provider.broadcast(tx)
+    const hash = await this.provider.sendRawTransaction(tx)
 
     // Extract contract address from transaction
     // We return a Contract instance with a placeholder address
@@ -193,7 +256,7 @@ export class ContractFactory {
 
     // Add deployment transaction reference for later receipt parsing
     Object.defineProperty(contract, 'deployTransaction', {
-      value: tx,
+      value: { hash, tx },
       writable: false,
       enumerable: true,
     })
@@ -255,16 +318,50 @@ export class ContractFactory {
   }
 
   /**
-   * Prepare deployment data (bytecode + constructor args)
+   * Encode CodeMetadata flags as a 4-char uppercase hex string (2 bytes).
+   * Byte 0: Upgradeable=0x01, Readable=0x04
+   * Byte 1: Payable=0x02, PayableBySC=0x04
    */
-  private _prepareDeployData(constructorData: string): string {
-    // Convert bytecode to hex
-    const bytecodeHex = Array.from(this.bytecode)
+  private _metadataHex(metadata: Required<DeployMetadata>): string {
+    let byte0 = 0
+    let byte1 = 0
+    if (metadata.upgradeable) byte0 |= 0x01
+    if (metadata.readable) byte0 |= 0x04
+    if (metadata.payable) byte1 |= 0x02
+    if (metadata.payableBySC) byte1 |= 0x04
+    return ((byte0 << 8) | byte1).toString(16).toUpperCase().padStart(4, '0')
+  }
+
+  /**
+   * Prepare deployment data in Klever format:
+   *   {wasm_hex}@{vmType}@{metadata_hex}[@{constructor_arg_hex}...]
+   */
+  private _prepareDeployData(
+    constructorArgs: Uint8Array[],
+    metadata: Required<DeployMetadata>,
+  ): string {
+    const wasmHex = Array.from(this.bytecode)
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
 
-    // Combine bytecode and constructor args
-    return bytecodeHex + constructorData
+    const parts = [wasmHex, metadata.vmType, this._metadataHex(metadata)]
+
+    for (const arg of constructorArgs) {
+      parts.push(
+        Array.from(arg)
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join(''),
+      )
+    }
+
+    return parts.join('@')
+  }
+
+  /** Check if an argument is a DeployOptions object (not a constructor arg) */
+  private _isDeployOptions(arg: unknown): arg is DeployOptions {
+    if (arg === null || typeof arg !== 'object' || arg instanceof Uint8Array) return false
+    const keys = Object.keys(arg)
+    return keys.length === 0 || keys.every((k) => k === 'metadata')
   }
 
   /**
@@ -375,9 +472,13 @@ export class ContractFactory {
    * ```
    */
   getDeployTransaction(...args: unknown[]): { data: string } {
+    let deployOptions: DeployOptions | undefined
+    if (args.length > 0 && this._isDeployOptions(args[args.length - 1])) {
+      deployOptions = args.pop() as DeployOptions
+    }
+    const metadata: Required<DeployMetadata> = { ...this.metadata, ...deployOptions?.metadata }
     const encodedArgs = this._encodeArguments(args)
-    const constructorData = this.interface.encodeConstructor(encodedArgs)
-    const deployData = this._prepareDeployData(constructorData)
+    const deployData = this._prepareDeployData(encodedArgs, metadata)
 
     return {
       data: deployData,
