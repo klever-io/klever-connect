@@ -1,0 +1,26 @@
+{
+  "name": "@klever/examples",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "balance": "tsx basic/balance.ts",
+    "account-info": "tsx basic/account-info.ts",
+    "mnemonic": "tsx wallet/mnemonic.ts",
+    "encoding": "tsx encoding/encode-decode.ts"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*",
+    "@klever/connect-core": "workspace:*",
+    "@klever/connect-crypto": "workspace:*",
+    "@klever/connect-encoding": "workspace:*",
+    "@klever/connect-provider": "workspace:*",
+    "@klever/connect-transactions": "workspace:*",
+    "@klever/connect-contracts": "workspace:*",
+    "@klever/connect-wallet": "workspace:*",
+    "@klever/connect-react": "workspace:*"
+  }
+}
