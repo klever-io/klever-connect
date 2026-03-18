@@ -451,7 +451,7 @@ export class ContractFactory {
    * ```
    */
   connect(signer: Signer): ContractFactory {
-    return new ContractFactory(this.interface.abi, this.bytecode, signer)
+    return new ContractFactory(this.interface.abi, this.bytecode, signer, this.metadata)
   }
 
   /**

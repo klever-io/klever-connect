@@ -342,6 +342,25 @@ describe('ContractFactory', () => {
       expect(newFactory.signer).toBe(newSigner)
       expect(newFactory.bytecode).toEqual(bytecode)
     })
+
+    it('should preserve metadata when connecting to a new signer', () => {
+      const customMetadata = {
+        upgradeable: false,
+        payable: false,
+        readable: true,
+        payableBySC: true,
+      }
+      const factory = new ContractFactory(abi, bytecode, mockSigner, customMetadata)
+      const newSigner = createMockSigner()
+
+      const newFactory = factory.connect(newSigner)
+
+      // Metadata effect is observable through getDeployTransaction output.
+      // byte0: readable(0x04) = 0x04, byte1: payableBySC(0x04) = 0x04  =>  "0404"
+      const originalTx = factory.getDeployTransaction()
+      const connectedTx = newFactory.getDeployTransaction()
+      expect(connectedTx.data).toBe(originalTx.data)
+    })
   })
 
   describe('getDeployTransaction', () => {

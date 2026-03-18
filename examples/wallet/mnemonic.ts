@@ -41,10 +41,13 @@ async function main(): Promise<void> {
   // --- Step 3: Restore wallet from mnemonic ---
   const wallet = await factory.fromMnemonic(mnemonic12)
   await wallet.connect()
-  console.log('\nRestored wallet address:', wallet.address)
-  console.log('Restored wallet public key:', wallet.publicKey)
-  console.log('Default derivation path:', DEFAULT_DERIVATION_PATH) // m/44'/690'/0'/0'/0'
-  await wallet.disconnect(true)
+  try {
+    console.log('\nRestored wallet address:', wallet.address)
+    console.log('Restored wallet public key:', wallet.publicKey)
+    console.log('Default derivation path:', DEFAULT_DERIVATION_PATH) // m/44'/690'/0'/0'/0'
+  } finally {
+    await wallet.disconnect(true)
+  }
 
   // --- Step 4: Derive multiple accounts from the same mnemonic ---
   // Change the last index to derive sibling accounts
@@ -58,8 +61,11 @@ async function main(): Promise<void> {
   for (const path of paths) {
     const derived = await factory.fromMnemonic(mnemonic12, undefined, { path })
     await derived.connect()
-    console.log(`  ${path} → ${derived.address}`)
-    await derived.disconnect(true)
+    try {
+      console.log(`  ${path} → ${derived.address}`)
+    } finally {
+      await derived.disconnect(true)
+    }
   }
 }
 

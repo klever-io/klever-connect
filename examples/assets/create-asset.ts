@@ -31,57 +31,59 @@ async function main(): Promise<void> {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log('Creator address:', wallet.address)
+  try {
+    console.log('Creator address:', wallet.address)
 
-  // ── Create a fungible KDA token ──────────────────────────────────────────
-  const result = await wallet.sendTransaction({
-    contractType: 1, // TXType.CreateAsset
-    type: AssetType.Fungible,
-    name: 'MyTestToken', // alphanumeric only — no spaces or special chars
-    ticker: 'MTT',
-    ownerAddress: wallet.address,
-    precision: 6, // 6 decimal places (like KLV)
-    initialSupply: parseKLV('1000000'), // 1,000,000 MTT minted to owner
-    maxSupply: parseKLV('10000000'), // 10,000,000 MTT hard cap
-    properties: {
-      canFreeze: true,
-      canWipe: false,
-      canPause: false,
-      canMint: true, // allows minting more supply later
-      canBurn: true, // allows burning tokens
-      canChangeOwner: true,
-      canAddRoles: true,
-    },
-    uris: {
-      website: 'https://example.com',
-      github: 'https://github.com/example',
-    },
-  })
+    // ── Create a fungible KDA token ──────────────────────────────────────────
+    const result = await wallet.sendTransaction({
+      contractType: 1, // TXType.CreateAsset
+      type: AssetType.Fungible,
+      name: 'MyTestToken', // alphanumeric only — no spaces or special chars
+      ticker: 'MTT',
+      ownerAddress: wallet.address,
+      precision: 6, // 6 decimal places (like KLV)
+      initialSupply: parseKLV('1000000'), // 1,000,000 MTT minted to owner
+      maxSupply: parseKLV('10000000'), // 10,000,000 MTT hard cap
+      properties: {
+        canFreeze: true,
+        canWipe: false,
+        canPause: false,
+        canMint: true, // allows minting more supply later
+        canBurn: true, // allows burning tokens
+        canChangeOwner: true,
+        canAddRoles: true,
+      },
+      uris: {
+        website: 'https://example.com',
+        github: 'https://github.com/example',
+      },
+    })
 
-  console.log('CreateAsset tx hash:', result.hash)
-  console.log('Check the receipt to find your new KDA ID (TICKER-XXXX-N).')
+    console.log('CreateAsset tx hash:', result.hash)
+    console.log('Check the receipt to find your new KDA ID (TICKER-XXXX-N).')
 
-  // ── Create an NFT collection ─────────────────────────────────────────────
-  // Uncomment to also create an NFT collection
-  //
-  // const nftResult = await wallet.sendTransaction({
-  //   contractType: 1, // TXType.CreateAsset
-  //   type: AssetType.NonFungible,
-  //   name: 'MyNFTCollection',   // alphanumeric only
-  //   ticker: 'MNFT',
-  //   ownerAddress: wallet.address,
-  //   precision: 0,    // NFTs always use 0 decimals
-  //   maxSupply: 10000,
-  //   properties: {
-  //     canMint: true,
-  //     canBurn: true,
-  //     canAddRoles: true,
-  //   },
-  //   uris: { website: 'https://mynft.example.com' },
-  // })
-  // console.log('CreateAsset (NFT) tx hash:', nftResult.hash)
-
-  await wallet.disconnect(true)
+    // ── Create an NFT collection ─────────────────────────────────────────────
+    // Uncomment to also create an NFT collection
+    //
+    // const nftResult = await wallet.sendTransaction({
+    //   contractType: 1, // TXType.CreateAsset
+    //   type: AssetType.NonFungible,
+    //   name: 'MyNFTCollection',   // alphanumeric only
+    //   ticker: 'MNFT',
+    //   ownerAddress: wallet.address,
+    //   precision: 0,    // NFTs always use 0 decimals
+    //   maxSupply: 10000,
+    //   properties: {
+    //     canMint: true,
+    //     canBurn: true,
+    //     canAddRoles: true,
+    //   },
+    //   uris: { website: 'https://mynft.example.com' },
+    // })
+    // console.log('CreateAsset (NFT) tx hash:', nftResult.hash)
+  } finally {
+    await wallet.disconnect(true)
+  }
 }
 
 main().catch((err) => {

@@ -28,46 +28,48 @@ async function main(): Promise<void> {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log('Sender:', wallet.address)
-
-  // --- Step 1: Build transaction via node ---
-  // The node fetches the current nonce, computes fees, and returns proto bytes.
-  const tx = await new TransactionBuilder(provider)
-    .sender(wallet.address)
-    .transfer({
-      receiver: wallet.address, // send to self for demonstration
-      amount: parseKLV('0.001'),
-    })
-    .build()
-
-  console.log('\nBuilt transaction (node-assisted):')
-
-  // --- Step 2: Serialize to hex ---
-  // Useful for: storing unsigned transactions, sending to a hardware signer, QR codes, etc.
-  const hex = tx.toHex()
-  console.log('Serialized hex:', hex.slice(0, 64) + '...')
-
-  // --- Step 3: Deserialize from hex ---
-  // Simulates receiving the transaction back (e.g., from a hardware signer that signed it offline)
-  let recovered: Transaction
   try {
-    recovered = Transaction.fromHex(hex)
-  } catch (err) {
-    throw new Error(
-      `Failed to deserialize transaction: ${err instanceof Error ? err.message : String(err)}`,
-      { cause: err },
-    )
+    console.log('Sender:', wallet.address)
+
+    // --- Step 1: Build transaction via node ---
+    // The node fetches the current nonce, computes fees, and returns proto bytes.
+    const tx = await new TransactionBuilder(provider)
+      .sender(wallet.address)
+      .transfer({
+        receiver: wallet.address, // send to self for demonstration
+        amount: parseKLV('0.001'),
+      })
+      .build()
+
+    console.log('\nBuilt transaction (node-assisted):')
+
+    // --- Step 2: Serialize to hex ---
+    // Useful for: storing unsigned transactions, sending to a hardware signer, QR codes, etc.
+    const hex = tx.toHex()
+    console.log('Serialized hex:', hex.slice(0, 64) + '...')
+
+    // --- Step 3: Deserialize from hex ---
+    // Simulates receiving the transaction back (e.g., from a hardware signer that signed it offline)
+    let recovered: Transaction
+    try {
+      recovered = Transaction.fromHex(hex)
+    } catch (err) {
+      throw new Error(
+        `Failed to deserialize transaction: ${err instanceof Error ? err.message : String(err)}`,
+        { cause: err },
+      )
+    }
+    console.log('Recovered transaction matches original:', tx.toHex() === recovered.toHex())
+
+    // --- Step 4: Sign and broadcast ---
+    const signed = await wallet.signTransaction(recovered)
+    console.log('Transaction signed')
+
+    const hash = await wallet.broadcastTransaction(signed)
+    console.log('Broadcasted! Hash:', hash)
+  } finally {
+    await wallet.disconnect(true)
   }
-  console.log('Recovered transaction matches original:', tx.toHex() === recovered.toHex())
-
-  // --- Step 4: Sign and broadcast ---
-  const signed = await wallet.signTransaction(recovered)
-  console.log('Transaction signed')
-
-  const hash = await wallet.broadcastTransaction(signed)
-  console.log('Broadcasted! Hash:', hash)
-
-  await wallet.disconnect(true)
 }
 
 main().catch((err) => {

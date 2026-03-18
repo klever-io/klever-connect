@@ -50,7 +50,7 @@ PRIVATE_KEY=your_hex_key npx tsx sign-message.ts
 
 Klever uses BIP44 with coin type `690`:
 
-```
+```text
 m / 44' / 690' / account' / change' / index'
 ```
 

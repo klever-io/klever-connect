@@ -42,52 +42,54 @@ async function main(): Promise<void> {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log('Asset manager:', wallet.address)
+  try {
+    console.log('Asset manager:', wallet.address)
 
-  // ── Mint new supply ──────────────────────────────────────────────────────
-  const mint = await wallet.sendTransaction({
-    contractType: 11, // TXType.AssetTrigger // AssetTrigger
-    triggerType: 0, // Mint
-    assetId: ASSET_ID,
-    receiver: wallet.address, // mint destination
-    amount: parseKLV('500000'),
-  })
-  console.log('Mint:', mint.hash)
+    // ── Mint new supply ──────────────────────────────────────────────────────
+    const mint = await wallet.sendTransaction({
+      contractType: 11, // TXType.AssetTrigger // AssetTrigger
+      triggerType: 0, // Mint
+      assetId: ASSET_ID,
+      receiver: wallet.address, // mint destination
+      amount: parseKLV('500000'),
+    })
+    console.log('Mint:', mint.hash)
 
-  // ── Burn supply ──────────────────────────────────────────────────────────
-  const burn = await wallet.sendTransaction({
-    contractType: 11, // TXType.AssetTrigger
-    triggerType: 1, // Burn
-    assetId: ASSET_ID,
-    amount: parseKLV('1000'),
-  })
-  console.log('Burn:', burn.hash)
+    // ── Burn supply ──────────────────────────────────────────────────────────
+    const burn = await wallet.sendTransaction({
+      contractType: 11, // TXType.AssetTrigger
+      triggerType: 1, // Burn
+      assetId: ASSET_ID,
+      amount: parseKLV('1000'),
+    })
+    console.log('Burn:', burn.hash)
 
-  // ── Grant mint role to another address ──────────────────────────────────
-  // Replace with the address you want to grant the mint role to
-  const minter = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
-  const addRole = await wallet.sendTransaction({
-    contractType: 11, // TXType.AssetTrigger
-    triggerType: 6, // AddRole
-    assetId: ASSET_ID,
-    role: {
-      address: minter,
-      hasRoleMint: true,
-      hasRoleSetITOPrices: false,
-    },
-  })
-  console.log('AddRole:', addRole.hash)
+    // ── Grant mint role to another address ──────────────────────────────────
+    // Replace with the address you want to grant the mint role to
+    const minter = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
+    const addRole = await wallet.sendTransaction({
+      contractType: 11, // TXType.AssetTrigger
+      triggerType: 6, // AddRole
+      assetId: ASSET_ID,
+      role: {
+        address: minter,
+        hasRoleMint: true,
+        hasRoleSetITOPrices: false,
+      },
+    })
+    console.log('AddRole:', addRole.hash)
 
-  // ── Update logo URL ──────────────────────────────────────────────────────
-  const updateLogo = await wallet.sendTransaction({
-    contractType: 11, // TXType.AssetTrigger
-    triggerType: 10, // UpdateLogo
-    assetId: ASSET_ID,
-    logo: 'https://example.com/token-logo.png',
-  })
-  console.log('UpdateLogo:', updateLogo.hash)
-
-  await wallet.disconnect(true)
+    // ── Update logo URL ──────────────────────────────────────────────────────
+    const updateLogo = await wallet.sendTransaction({
+      contractType: 11, // TXType.AssetTrigger
+      triggerType: 10, // UpdateLogo
+      assetId: ASSET_ID,
+      logo: 'https://example.com/token-logo.png',
+    })
+    console.log('UpdateLogo:', updateLogo.hash)
+  } finally {
+    await wallet.disconnect(true)
+  }
 }
 
 main().catch((err) => {

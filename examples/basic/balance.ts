@@ -5,7 +5,7 @@
  * 1. Check KLV balance of any address (read-only, no wallet needed)
  * 2. Check a specific KDA token balance
  *
- * For full account details (nonce, assets, staking), see account-info.ts
+ * For full account details (nonce, assets), see account-info.ts
  */
 
 import 'dotenv/config'

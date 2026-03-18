@@ -49,40 +49,42 @@ async function main(): Promise<void> {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log('Deployer:', wallet.address)
+  try {
+    console.log('Deployer:', wallet.address)
 
-  // Create the factory with ABI, bytecode, and a signer.
-  // You can set default metadata flags here (all default to true):
-  //   new ContractFactory(abi, bytecode, wallet, { upgradeable: false })
-  const factory = new ContractFactory(abi, bytecode, wallet)
+    // Create the factory with ABI, bytecode, and a signer.
+    // You can set default metadata flags here (all default to true):
+    //   new ContractFactory(abi, bytecode, wallet, { upgradeable: false })
+    const factory = new ContractFactory(abi, bytecode, wallet)
 
-  // Deploy the contract.
-  // Pass constructor args first (if your init() takes parameters), then optional metadata overrides:
-  //   await factory.deploy(initialValue)
-  //   await factory.deploy({ metadata: { upgradeable: false } })
-  console.log('Deploying contract...')
-  const deployed = await factory.deploy()
+    // Deploy the contract.
+    // Pass constructor args first (if your init() takes parameters), then optional metadata overrides:
+    //   await factory.deploy(initialValue)
+    //   await factory.deploy({ metadata: { upgradeable: false } })
+    console.log('Deploying contract...')
+    const deployed = await factory.deploy()
 
-  // ContractFactory attaches `deployTransaction` to the Contract instance after
-  // broadcasting, but the property is not part of the public Contract type because
-  // it is only meaningful immediately after deployment. The assertion is intentional
-  // here; if `deployTransaction` is missing at runtime it means the factory did not
-  // broadcast (e.g. a dry-run mode), and the access will throw a clear TypeError.
-  const { hash } = (deployed as Contract & { deployTransaction: { hash: string } })
-    .deployTransaction
-  console.log('Deploy tx hash:', hash)
+    // ContractFactory attaches `deployTransaction` to the Contract instance after
+    // broadcasting, but the property is not part of the public Contract type because
+    // it is only meaningful immediately after deployment. The assertion is intentional
+    // here; if `deployTransaction` is missing at runtime it means the factory did not
+    // broadcast (e.g. a dry-run mode), and the access will throw a clear TypeError.
+    const { hash } = (deployed as Contract & { deployTransaction: { hash: string } })
+      .deployTransaction
+    console.log('Deploy tx hash:', hash)
 
-  // The contract address is only assigned after the tx is confirmed on-chain.
-  // Once waitForTransaction is available in the provider:
-  //
-  //   const receipt = await provider.waitForTransaction(hash)
-  //   const address = ContractFactory.getDeployedAddress(receipt)
-  //   console.log('Contract deployed at:', address)
-  //
-  // For now, check the explorer:
-  console.log(`Explorer: https://kleverscan.org/transaction/${hash}`)
-
-  await wallet.disconnect(true)
+    // The contract address is only assigned after the tx is confirmed on-chain.
+    // Once waitForTransaction is available in the provider:
+    //
+    //   const receipt = await provider.waitForTransaction(hash)
+    //   const address = ContractFactory.getDeployedAddress(receipt)
+    //   console.log('Contract deployed at:', address)
+    //
+    // For now, check the explorer:
+    console.log(`Explorer: https://kleverscan.org/transaction/${hash}`)
+  } finally {
+    await wallet.disconnect(true)
+  }
 }
 
 main().catch((err) => {

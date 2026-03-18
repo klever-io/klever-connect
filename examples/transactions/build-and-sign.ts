@@ -39,7 +39,9 @@ async function main(): Promise<void> {
   console.log('\n[Node-assisted] Hash:', hash1)
 
   // ── Mode 2: Offline (buildProto) ─────────────────────────────────────────
-  // No network call — nonce, chainId, and fees must be supplied manually.
+  // Nonce, chainId, and fees must be supplied manually (no automatic filling).
+  // Here we fetch the nonce explicitly; in a fully offline scenario you would
+  // supply a pre-known value instead.
   const nonce = await provider.getNonce(createKleverAddress(wallet.address))
 
   const offlineTx = new TransactionBuilder()

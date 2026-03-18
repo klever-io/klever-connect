@@ -34,76 +34,77 @@ async function main(): Promise<void> {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log('Sender:', wallet.address)
+  try {
+    console.log('Sender:', wallet.address)
 
-  // ── Transfer ─────────────────────────────────────────────────────────────
-  const transfer = await wallet.sendTransaction({
-    contractType: 0, // TXType.Transfer
-    receiver: VALIDATOR,
-    amount: parseKLV('1'),
-    // kda: 'MY-TOKEN-ABCD', // optional: send a specific KDA instead of KLV
-  })
-  console.log('Transfer:', transfer.hash)
-
-  // ── Freeze ───────────────────────────────────────────────────────────────
-  // Lock KLV to earn staking rewards; returns a bucketId in the receipt
-  const freeze = await wallet.sendTransaction({
-    contractType: 4, // TXType.Freeze
-    amount: parseKLV('100'),
-    // kda: 'KDA-TOKEN', // optional: freeze a KDA token
-  })
-  console.log('Freeze:', freeze.hash)
-  // To get the bucketId: const receipt = await freeze.wait() (if wait() is available)
-
-  // ── Delegate ─────────────────────────────────────────────────────────────
-  // Delegate a frozen KLV bucket to a validator
-  if (BUCKET_ID) {
-    const delegate = await wallet.sendTransaction({
-      contractType: 6, // TXType.Delegate
+    // ── Transfer ─────────────────────────────────────────────────────────────
+    const transfer = await wallet.sendTransaction({
+      contractType: 0, // TXType.Transfer
       receiver: VALIDATOR,
-      bucketId: BUCKET_ID,
+      amount: parseKLV('1'),
+      // kda: 'MY-TOKEN-ABCD', // optional: send a specific KDA instead of KLV
     })
-    console.log('Delegate:', delegate.hash)
+    console.log('Transfer:', transfer.hash)
 
-    // ── Undelegate ───────────────────────────────────────────────────────
-    // Remove delegation (bucket stays frozen, can be unfrozen after cooldown)
-    const undelegate = await wallet.sendTransaction({
-      contractType: 7, // TXType.Undelegate
-      bucketId: BUCKET_ID,
+    // ── Freeze ───────────────────────────────────────────────────────────────
+    // Lock KLV to earn staking rewards; returns a bucketId in the receipt
+    const freeze = await wallet.sendTransaction({
+      contractType: 4, // TXType.Freeze
+      amount: parseKLV('100'),
+      // kda: 'KDA-TOKEN', // optional: freeze a KDA token
     })
-    console.log('Undelegate:', undelegate.hash)
+    console.log('Freeze:', freeze.hash)
 
-    // ── Unfreeze ─────────────────────────────────────────────────────────
-    // Unlock the frozen bucket after the undelegate cooldown period
-    const unfreeze = await wallet.sendTransaction({
-      contractType: 5, // TXType.Unfreeze
-      kda: 'KLV',
-      bucketId: BUCKET_ID,
+    // ── Delegate ─────────────────────────────────────────────────────────────
+    // Delegate a frozen KLV bucket to a validator
+    if (BUCKET_ID) {
+      const delegate = await wallet.sendTransaction({
+        contractType: 6, // TXType.Delegate
+        receiver: VALIDATOR,
+        bucketId: BUCKET_ID,
+      })
+      console.log('Delegate:', delegate.hash)
+
+      // ── Undelegate ───────────────────────────────────────────────────────
+      // Remove delegation (bucket stays frozen, can be unfrozen after cooldown)
+      const undelegate = await wallet.sendTransaction({
+        contractType: 7, // TXType.Undelegate
+        bucketId: BUCKET_ID,
+      })
+      console.log('Undelegate:', undelegate.hash)
+
+      // ── Unfreeze ─────────────────────────────────────────────────────────
+      // Unlock the frozen bucket after the undelegate cooldown period
+      const unfreeze = await wallet.sendTransaction({
+        contractType: 5, // TXType.Unfreeze
+        kda: 'KLV',
+        bucketId: BUCKET_ID,
+      })
+      console.log('Unfreeze:', unfreeze.hash)
+    } else {
+      console.log('Set BUCKET_ID env var to test Delegate/Undelegate/Unfreeze')
+    }
+
+    // ── Claim ────────────────────────────────────────────────────────────────
+    // Claim staking rewards
+    const claim = await wallet.sendTransaction({
+      contractType: 9, // TXType.Claim
+      claimType: ClaimType.StakingClaim,
     })
-    console.log('Unfreeze:', unfreeze.hash)
-  } else {
-    console.log('Set BUCKET_ID env var to test Delegate/Undelegate/Unfreeze')
+    console.log('Claim:', claim.hash)
+
+    // ── Vote ─────────────────────────────────────────────────────────────────
+    // Vote on a governance proposal (type: 0 = Yes, 1 = No)
+    // Requires an active proposal ID — check the Klever explorer for open proposals.
+    // const vote = await wallet.sendTransaction({
+    //   contractType: 14, // TXType.Vote
+    //   type: 0,          // 0 = Yes, 1 = No
+    //   proposalId: 1,    // replace with an active proposal ID
+    // })
+    // console.log('Vote:', vote.hash)
+  } finally {
+    await wallet.disconnect(true)
   }
-
-  // ── Claim ────────────────────────────────────────────────────────────────
-  // Claim staking rewards
-  const claim = await wallet.sendTransaction({
-    contractType: 9, // TXType.Claim
-    claimType: ClaimType.StakingClaim,
-  })
-  console.log('Claim:', claim.hash)
-
-  // ── Vote ─────────────────────────────────────────────────────────────────
-  // Vote on a governance proposal (type: 0 = Yes, 1 = No)
-  // Requires an active proposal ID — check the Klever explorer for open proposals.
-  // const vote = await wallet.sendTransaction({
-  //   contractType: 14, // TXType.Vote
-  //   type: 0,          // 0 = Yes, 1 = No
-  //   proposalId: 1,    // replace with an active proposal ID
-  // })
-  // console.log('Vote:', vote.hash)
-
-  await wallet.disconnect(true)
 }
 
 main().catch((err) => {
