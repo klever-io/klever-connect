@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   // --- Step 4: Derive multiple accounts from the same mnemonic ---
   // Change the last index to derive sibling accounts
   const paths = [
-    "m/44'/690'/0'/0'/0'", // account 0
+    DEFAULT_DERIVATION_PATH, // account 0
     "m/44'/690'/0'/0'/1'", // account 1
     "m/44'/690'/0'/0'/2'", // account 2
   ]

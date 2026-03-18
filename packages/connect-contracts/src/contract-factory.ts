@@ -316,9 +316,8 @@ export class ContractFactory {
   }
 
   /**
-   * Encode CodeMetadata flags as a 4-char uppercase hex string (2 bytes).
-   * Byte 0: Upgradeable=0x01, Readable=0x04
-   * Byte 1: Payable=0x02, PayableBySC=0x04
+   * Merge per-deploy overrides with factory-level metadata defaults.
+   * Each field falls back to the factory default when not provided by the caller.
    */
   private _resolveMetadata(deployOptions?: DeployOptions): Required<DeployMetadata> {
     const overrides = deployOptions?.metadata
