@@ -349,7 +349,9 @@ describe('ContractFactory', () => {
       const factory = new ContractFactory(abi, bytecode, mockSigner)
       const deployTx = factory.getDeployTransaction()
 
-      expect(deployTx.data).toBe('010203')
+      // Format: {bytecode}@{vmType}@{metadataHex} with default metadata
+      // byte0 = upgradeable(0x01)|readable(0x04) = 0x05, byte1 = payable(0x02)|payableBySC(0x04) = 0x06
+      expect(deployTx.data).toBe('010203@0500@0506')
     })
 
     it('should get deployment data with constructor args', async () => {
