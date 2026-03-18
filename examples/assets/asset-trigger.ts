@@ -29,8 +29,12 @@ import { KleverProvider } from '@klever/connect-provider'
 import { NodeWallet } from '@klever/connect-wallet'
 import { parseKLV } from '@klever/connect-core'
 
-// Replace with your KDA asset ID
-const ASSET_ID = process.env['ASSET_ID'] ?? 'MTT-ABCD-1A'
+const ASSET_ID = process.env['ASSET_ID']
+if (!ASSET_ID) {
+  console.error('Error: ASSET_ID environment variable is not set.')
+  console.error('Set it to your KDA asset ID, e.g. ASSET_ID=MTT-ABCD-1A')
+  process.exit(1)
+}
 
 async function main(): Promise<void> {
   const privateKey = process.env['PRIVATE_KEY']
@@ -49,7 +53,7 @@ async function main(): Promise<void> {
     const mint = await wallet.sendTransaction({
       contractType: 11, // TXType.AssetTrigger // AssetTrigger
       triggerType: 0, // Mint
-      assetId: ASSET_ID,
+      assetId: ASSET_ID as string,
       receiver: wallet.address, // mint destination
       amount: parseKLV('500000'),
     })
@@ -59,7 +63,7 @@ async function main(): Promise<void> {
     const burn = await wallet.sendTransaction({
       contractType: 11, // TXType.AssetTrigger
       triggerType: 1, // Burn
-      assetId: ASSET_ID,
+      assetId: ASSET_ID as string,
       amount: parseKLV('1000'),
     })
     console.log('Burn:', burn.hash)
@@ -70,7 +74,7 @@ async function main(): Promise<void> {
     const addRole = await wallet.sendTransaction({
       contractType: 11, // TXType.AssetTrigger
       triggerType: 6, // AddRole
-      assetId: ASSET_ID,
+      assetId: ASSET_ID as string,
       role: {
         address: minter,
         hasRoleMint: true,
@@ -83,7 +87,7 @@ async function main(): Promise<void> {
     const updateLogo = await wallet.sendTransaction({
       contractType: 11, // TXType.AssetTrigger
       triggerType: 10, // UpdateLogo
-      assetId: ASSET_ID,
+      assetId: ASSET_ID as string,
       logo: 'https://example.com/token-logo.png',
     })
     console.log('UpdateLogo:', updateLogo.hash)

@@ -201,17 +201,7 @@ export class ContractFactory {
       deployOptions = args.pop() as DeployOptions
     }
 
-    // Merge per-deploy overrides with factory-level defaults using explicit ?? so
-    // that a partial DeployMetadata (e.g. only `upgradeable`) never leaves any
-    // field as `undefined` — which would otherwise violate Required<DeployMetadata>.
-    const overrides = deployOptions?.metadata
-    const metadata: Required<DeployMetadata> = {
-      upgradeable: overrides?.upgradeable ?? this.metadata.upgradeable,
-      readable: overrides?.readable ?? this.metadata.readable,
-      payable: overrides?.payable ?? this.metadata.payable,
-      payableBySC: overrides?.payableBySC ?? this.metadata.payableBySC,
-      vmType: overrides?.vmType ?? this.metadata.vmType,
-    }
+    const metadata = this._resolveMetadata(deployOptions)
 
     // Encode constructor arguments using ABI-aware encoder
     const encodedArgs = this._encodeArguments(args)
@@ -330,6 +320,17 @@ export class ContractFactory {
    * Byte 0: Upgradeable=0x01, Readable=0x04
    * Byte 1: Payable=0x02, PayableBySC=0x04
    */
+  private _resolveMetadata(deployOptions?: DeployOptions): Required<DeployMetadata> {
+    const overrides = deployOptions?.metadata
+    return {
+      upgradeable: overrides?.upgradeable ?? this.metadata.upgradeable,
+      readable: overrides?.readable ?? this.metadata.readable,
+      payable: overrides?.payable ?? this.metadata.payable,
+      payableBySC: overrides?.payableBySC ?? this.metadata.payableBySC,
+      vmType: overrides?.vmType ?? this.metadata.vmType,
+    }
+  }
+
   private _metadataHex(metadata: Required<DeployMetadata>): string {
     let byte0 = 0
     let byte1 = 0
@@ -492,15 +493,7 @@ export class ContractFactory {
     if (args.length > 0 && this._isDeployOptions(args[args.length - 1])) {
       deployOptions = args.pop() as DeployOptions
     }
-    // Same explicit ?? merge as deploy() — keeps Required<DeployMetadata> fully defined.
-    const overrides = deployOptions?.metadata
-    const metadata: Required<DeployMetadata> = {
-      upgradeable: overrides?.upgradeable ?? this.metadata.upgradeable,
-      readable: overrides?.readable ?? this.metadata.readable,
-      payable: overrides?.payable ?? this.metadata.payable,
-      payableBySC: overrides?.payableBySC ?? this.metadata.payableBySC,
-      vmType: overrides?.vmType ?? this.metadata.vmType,
-    }
+    const metadata = this._resolveMetadata(deployOptions)
     const encodedArgs = this._encodeArguments(args)
     const deployData = this._prepareDeployData(encodedArgs, metadata)
 
