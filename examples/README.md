@@ -26,7 +26,6 @@ npx tsx examples/<category>/<file>.ts
 | [`transactions/`](./transactions/) | Build modes, all contract types, fee control                     | `PRIVATE_KEY`                     |
 | [`assets/`](./assets/)             | Create KDA token, mint, burn, manage roles                       | `PRIVATE_KEY`, `ASSET_ID`         |
 | [`contracts/`](./contracts/)       | Deploy, call, and invoke smart contracts                         | `PRIVATE_KEY`, `CONTRACT_ADDRESS` |
-| [`react/`](./react/)               | KleverProvider, useKlever, useBalance, useTransaction            | (browser only)                    |
 
 ## Quick start
 
@@ -45,7 +44,7 @@ npx tsx examples/basic/transfer.ts
 
 ## Environment variables
 
-Examples automatically load `examples/.env` via `dotenv`.
+Examples that need credentials import `dotenv/config` at the top of the file, which loads `examples/.env` automatically when you run that script.
 Copy `.env.example` to get started — **never commit the real `.env`**.
 
 ```bash
@@ -59,7 +58,6 @@ cp examples/.env.example examples/.env
 | `CONTRACT_ADDRESS`  | contracts/\*.ts              | Deployed smart contract address   |
 | `WASM_PATH`         | contracts/deploy-contract.ts | Path to compiled `.wasm` file     |
 | `ABI_PATH`          | contracts/deploy-contract.ts | Path to `.abi.json` file          |
-| `TX_HASH`           | basic/account-info.ts        | Transaction hash to look up       |
 | `KDA_ID`            | basic/balance.ts             | KDA token ID for balance check    |
 | `KEYSTORE_PASSWORD` | wallet/keystore.ts           | Password for keystore encryption  |
 

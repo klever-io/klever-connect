@@ -18,6 +18,7 @@ import { KleverProvider } from '@klever/connect-provider'
 import { NodeWallet } from '@klever/connect-wallet'
 import { Contract } from '@klever/connect-contracts'
 import type { ContractABI } from '@klever/connect-contracts'
+import { parseKLV } from '@klever/connect-core'
 
 const CONTRACT_ADDRESS = process.env['CONTRACT_ADDRESS']
 if (!CONTRACT_ADDRESS) {
@@ -50,19 +51,26 @@ async function main(): Promise<void> {
   await wallet.connect()
 
   // Create a Contract instance (signer enables mutable calls)
-  const contract = new Contract(CONTRACT_ADDRESS, ABI, wallet)
+  const contract = new Contract(CONTRACT_ADDRESS as string, ABI, wallet)
 
-  // ── Mutable call — get_message ─────────────────────────────────────────
-  const msgResult = await contract.invoke('get_message')
-  console.log('get_message tx hash:', msgResult.hash)
+  try {
+    // ── Mutable call — set_message ───────────────────────────────────────
+    // set_message writes state on-chain, so it submits a signed transaction.
+    // A view/query function would use contract.query() instead of invoke().
+    const msgResult = await contract.invoke('set_message')
+    console.log('set_message tx hash:', msgResult.hash)
 
-  // ── Payable call — pay_hello ───────────────────────────────────────────
-  // Sends KLV alongside the call via CallOptions { value: { KLV: amount } }.
-  // This contract checks: require!(klv_value() == BigUint::from(10u8))
-  const payResult = await contract.invoke('pay_hello', { value: { KLV: 10n } })
-  console.log('pay_hello tx hash:', payResult.hash)
-
-  await wallet.disconnect(true)
+    // ── Payable call — pay_hello ─────────────────────────────────────────
+    // Sends KLV alongside the call via CallOptions { value: { KLV: amount } }.
+    // parseKLV converts a human-readable KLV amount to the 6-decimal precision
+    // required by the chain. The contract checks:
+    //   require!(klv_value() == BigUint::from(10_000_000u64))  // 10 KLV
+    const payResult = await contract.invoke('pay_hello', { value: { KLV: parseKLV('10') } })
+    console.log('pay_hello tx hash:', payResult.hash)
+  } finally {
+    // Disconnect regardless of whether the calls succeed or throw.
+    await wallet.disconnect(true)
+  }
 }
 
 main().catch((err) => {

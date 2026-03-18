@@ -20,14 +20,6 @@ Transfer, Freeze, Delegate, Undelegate, Unfreeze, Claim, and more using `contrac
 PRIVATE_KEY=your_hex_key BUCKET_ID=your_bucket npx tsx all-types.ts
 ```
 
-### `fee-estimation.ts` — Fee control
-
-Build offline transactions with explicit fees; optionally pay fees in a KDA token.
-
-```bash
-PRIVATE_KEY=your_hex_key npx tsx fee-estimation.ts
-```
-
 ## Key Concepts
 
 ### Build modes

@@ -63,7 +63,11 @@ async function main(): Promise<void> {
   console.log('Deploying contract...')
   const deployed = await factory.deploy()
 
-  // deployTransaction is attached by ContractFactory after broadcast
+  // ContractFactory attaches `deployTransaction` to the Contract instance after
+  // broadcasting, but the property is not part of the public Contract type because
+  // it is only meaningful immediately after deployment. The assertion is intentional
+  // here; if `deployTransaction` is missing at runtime it means the factory did not
+  // broadcast (e.g. a dry-run mode), and the access will throw a clear TypeError.
   const { hash } = (deployed as Contract & { deployTransaction: { hash: string } })
     .deployTransaction
   console.log('Deploy tx hash:', hash)

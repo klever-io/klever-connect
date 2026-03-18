@@ -13,12 +13,12 @@ import { KleverProvider } from '@klever/connect-provider'
 import { NodeWallet, WalletFactory } from '@klever/connect-wallet'
 
 const KEYSTORE_PATH = './wallet.keystore.json'
-const PASSWORD = process.env['KEYSTORE_PASSWORD'] ?? 'change-me-in-production'
 
-if (!process.env['KEYSTORE_PASSWORD']) {
-  console.warn(
-    '⚠ KEYSTORE_PASSWORD not set — using default password. Set it in your .env for real wallets.',
-  )
+const PASSWORD = process.env['KEYSTORE_PASSWORD']
+if (!PASSWORD) {
+  console.error('Error: KEYSTORE_PASSWORD environment variable is not set.')
+  console.error('Add it to your .env file before running this example.')
+  process.exit(1)
 }
 
 async function createAndSave(): Promise<void> {
@@ -31,10 +31,10 @@ async function createAndSave(): Promise<void> {
 
   // Encrypt to keystore (scryptN: 4096 is fast but less secure — use default for production)
   console.log('Encrypting keystore (this may take a moment)...')
-  const keystore = await wallet.encrypt(PASSWORD, { scryptN: 4096 })
+  const keystore = await wallet.encrypt(PASSWORD as string, { scryptN: 4096 })
 
-  // Save to disk
-  writeFileSync(KEYSTORE_PATH, JSON.stringify(keystore, null, 2))
+  // Save to disk with owner-only read/write permissions (mode 0o600)
+  writeFileSync(KEYSTORE_PATH, JSON.stringify(keystore, null, 2), { mode: 0o600 })
   console.log('Keystore saved to:', KEYSTORE_PATH)
 
   await wallet.disconnect(true)
@@ -51,7 +51,7 @@ async function loadAndUse(): Promise<void> {
   const factory = new WalletFactory(provider)
 
   console.log('\nDecrypting keystore...')
-  const wallet = await factory.fromEncryptedJson(keystoreJson, PASSWORD)
+  const wallet = await factory.fromEncryptedJson(keystoreJson, PASSWORD as string)
   await wallet.connect()
 
   console.log('Restored address:', wallet.address)

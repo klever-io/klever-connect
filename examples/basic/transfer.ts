@@ -11,7 +11,7 @@
 import 'dotenv/config'
 import { KleverProvider } from '@klever/connect-provider'
 import { NodeWallet } from '@klever/connect-wallet'
-import { parseKLV } from '@klever/connect-core'
+import { parseKLV, isValidAddress, ValidationError } from '@klever/connect-core'
 
 async function main(): Promise<void> {
   // Step 1: Connect to testnet
@@ -30,6 +30,12 @@ async function main(): Promise<void> {
 
   // Step 3: Resolve receiver — argv[2] > RECEIVER env var > self-send
   const receiver = process.argv[2] ?? process.env['RECEIVER'] ?? wallet.address // send to self if no address provided
+
+  // Validate receiver address before attempting the transfer.
+  // wallet.address is already validated on connect; external inputs (argv/env) are not.
+  if (!isValidAddress(receiver)) {
+    throw new ValidationError(`Invalid receiver address: ${receiver}`)
+  }
 
   try {
     // Send 1 KLV to the receiver

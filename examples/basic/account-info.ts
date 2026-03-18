@@ -34,8 +34,8 @@ async function getAccountInfo(rawAddress: string): Promise<void> {
     // KLV balance is always present
     const klvAsset = account.assets?.find((a) => a.assetId === 'KLV')
     if (klvAsset) {
-      const balance = BigInt(klvAsset.balance)
-      const frozen = BigInt(klvAsset.frozenBalance)
+      const balance = BigInt(klvAsset.balance ?? 0)
+      const frozen = BigInt(klvAsset.frozenBalance ?? 0)
       console.log('\n=== KLV ===')
       console.log('Balance:', formatKLV(balance))
       console.log('Frozen:', formatKLV(frozen))

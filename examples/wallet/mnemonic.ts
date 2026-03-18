@@ -24,10 +24,15 @@ async function main(): Promise<void> {
   const mnemonic12 = generateMnemonicPhrase({ strength: 128 }) // 12 words
   const mnemonic24 = generateMnemonicPhrase({ strength: 256 }) // 24 words
 
-  console.log('12-word mnemonic:', mnemonic12)
-  console.log('24-word mnemonic:', mnemonic24)
+  // Never log full mnemonic phrases in production applications.
+  const maskMnemonic = (phrase: string): string => {
+    const words = phrase.split(' ')
+    return `${words[0] ?? ''} ${'*'.repeat(8)} ... ${'*'.repeat(8)} ${words[words.length - 1] ?? ''} (${words.length} words)`
+  }
+  console.log('12-word mnemonic (masked):', maskMnemonic(mnemonic12))
+  console.log('24-word mnemonic (masked):', maskMnemonic(mnemonic24))
 
-  // IMPORTANT: In a real app, show this to the user and ask them to back it up.
+  // IMPORTANT: In a real app, show the full phrase to the user once and ask them to back it up.
 
   // --- Step 2: Validate a mnemonic ---
   console.log('Is valid (12):', isValidMnemonic(mnemonic12))

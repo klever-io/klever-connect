@@ -30,7 +30,7 @@ async function main(): Promise<void> {
 
   // IMPORTANT: In a real app, save the private key before disconnecting.
   // There is currently no way to export the key after connect() — generate
-  // a key pair separately if you need to persist it (see hd-wallet.ts).
+  // a key pair separately if you need to persist it (see mnemonic.ts).
 
   await newWallet.disconnect(true)
 

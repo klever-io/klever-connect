@@ -21,8 +21,7 @@ import { parseKLV } from '@klever/connect-core'
 async function main(): Promise<void> {
   const privateKey = process.env['PRIVATE_KEY']
   if (!privateKey) {
-    console.log('Set PRIVATE_KEY env var to sign and broadcast')
-    return
+    throw new Error('Set PRIVATE_KEY environment variable')
   }
 
   const provider = new KleverProvider({ network: 'testnet' })

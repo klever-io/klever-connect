@@ -9,10 +9,8 @@
     "mnemonic": "tsx wallet/mnemonic.ts",
     "encoding": "tsx encoding/encode-decode.ts"
   },
-  "devDependencies": {
-    "dotenv": "^16.0.0"
-  },
   "dependencies": {
+    "dotenv": "^16.0.0",
     "@klever/connect": "workspace:*",
     "@klever/connect-core": "workspace:*",
     "@klever/connect-crypto": "workspace:*",

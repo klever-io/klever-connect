@@ -14,7 +14,7 @@ npx tsx encode-decode.ts
 
 ### `transaction-encoding.ts` — Transaction serialization
 
-Build an offline transaction, serialize to hex, deserialize it back, then sign and broadcast.
+Build a node-assisted transaction, serialize to hex, deserialize it back, then sign and broadcast.
 
 ```bash
 PRIVATE_KEY=your_hex_key npx tsx transaction-encoding.ts
