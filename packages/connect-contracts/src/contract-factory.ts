@@ -201,9 +201,16 @@ export class ContractFactory {
       deployOptions = args.pop() as DeployOptions
     }
 
+    // Merge per-deploy overrides with factory-level defaults using explicit ?? so
+    // that a partial DeployMetadata (e.g. only `upgradeable`) never leaves any
+    // field as `undefined` — which would otherwise violate Required<DeployMetadata>.
+    const overrides = deployOptions?.metadata
     const metadata: Required<DeployMetadata> = {
-      ...this.metadata,
-      ...deployOptions?.metadata,
+      upgradeable: overrides?.upgradeable ?? this.metadata.upgradeable,
+      readable: overrides?.readable ?? this.metadata.readable,
+      payable: overrides?.payable ?? this.metadata.payable,
+      payableBySC: overrides?.payableBySC ?? this.metadata.payableBySC,
+      vmType: overrides?.vmType ?? this.metadata.vmType,
     }
 
     // Encode constructor arguments using ABI-aware encoder
@@ -240,8 +247,9 @@ export class ContractFactory {
       )
     }
 
-    // Sign transaction
-    await this.signer.signTransaction(tx)
+    // Sign transaction — reassign because the signer may return a new Transaction
+    // object rather than mutating in place (matches the Signer interface contract).
+    tx = await this.signer.signTransaction(tx)
 
     // Broadcast transaction
     const hash = await this.provider.sendRawTransaction(tx)
@@ -357,11 +365,19 @@ export class ContractFactory {
     return parts.join('@')
   }
 
-  /** Check if an argument is a DeployOptions object (not a constructor arg) */
+  /**
+   * Check if an argument is a DeployOptions object (not a constructor arg).
+   *
+   * An empty plain object `{}` is intentionally NOT treated as DeployOptions:
+   * it is indistinguishable from an arbitrary constructor argument and would
+   * silently swallow user data. The object must explicitly contain the
+   * `metadata` key (and no other keys) to be recognised as DeployOptions.
+   */
   private _isDeployOptions(arg: unknown): arg is DeployOptions {
     if (arg === null || typeof arg !== 'object' || arg instanceof Uint8Array) return false
     const keys = Object.keys(arg)
-    return keys.length === 0 || keys.every((k) => k === 'metadata')
+    // Require at least one key so that {} passes through as a normal argument.
+    return keys.length > 0 && keys.every((k) => k === 'metadata')
   }
 
   /**
@@ -476,7 +492,15 @@ export class ContractFactory {
     if (args.length > 0 && this._isDeployOptions(args[args.length - 1])) {
       deployOptions = args.pop() as DeployOptions
     }
-    const metadata: Required<DeployMetadata> = { ...this.metadata, ...deployOptions?.metadata }
+    // Same explicit ?? merge as deploy() — keeps Required<DeployMetadata> fully defined.
+    const overrides = deployOptions?.metadata
+    const metadata: Required<DeployMetadata> = {
+      upgradeable: overrides?.upgradeable ?? this.metadata.upgradeable,
+      readable: overrides?.readable ?? this.metadata.readable,
+      payable: overrides?.payable ?? this.metadata.payable,
+      payableBySC: overrides?.payableBySC ?? this.metadata.payableBySC,
+      vmType: overrides?.vmType ?? this.metadata.vmType,
+    }
     const encodedArgs = this._encodeArguments(args)
     const deployData = this._prepareDeployData(encodedArgs, metadata)
 
