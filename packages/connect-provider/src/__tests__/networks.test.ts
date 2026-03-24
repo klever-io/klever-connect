@@ -272,7 +272,10 @@ describe('Networks', () => {
         expect(network).toHaveProperty('isTestnet')
         expect(network).toHaveProperty('nativeCurrency')
 
-        expect(network.config).toHaveProperty('api')
+        // 'custom' is a placeholder with an empty config — skip the api check for it
+        if (network.name !== 'custom') {
+          expect(network.config).toHaveProperty('api')
+        }
         expect(typeof network.isTestnet).toBe('boolean')
       })
     })
@@ -290,11 +293,14 @@ describe('Networks', () => {
       expect(NETWORKS.devnet.config.explorer).toBe('https://devnet.kleverscan.org')
     })
 
-    it('should have WebSocket URL for networks that support it', () => {
-      expect(NETWORKS.mainnet.config.ws).toBe('wss://api.mainnet.klever.org')
-      expect(NETWORKS.testnet.config.ws).toBe('wss://api.testnet.klever.org')
-      expect(NETWORKS.devnet.config.ws).toBe('wss://api.devnet.klever.org')
-      expect(NETWORKS.local.config.ws).toBe('ws://localhost:8080')
+    it('should not have a WebSocket URL for public networks (official endpoint is disabled)', () => {
+      expect(NETWORKS.mainnet.config.ws).toBeUndefined()
+      expect(NETWORKS.testnet.config.ws).toBeUndefined()
+      expect(NETWORKS.devnet.config.ws).toBeUndefined()
+    })
+
+    it('should have a WebSocket URL for local network', () => {
+      expect(NETWORKS.local.config.ws).toBe('ws://localhost:8080/subscribe')
     })
   })
 })

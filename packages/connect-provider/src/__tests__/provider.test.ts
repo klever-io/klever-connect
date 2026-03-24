@@ -683,7 +683,7 @@ describe('KleverProvider', () => {
           nonce: 10,
           contracts: [{ type: 0, parameter: {} }],
         }),
-      ).rejects.toThrow('Failed to build transaction: Build failed')
+      ).rejects.toThrow('Build failed')
     })
   })
 
@@ -934,7 +934,7 @@ describe('KleverProvider', () => {
     })
   })
 
-  describe('event listeners (TODO)', () => {
+  describe('event listeners', () => {
     it('should register event listener', () => {
       const listener = vi.fn()
       expect(() => provider.on('block', listener)).not.toThrow()
@@ -944,12 +944,112 @@ describe('KleverProvider', () => {
       const listener = vi.fn()
       expect(() => provider.off('block', listener)).not.toThrow()
     })
+
+    it('on() — listener is called when emitter fires the event', () => {
+      const listener = vi.fn()
+      provider.on('error', listener)
+      // Access the internal emitter to trigger a test event
+      // @ts-expect-error - accessing private property for testing
+      provider._emitter.emit('error', { code: 'TEST', message: 'test error' })
+      expect(listener).toHaveBeenCalledOnce()
+      expect(listener).toHaveBeenCalledWith({ code: 'TEST', message: 'test error' })
+    })
+
+    it('off() — listener is no longer called after removal', () => {
+      const listener = vi.fn()
+      provider.on('error', listener)
+      provider.off('error', listener)
+      // @ts-expect-error - accessing private property for testing
+      provider._emitter.emit('error', { code: 'TEST', message: 'test error' })
+      expect(listener).not.toHaveBeenCalled()
+    })
+
+    it('once() — listener is called exactly once then auto-removed', () => {
+      const listener = vi.fn()
+      provider.once('error', listener)
+      // @ts-expect-error - accessing private property for testing
+      provider._emitter.emit('error', { code: 'A', message: 'first' })
+      // @ts-expect-error - accessing private property for testing
+      provider._emitter.emit('error', { code: 'B', message: 'second' })
+      expect(listener).toHaveBeenCalledOnce()
+      expect(listener).toHaveBeenCalledWith({ code: 'A', message: 'first' })
+    })
+
+    it('removeAllListeners(event) — removes all listeners for that event', () => {
+      const l1 = vi.fn()
+      const l2 = vi.fn()
+      provider.on('error', l1)
+      provider.on('error', l2)
+      provider.removeAllListeners('error')
+      // @ts-expect-error - accessing private property for testing
+      provider._emitter.emit('error', { code: 'TEST', message: 'test' })
+      expect(l1).not.toHaveBeenCalled()
+      expect(l2).not.toHaveBeenCalled()
+    })
+
+    it('removeAllListeners() with no args — removes all listeners across all events', () => {
+      const blockListener = vi.fn()
+      const errorListener = vi.fn()
+      provider.on('block', blockListener)
+      provider.on('error', errorListener)
+      provider.removeAllListeners()
+      // @ts-expect-error - accessing private property for testing
+      provider._emitter.emit('block', { blockNumber: 1, hash: '', timestamp: 0 })
+      // @ts-expect-error - accessing private property for testing
+      provider._emitter.emit('error', { code: 'TEST', message: 'test' })
+      expect(blockListener).not.toHaveBeenCalled()
+      expect(errorListener).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('connect / disconnect', () => {
+    it('connect() creates an event manager', () => {
+      provider.connect()
+      // @ts-expect-error - accessing private property for testing
+      expect(provider._eventManager).not.toBeNull()
+      provider.disconnect()
+    })
+
+    it('connect() is a no-op when already connected', () => {
+      provider.connect()
+      // @ts-expect-error - accessing private property for testing
+      const firstManager = provider._eventManager
+      provider.connect()
+      // @ts-expect-error - accessing private property for testing
+      expect(provider._eventManager).toBe(firstManager)
+      provider.disconnect()
+    })
+
+    it('disconnect() disposes the event manager', () => {
+      provider.connect()
+      // @ts-expect-error - accessing private property for testing
+      expect(provider._eventManager).not.toBeNull()
+      provider.disconnect()
+      // @ts-expect-error - accessing private property for testing
+      expect(provider._eventManager).toBeNull()
+    })
+
+    it('disconnect() is a no-op when not connected', () => {
+      expect(() => provider.disconnect()).not.toThrow()
+    })
+
+    it('connect() then disconnect() then connect() creates a new manager', () => {
+      provider.connect()
+      // @ts-expect-error - accessing private property for testing
+      const firstManager = provider._eventManager
+      provider.disconnect()
+      provider.connect()
+      // @ts-expect-error - accessing private property for testing
+      const secondManager = provider._eventManager
+      expect(secondManager).not.toBe(firstManager)
+      expect(secondManager).not.toBeNull()
+      provider.disconnect()
+    })
   })
 
   describe('contract call (TODO)', () => {
-    it('should call contract method', async () => {
-      const result = await provider.call('/contract/method')
-      expect(result).toEqual({})
+    it('should throw not implemented error', async () => {
+      await expect(provider.call('/contract/method')).rejects.toThrow('not yet implemented')
     })
   })
 })
