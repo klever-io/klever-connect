@@ -128,6 +128,7 @@ jobs:
           retention-days: 7
 
   coverage:
+    needs: [build]
     runs-on: ubuntu-latest
 
     steps:

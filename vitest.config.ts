@@ -20,6 +20,7 @@ export default defineConfig({
         '**/vitest.config.ts',
         '**/vitest.integration.config.ts',
         '**/scripts/**',
+        '**/*.testnet.ts',
       ],
       thresholds: {
         statements: 80,

@@ -57,6 +57,12 @@ describe('encoding', () => {
       const original = new Uint8Array([1, 2, 3, 4, 5, 255, 0, 128])
       expect(hexDecode(hexEncode(original))).toEqual(original)
     })
+
+    it('should accept Node.js Buffer as input', () => {
+      const buf = Buffer.from([1, 2, 3, 4])
+      expect(hexEncode(buf)).toBe('01020304')
+      expect(hexDecode(hexEncode(buf))).toEqual(buf)
+    })
   })
 
   describe('base58Encode / base58Decode', () => {
@@ -128,8 +134,9 @@ describe('encoding', () => {
     })
 
     it('should throw on address with wrong data length', () => {
-      // Short address won't decode to 32 bytes
-      expect(() => bech32Decode('klv1qqqqqqq')).toThrow()
+      // Encode 20 bytes — valid bech32 but not the required 32-byte length
+      const shortAddr = bech32Encode(new Uint8Array(20))
+      expect(() => bech32Decode(shortAddr)).toThrow('Invalid address length')
     })
 
     it('should roundtrip known public key bytes', () => {

@@ -197,15 +197,8 @@ describe('keystore', () => {
     it('should successfully encrypt and decrypt multiple times', { timeout: 10000 }, async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
 
-      // Use faster scrypt params for testing
-      const testOptions = {
-        scryptN: 4096,
-        scryptR: 4,
-        scryptP: 1,
-      }
-
       for (let i = 0; i < 3; i++) {
-        const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, testOptions)
+        const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
         const decrypted = await decryptKeystore(keystore, testPassword)
         expect(decrypted.toHex()).toBe(testPrivateKeyHex)
       }

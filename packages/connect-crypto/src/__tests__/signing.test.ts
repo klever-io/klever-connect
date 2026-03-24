@@ -242,4 +242,9 @@ describe('generateKeyPairSync', () => {
     const kp2 = generateKeyPairSync()
     expect(kp1.privateKey.toHex()).not.toBe(kp2.privateKey.toHex())
   })
+
+  it('should generate address from sync key pair', () => {
+    const { publicKey } = generateKeyPairSync()
+    expect(publicKey.toAddress()).toMatch(/^klv1/)
+  })
 })
