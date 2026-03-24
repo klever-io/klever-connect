@@ -31,26 +31,22 @@ function createBlockPoller(
     if (stopped) return
     try {
       const num = await fetchBlockNumber()
-      if (num !== lastSeen) {
+      if (!stopped && num !== lastSeen) {
         lastSeen = num
         onBlock(num)
       }
     } catch (err) {
-      onError(err instanceof Error ? err : new Error(String(err)))
+      if (!stopped) onError(err instanceof Error ? err : new Error(String(err)))
+    } finally {
+      if (!stopped) setTimeout(() => void tick(), BLOCK_POLL_INTERVAL_MS)
     }
   }
 
-  const id = setInterval(() => {
-    void tick()
-  }, BLOCK_POLL_INTERVAL_MS)
-
-  // Kick off immediately
   void tick()
 
   return {
     stop: () => {
       stopped = true
-      clearInterval(id)
     },
   }
 }
@@ -251,7 +247,8 @@ export class KleverEventManager {
       this._emitter.emit('block', {
         blockNumber: (blockData?.['nonce'] as number | undefined) ?? 0,
         hash: (blockData?.['hash'] as string | undefined) ?? parsed.hash ?? '',
-        timestamp: (blockData?.['timestamp'] as number | undefined) ?? Date.now(),
+        timestamp:
+          (blockData?.['timestamp'] as number | undefined) ?? Math.floor(Date.now() / 1000),
       })
       return
     }
@@ -301,7 +298,7 @@ export class KleverEventManager {
         this._emitter.emit('block', {
           blockNumber,
           hash: '',
-          timestamp: Date.now(),
+          timestamp: Math.floor(Date.now() / 1000),
         })
       },
       (err) => {
@@ -312,12 +309,17 @@ export class KleverEventManager {
         })
       },
     )
+    this._emitter.emit('connect', undefined)
   }
 
   private _teardown(): void {
     if (this._reconnectTimer !== null) {
       clearTimeout(this._reconnectTimer)
       this._reconnectTimer = null
+    }
+
+    if (this._wsConnected || this._poller !== null) {
+      this._emitter.emit('disconnect', undefined)
     }
 
     if (this._ws) {

@@ -57,9 +57,7 @@ export interface ProviderEventMap {
 }
 
 // Provider events
-export type ProviderEvent =
-  | keyof ProviderEventMap
-  | { address: KleverAddress; topics: Array<string | null> }
+export type ProviderEvent = keyof ProviderEventMap
 
 export interface WsEventMessage {
   type: string

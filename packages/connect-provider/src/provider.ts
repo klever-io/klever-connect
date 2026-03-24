@@ -1042,7 +1042,7 @@ export class KleverProvider implements IProvider {
 
   /**
    * Stop real-time event subscription and release all associated resources
-   * (WebSocket, polling timers, ping interval).
+   * (WebSocket, polling timers).
    *
    * After calling `disconnect()` you can call `connect()` again to re-establish
    * the connection.
@@ -1237,7 +1237,11 @@ export class KleverProvider implements IProvider {
           }>
         >(`/address/${req.sender}/nonce`)
 
-        req.nonce = nonceResponse.data?.nonce ?? 0
+        const fetchedNonce = nonceResponse.data?.nonce
+        if (fetchedNonce === undefined || fetchedNonce === null) {
+          throw new Error(`Failed to fetch nonce for address ${req.sender}`)
+        }
+        req.nonce = fetchedNonce
       }
 
       // Call node endpoint to build transaction
