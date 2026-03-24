@@ -19,13 +19,54 @@ export interface TransactionReceipt {
   timestamp: number
 }
 
+export interface BlockEventData {
+  blockNumber: number
+  hash: string
+  timestamp: number
+}
+
+export interface PendingEventData {
+  hash: string
+  from: string
+}
+
+export interface ProviderError {
+  code: string
+  message: string
+  originalError?: Error | undefined
+}
+
+export interface DebugEvent {
+  message: string
+  data?: unknown
+}
+
+export interface NetworkChangeEvent {
+  oldNetwork: Network
+  newNetwork: Network
+}
+
+export interface ProviderEventMap {
+  block: BlockEventData
+  pending: PendingEventData
+  error: ProviderError
+  debug: DebugEvent
+  network: NetworkChangeEvent
+  connect: void
+  disconnect: void
+}
+
 // Provider events
 export type ProviderEvent =
-  | 'block'
-  | 'pending'
-  | 'error'
-  | 'debug'
+  | keyof ProviderEventMap
   | { address: KleverAddress; topics: Array<string | null> }
+
+export interface WsEventMessage {
+  type: string
+  address: string
+  hash: string
+  data?: unknown
+}
 
 // Block identifier type - can be a hash, number, or 'latest'
 export type BlockIdentifier = BlockHash | number | 'latest'
@@ -83,8 +124,21 @@ export interface IProvider {
       },
     ) => void,
   ): Promise<ITransactionResponse | null>
-  on(event: ProviderEvent, listener: (...args: unknown[]) => void): void
-  off(event: ProviderEvent, listener: (...args: unknown[]) => void): void
+  on<K extends keyof ProviderEventMap>(
+    event: K,
+    listener: (data: ProviderEventMap[K]) => void,
+  ): void
+  off<K extends keyof ProviderEventMap>(
+    event: K,
+    listener: (data: ProviderEventMap[K]) => void,
+  ): void
+  once<K extends keyof ProviderEventMap>(
+    event: K,
+    listener: (data: ProviderEventMap[K]) => void,
+  ): void
+  removeAllListeners<K extends keyof ProviderEventMap>(event?: K): void
+  connect?(): void
+  disconnect?(): void
   // JSON API specific methods
   call<T = unknown>(endpoint: string, params?: Record<string, unknown>): Promise<T>
   // Transaction building

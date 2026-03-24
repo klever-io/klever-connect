@@ -59,7 +59,7 @@ describe('KleverProvider Configuration', () => {
 
       const local = new KleverProvider('local')
       expect(local.network.name).toBe('local')
-      expect(local.network.chainId).toBe('420420')
+      expect(local.network.chainId).toBe('100000')
     })
 
     it('should throw error for unknown network name', () => {
@@ -88,6 +88,42 @@ describe('KleverProvider Configuration', () => {
       // This is a limitation of the design, but acceptable
       const provider = new KleverProvider('testnet')
       expect(provider.network.name).toBe('testnet')
+    })
+  })
+
+  describe('WebSocket configuration', () => {
+    it('should have no ws URL by default on public networks', () => {
+      const provider = new KleverProvider('mainnet')
+      expect(provider.network.config.ws).toBeUndefined()
+    })
+
+    it('should apply custom ws URL from config', () => {
+      const provider = new KleverProvider({
+        network: 'mainnet',
+        ws: 'wss://my-node.example.com/subscribe',
+      })
+      expect(provider.network.config.ws).toBe('wss://my-node.example.com/subscribe')
+    })
+
+    it('should apply custom ws URL when using testnet', () => {
+      const provider = new KleverProvider({
+        network: 'testnet',
+        ws: 'wss://my-testnet-node.example.com/subscribe',
+      })
+      expect(provider.network.config.ws).toBe('wss://my-testnet-node.example.com/subscribe')
+      // rest of network config unchanged
+      expect(provider.network.name).toBe('testnet')
+      expect(provider.network.chainId).toBe('109')
+    })
+
+    it('should not mutate the original NETWORKS constant', () => {
+      new KleverProvider({ network: 'mainnet', ws: 'wss://my-node.example.com/subscribe' })
+      expect(NETWORKS.mainnet.config.ws).toBeUndefined()
+    })
+
+    it('should have ws URL for local network by default', () => {
+      const provider = new KleverProvider('local')
+      expect(provider.network.config.ws).toBe('ws://localhost:8080/subscribe')
     })
   })
 

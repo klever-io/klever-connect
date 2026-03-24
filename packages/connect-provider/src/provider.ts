@@ -33,10 +33,12 @@ import { SimpleCache } from './cache'
 import type {
   BlockIdentifier,
   IProvider,
-  ProviderEvent,
+  ProviderEventMap,
   BuildTransactionRequest,
   BuildTransactionResponse,
 } from './types/types'
+import { TypedEventEmitter } from './event-emitter'
+import { KleverEventManager } from './provider-events'
 
 /**
  * Klever blockchain provider with built-in caching and retry capabilities
@@ -84,6 +86,11 @@ export class KleverProvider implements IProvider {
   protected cache?: SimpleCache<unknown>
   protected readonly debug: boolean
 
+  /** Internal typed event emitter shared across the provider */
+  private readonly _emitter: TypedEventEmitter<ProviderEventMap>
+  /** WebSocket / polling manager (created lazily on first connect()) call) */
+  private _eventManager: KleverEventManager | null = null
+
   /**
    * Creates a new KleverProvider instance
    *
@@ -124,6 +131,8 @@ export class KleverProvider implements IProvider {
       this.cache = new SimpleCache(normalizedConfig.cache ?? {})
     }
 
+    this._emitter = new TypedEventEmitter<ProviderEventMap>()
+
     if (this.debug) {
       console.log(`[KleverProvider] Initialized with network: ${this.network.name}`)
     }
@@ -151,9 +160,11 @@ export class KleverProvider implements IProvider {
    * Resolve network from config
    */
   private resolveNetwork(config: ProviderConfigObject): Network {
+    let network: Network
+
     // If url and chainId provided, create custom network
     if (config.url && config.chainId) {
-      return {
+      network = {
         name: 'custom',
         chainId: config.chainId,
         config: {
@@ -167,28 +178,35 @@ export class KleverProvider implements IProvider {
           decimals: 6,
         },
       }
-    }
-
-    // If network is provided, resolve it
-    if (config.network) {
+    } else if (config.network) {
       // If network is a string (network name)
       if (typeof config.network === 'string') {
         const networkName = config.network
-        const network = NETWORKS[networkName]
-        if (!network) {
+        const resolved = NETWORKS[networkName]
+        if (!resolved) {
           throw new ValidationError(`Unknown network: ${config.network}`, {
             network: config.network,
           })
         }
-        return network
+        network = resolved
+      } else {
+        // It's a Network object
+        network = config.network
       }
-
-      // Otherwise, it's a Network object
-      return config.network
+    } else {
+      // Default to mainnet
+      network = NETWORKS[DEFAULT_NETWORK]
     }
 
-    // Default to mainnet
-    return NETWORKS[DEFAULT_NETWORK]
+    // Apply custom WebSocket URL if provided, overriding the network default
+    if (config.ws !== undefined) {
+      network = {
+        ...network,
+        config: { ...network.config, ws: config.ws },
+      }
+    }
+
+    return network
   }
 
   /**
@@ -976,6 +994,9 @@ export class KleverProvider implements IProvider {
         }
       }
 
+      // Fire immediately so a tx that's already mined doesn't wait a full interval.
+      void checkTransaction()
+
       const interval = setInterval(() => {
         void checkTransaction()
       }, pollInterval)
@@ -985,52 +1006,165 @@ export class KleverProvider implements IProvider {
   /**
    * Subscribe to provider events
    *
-   * TODO: Implementation pending - event subscription not yet supported
+   * Opens a WebSocket connection to the network's `ws` URL.  If WebSocket is unavailable in the
+   * current runtime, or if the network has no `ws` URL configured, the
+   * provider automatically falls back to polling the REST API for new blocks
+   * every 3 seconds.
    *
-   * This method will allow subscribing to blockchain events like:
-   * - New blocks
-   * - Pending transactions
-   * - Account balance changes
-   * - Contract events
-   *
-   * @param _event - The event type to subscribe to
-   * @param _listener - Callback function to handle the event
+   * Safe to call multiple times — subsequent calls while already connected are
+   * no-ops.  To reconnect, call `disconnect()` first.
    *
    * @example
    * ```typescript
-   * // Future usage (not yet implemented)
-   * provider.on('block', (block) => {
-   *   console.log('New block:', block.nonce)
-   * })
-   *
-   * provider.on('transaction', (tx) => {
-   *   console.log('New transaction:', tx.hash)
-   * })
+   * const provider = new KleverProvider('mainnet')
+   * provider.on('block', ({ blockNumber }) => console.log('New block:', blockNumber))
+   * provider.connect()
    * ```
    */
-  on(_event: ProviderEvent, _listener: (...args: unknown[]) => void): void {
-    // TODO: Implement event subscription
+  connect(): void {
+    if (this._eventManager) {
+      // Already connected or connecting — no-op
+      return
+    }
+
+    this._eventManager = new KleverEventManager(
+      this.network,
+      this._emitter,
+      () => this.getBlockNumber(),
+      this.debug,
+    )
+    this._eventManager.connect()
+
+    if (this.debug) {
+      console.log('[KleverProvider] Event manager started')
+    }
   }
 
   /**
-   * Unsubscribe from provider events
+   * Stop real-time event subscription and release all associated resources
+   * (WebSocket, polling timers, ping interval).
    *
-   * TODO: Implementation pending - event unsubscription not yet supported
-   *
-   * @param _event - The event type to unsubscribe from
-   * @param _listener - The callback function to remove
+   * After calling `disconnect()` you can call `connect()` again to re-establish
+   * the connection.
    *
    * @example
    * ```typescript
-   * // Future usage (not yet implemented)
-   * const listener = (block) => console.log('Block:', block.nonce)
-   * provider.on('block', listener)
-   * // Later...
-   * provider.off('block', listener)
+   * provider.disconnect()
    * ```
    */
-  off(_event: ProviderEvent, _listener: (...args: unknown[]) => void): void {
-    // TODO: Implement event unsubscription
+  disconnect(): void {
+    if (this._eventManager) {
+      this._eventManager.dispose()
+      this._eventManager = null
+    }
+
+    if (this.debug) {
+      console.log('[KleverProvider] Event manager stopped')
+    }
+  }
+
+  /**
+   * Register a persistent listener for a provider event.
+   *
+   * The provider emits the following typed events:
+   * - `'block'` — `BlockEventData` — new block produced
+   * - `'pending'` — `PendingEventData` — pending transaction in mempool
+   * - `'error'` — `ProviderError` — connection or polling error
+   * - `'debug'` — `DebugEvent` — internal diagnostic message
+   * - `'network'` — `NetworkChangeEvent` — active network changed
+   * - `'connect'` — `undefined` — WebSocket/polling connection established
+   * - `'disconnect'` — `undefined` — WebSocket/polling connection closed
+   *
+   * Note: You must call `connect()` to start receiving `'block'`, `'pending'`,
+   * `'connect'`, and `'disconnect'` events.  `'error'` and `'network'` events
+   * can fire without an active connection.
+   *
+   * @param event - The event name (key of ProviderEventMap)
+   * @param listener - Callback receiving the typed payload
+   *
+   * @example
+   * ```typescript
+   * provider.on('block', ({ blockNumber, hash }) => {
+   *   console.log(`New block #${blockNumber}: ${hash}`)
+   * })
+   *
+   * provider.on('error', ({ code, message }) => {
+   *   console.error(`Provider error [${code}]: ${message}`)
+   * })
+   *
+   * provider.connect()
+   * ```
+   */
+  on<K extends keyof ProviderEventMap>(
+    event: K,
+    listener: (data: ProviderEventMap[K]) => void,
+  ): void {
+    this._emitter.on(event, listener)
+  }
+
+  /**
+   * Remove a previously registered listener.
+   *
+   * Passing a listener reference that was never registered is a no-op.
+   *
+   * @param event - The event name
+   * @param listener - The exact callback reference that was passed to `on`/`once`
+   *
+   * @example
+   * ```typescript
+   * const handler = ({ blockNumber }: BlockEventData) => console.log(blockNumber)
+   * provider.on('block', handler)
+   * // ... later
+   * provider.off('block', handler)
+   * ```
+   */
+  off<K extends keyof ProviderEventMap>(
+    event: K,
+    listener: (data: ProviderEventMap[K]) => void,
+  ): void {
+    this._emitter.off(event, listener)
+  }
+
+  /**
+   * Register a one-time listener that is automatically removed after its
+   * first invocation.
+   *
+   * @param event - The event name
+   * @param listener - Callback receiving the typed payload
+   *
+   * @example
+   * ```typescript
+   * // Wait for the first block after connecting
+   * provider.once('block', ({ blockNumber }) => {
+   *   console.log('First block received:', blockNumber)
+   * })
+   * provider.connect()
+   * ```
+   */
+  once<K extends keyof ProviderEventMap>(
+    event: K,
+    listener: (data: ProviderEventMap[K]) => void,
+  ): void {
+    this._emitter.once(event, listener)
+  }
+
+  /**
+   * Remove all listeners for a specific event, or every listener across all
+   * events when called without arguments.
+   *
+   * @param event - Optional event name.  Omit to clear all events.
+   *
+   * @example
+   * ```typescript
+   * // Remove all 'block' listeners
+   * provider.removeAllListeners('block')
+   *
+   * // Remove every listener on the provider
+   * provider.removeAllListeners()
+   * ```
+   */
+  removeAllListeners<K extends keyof ProviderEventMap>(event?: K): void {
+    this._emitter.removeAllListeners(event)
   }
 
   /**
@@ -1055,8 +1189,7 @@ export class KleverProvider implements IProvider {
    * ```
    */
   async call<T = unknown>(_endpoint: string, _params?: Record<string, unknown>): Promise<T> {
-    // TODO: Implement contract call logic
-    return {} as T
+    throw new Error('call() is not yet implemented')
   }
 
   /**
@@ -1092,17 +1225,19 @@ export class KleverProvider implements IProvider {
     }
 
     try {
+      const req: BuildTransactionRequest = { ...request }
+
       // Auto-fetch nonce if not provided
-      if (request.sender && request.nonce === undefined) {
+      if (req.sender && req.nonce === undefined) {
         const nonceResponse = await this.nodeClient.get<
           ApiResponse<{
             nonce: number
             firstPendingNonce: number
             txPending: number
           }>
-        >(`/address/${request.sender}/nonce`)
+        >(`/address/${req.sender}/nonce`)
 
-        request.nonce = nonceResponse.data?.nonce || 0
+        req.nonce = nonceResponse.data?.nonce ?? 0
       }
 
       // Call node endpoint to build transaction
@@ -1111,7 +1246,7 @@ export class KleverProvider implements IProvider {
           result: unknown // Proto transaction object (ITransaction)
           txHash: string
         }>
-      >('/transaction/send', request)
+      >('/transaction/send', req)
 
       if (response.error || !response.data) {
         throw new NetworkError(response.error || 'Failed to build transaction', { request })
@@ -1122,6 +1257,9 @@ export class KleverProvider implements IProvider {
         txHash: response.data.txHash,
       }
     } catch (error) {
+      if (error instanceof NetworkError || error instanceof ValidationError) {
+        throw error
+      }
       throw new TransactionError(
         `Failed to build transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
         { request, originalError: error },
