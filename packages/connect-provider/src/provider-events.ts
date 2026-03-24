@@ -235,6 +235,11 @@ export class KleverEventManager {
       return
     }
 
+    if (parsed === null || typeof parsed !== 'object' || typeof parsed.type !== 'string') {
+      this._log(`Dropping malformed WS frame: ${raw}`)
+      return
+    }
+
     const providerEvent = WS_TYPE_TO_PROVIDER_EVENT[parsed.type as WsEventType]
 
     if (!providerEvent) {
@@ -244,20 +249,40 @@ export class KleverEventManager {
 
     if (providerEvent === 'block') {
       const blockData = parsed.data as Record<string, unknown> | undefined
+      const blockNumber = blockData?.['nonce']
+      const hash = blockData?.['hash'] ?? parsed.hash
+      const timestamp = blockData?.['timestamp']
+
+      if (
+        typeof blockNumber !== 'number' ||
+        typeof hash !== 'string' ||
+        typeof timestamp !== 'number'
+      ) {
+        this._log(`Dropping malformed block frame: ${raw}`)
+        return
+      }
+
       this._emitter.emit('block', {
-        blockNumber: (blockData?.['nonce'] as number | undefined) ?? 0,
-        hash: (blockData?.['hash'] as string | undefined) ?? parsed.hash ?? '',
-        timestamp:
-          (blockData?.['timestamp'] as number | undefined) ?? Math.floor(Date.now() / 1000),
+        blockNumber,
+        hash,
+        timestamp,
       })
       return
     }
 
     if (providerEvent === 'pending') {
       const txData = parsed.data as Record<string, unknown> | undefined
+      const txHash = txData?.['hash'] ?? parsed.hash
+      const txFrom = txData?.['sender'] ?? parsed.address
+
+      if (typeof txHash !== 'string' || typeof txFrom !== 'string') {
+        this._log(`Dropping malformed pending frame: ${raw}`)
+        return
+      }
+
       this._emitter.emit('pending', {
-        hash: (txData?.['hash'] as string | undefined) ?? parsed.hash ?? '',
-        from: (txData?.['sender'] as string | undefined) ?? parsed.address ?? '',
+        hash: txHash,
+        from: txFrom,
       })
     }
   }

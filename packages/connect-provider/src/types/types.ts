@@ -36,22 +36,10 @@ export interface ProviderError {
   originalError?: Error | undefined
 }
 
-export interface DebugEvent {
-  message: string
-  data?: unknown
-}
-
-export interface NetworkChangeEvent {
-  oldNetwork: Network
-  newNetwork: Network
-}
-
 export interface ProviderEventMap {
   block: BlockEventData
   pending: PendingEventData
   error: ProviderError
-  debug: DebugEvent
-  network: NetworkChangeEvent
   connect: void
   disconnect: void
 }
