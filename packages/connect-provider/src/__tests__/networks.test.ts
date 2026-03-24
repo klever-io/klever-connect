@@ -39,7 +39,7 @@ describe('Networks', () => {
     it('should contain local configuration', () => {
       expect(NETWORKS.local).toBeDefined()
       expect(NETWORKS.local.name).toBe('local')
-      expect(NETWORKS.local.chainId).toBe('100000')
+      expect(NETWORKS.local.chainId).toBe('420420')
       expect(NETWORKS.local.isTestnet).toBe(true)
       expect(NETWORKS.local.config.api).toBe('http://localhost:8080')
     })

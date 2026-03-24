@@ -59,7 +59,7 @@ describe('KleverProvider Configuration', () => {
 
       const local = new KleverProvider('local')
       expect(local.network.name).toBe('local')
-      expect(local.network.chainId).toBe('100000')
+      expect(local.network.chainId).toBe('420420')
     })
 
     it('should throw error for unknown network name', () => {
