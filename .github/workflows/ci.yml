@@ -11,7 +11,7 @@ jobs:
   all-checks:
     runs-on: ubuntu-latest
     if: always()
-    needs: [format, typecheck, lint, build, coverage]
+    needs: [format, typecheck, lint, build, test, coverage]
 
     steps:
       - name: Check all jobs
@@ -20,6 +20,7 @@ jobs:
              [[ "${{ needs.typecheck.result }}" != "success" ]] || \
              [[ "${{ needs.lint.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.test.result }}" != "success" ]] || \
              [[ "${{ needs.coverage.result }}" != "success" ]]; then
             echo "One or more checks failed"
             exit 1
@@ -127,8 +128,37 @@ jobs:
             packages/*/build
           retention-days: 7
 
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: packages
+
+      - name: Run tests
+        run: pnpm test
+
   coverage:
-    needs: [format, typecheck, lint, build]
+    needs: [build]
     runs-on: ubuntu-latest
 
     steps:
