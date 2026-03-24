@@ -61,7 +61,7 @@ describe('encoding', () => {
     it('should accept Node.js Buffer as input', () => {
       const buf = Buffer.from([1, 2, 3, 4])
       expect(hexEncode(buf)).toBe('01020304')
-      expect(hexDecode(hexEncode(buf))).toEqual(buf)
+      expect(hexDecode(hexEncode(buf))).toEqual(new Uint8Array(buf))
     })
   })
 
