@@ -120,8 +120,8 @@ export class KleverEventManager {
    */
   connect(): void {
     if (this._disposed) return
-    // Guard: already have an active WebSocket or polling is running
-    if (this._ws !== null || this._poller !== null) return
+    // Guard: already have an active WebSocket, polling, or a pending reconnect
+    if (this._ws !== null || this._poller !== null || this._reconnectTimer !== null) return
 
     const wsUrl = this._network.config.ws
 
@@ -331,11 +331,7 @@ export class KleverEventManager {
     this._poller = createBlockPoller(
       this._fetchBlockNumber,
       (blockNumber) => {
-        this._safeEmit('block', {
-          blockNumber,
-          hash: '',
-          timestamp: Math.floor(Date.now() / 1000),
-        })
+        this._safeEmit('block', { blockNumber })
       },
       (err) => {
         this._safeEmit('error', {

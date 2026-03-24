@@ -21,8 +21,8 @@ export interface TransactionReceipt {
 
 export interface BlockEventData {
   blockNumber: number
-  hash: string
-  timestamp: number
+  hash?: string
+  timestamp?: number
 }
 
 export interface PendingEventData {
