@@ -7,11 +7,12 @@ describe('keystore', () => {
   const testPrivateKeyHex = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'
   const testPassword = 'test-password-123'
   const testAddress = 'klv1test123456789abcdef'
+  const fastScrypt = { scryptN: 4096, scryptR: 4, scryptP: 1 }
 
   describe('encryptToKeystore', () => {
     it('should create a valid keystore object', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
 
       expect(keystore).toBeDefined()
       expect(keystore.version).toBe(1)
@@ -25,8 +26,8 @@ describe('keystore', () => {
 
     it('should generate unique IDs for each keystore', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore1 = await encryptToKeystore(privateKey, testPassword, testAddress)
-      const keystore2 = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore1 = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
+      const keystore2 = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
 
       expect(keystore1.id).not.toBe(keystore2.id)
     })
@@ -72,7 +73,12 @@ describe('keystore', () => {
 
     it('should strip klv1 prefix from address', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, 'klv1address123')
+      const keystore = await encryptToKeystore(
+        privateKey,
+        testPassword,
+        'klv1address123',
+        fastScrypt,
+      )
 
       expect(keystore.address).toBe('address123')
     })
@@ -81,7 +87,12 @@ describe('keystore', () => {
   describe('decryptKeystore', () => {
     it('should decrypt keystore and return original private key', async () => {
       const originalPrivateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(originalPrivateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(
+        originalPrivateKey,
+        testPassword,
+        testAddress,
+        fastScrypt,
+      )
 
       const decryptedPrivateKey = await decryptKeystore(keystore, testPassword)
 
@@ -90,7 +101,12 @@ describe('keystore', () => {
 
     it('should accept keystore as JSON string', async () => {
       const originalPrivateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(originalPrivateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(
+        originalPrivateKey,
+        testPassword,
+        testAddress,
+        fastScrypt,
+      )
       const keystoreJson = JSON.stringify(keystore)
 
       const decryptedPrivateKey = await decryptKeystore(keystoreJson, testPassword)
@@ -100,7 +116,7 @@ describe('keystore', () => {
 
     it('should throw error with wrong password', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
 
       await expect(decryptKeystore(keystore, 'wrong-password')).rejects.toThrow(
         'Invalid password or corrupted keystore',
@@ -109,7 +125,7 @@ describe('keystore', () => {
 
     it('should throw error with unsupported version', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
       // @ts-expect-error - Testing invalid version
       keystore.version = 2
 
@@ -120,7 +136,7 @@ describe('keystore', () => {
 
     it('should throw error with unsupported cipher', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
       // @ts-expect-error - Testing invalid cipher
       keystore.crypto.cipher = 'aes-256-cbc'
 
@@ -131,7 +147,7 @@ describe('keystore', () => {
 
     it('should throw error with unsupported KDF', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
       // @ts-expect-error - Testing invalid KDF
       keystore.crypto.kdf = 'pbkdf2'
 
@@ -144,7 +160,7 @@ describe('keystore', () => {
   describe('isPasswordCorrect', () => {
     it('should return true for correct password', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
 
       const isCorrect = await isPasswordCorrect(keystore, testPassword)
 
@@ -153,7 +169,7 @@ describe('keystore', () => {
 
     it('should return false for incorrect password', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
 
       const isCorrect = await isPasswordCorrect(keystore, 'wrong-password')
 
@@ -162,7 +178,7 @@ describe('keystore', () => {
 
     it('should accept keystore as JSON string', async () => {
       const privateKey = PrivateKeyImpl.fromBytes(hexDecode(testPrivateKeyHex))
-      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress)
+      const keystore = await encryptToKeystore(privateKey, testPassword, testAddress, fastScrypt)
       const keystoreJson = JSON.stringify(keystore)
 
       const isCorrect = await isPasswordCorrect(keystoreJson, testPassword)
