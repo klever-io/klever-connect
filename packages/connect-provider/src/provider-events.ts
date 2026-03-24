@@ -26,6 +26,7 @@ function createBlockPoller(
 ): BlockPoller {
   let lastSeen = -1
   let stopped = false
+  let timer: ReturnType<typeof setTimeout> | null = null
 
   const tick = async (): Promise<void> => {
     if (stopped) return
@@ -38,7 +39,7 @@ function createBlockPoller(
     } catch (err) {
       if (!stopped) onError(err instanceof Error ? err : new Error(String(err)))
     } finally {
-      if (!stopped) setTimeout(() => void tick(), BLOCK_POLL_INTERVAL_MS)
+      if (!stopped) timer = setTimeout(() => void tick(), BLOCK_POLL_INTERVAL_MS)
     }
   }
 
@@ -47,6 +48,10 @@ function createBlockPoller(
   return {
     stop: () => {
       stopped = true
+      if (timer !== null) {
+        clearTimeout(timer)
+        timer = null
+      }
     },
   }
 }
@@ -169,7 +174,7 @@ export class KleverEventManager {
         // Send the initial subscription message.
         ws.send(buildSubscribeMessage([]))
 
-        this._emitter.emit('connect', undefined)
+        this._safeEmit('connect', undefined)
       }
 
       ws.onmessage = (event: MessageEvent<string>) => {
@@ -184,7 +189,7 @@ export class KleverEventManager {
           typeof ErrorEvent !== 'undefined' && event instanceof ErrorEvent
             ? event.message
             : undefined
-        this._emitter.emit('error', {
+        this._safeEmit('error', {
           code: 'WS_ERROR',
           message: 'WebSocket connection error',
           originalError: errorEventMessage !== undefined ? new Error(errorEventMessage) : undefined,
@@ -208,13 +213,13 @@ export class KleverEventManager {
         this._log(`WebSocket closed: code=${event.code} reason=${event.reason}`)
 
         if (!this._disposed) {
-          this._emitter.emit('disconnect', undefined)
+          this._safeEmit('disconnect', undefined)
           this._scheduleReconnect(url)
         }
       }
     } catch (err) {
       this._log(`Failed to create WebSocket: ${String(err)}`)
-      this._emitter.emit('error', {
+      this._safeEmit('error', {
         code: 'WS_INIT_FAILED',
         message: `Failed to create WebSocket: ${err instanceof Error ? err.message : String(err)}`,
         originalError: err instanceof Error ? err : undefined,
@@ -248,7 +253,10 @@ export class KleverEventManager {
     }
 
     if (providerEvent === 'block') {
-      const blockData = parsed.data as Record<string, unknown> | undefined
+      const blockData =
+        typeof parsed.data === 'object' && parsed.data !== null
+          ? (parsed.data as Record<string, unknown>)
+          : undefined
       const blockNumber = blockData?.['nonce']
       const hash = blockData?.['hash'] ?? parsed.hash
       const timestamp = blockData?.['timestamp']
@@ -262,7 +270,7 @@ export class KleverEventManager {
         return
       }
 
-      this._emitter.emit('block', {
+      this._safeEmit('block', {
         blockNumber,
         hash,
         timestamp,
@@ -271,7 +279,10 @@ export class KleverEventManager {
     }
 
     if (providerEvent === 'pending') {
-      const txData = parsed.data as Record<string, unknown> | undefined
+      const txData =
+        typeof parsed.data === 'object' && parsed.data !== null
+          ? (parsed.data as Record<string, unknown>)
+          : undefined
       const txHash = txData?.['hash'] ?? parsed.hash
       const txFrom = txData?.['sender'] ?? parsed.address
 
@@ -280,7 +291,7 @@ export class KleverEventManager {
         return
       }
 
-      this._emitter.emit('pending', {
+      this._safeEmit('pending', {
         hash: txHash,
         from: txFrom,
       })
@@ -320,21 +331,21 @@ export class KleverEventManager {
     this._poller = createBlockPoller(
       this._fetchBlockNumber,
       (blockNumber) => {
-        this._emitter.emit('block', {
+        this._safeEmit('block', {
           blockNumber,
           hash: '',
           timestamp: Math.floor(Date.now() / 1000),
         })
       },
       (err) => {
-        this._emitter.emit('error', {
+        this._safeEmit('error', {
           code: 'POLL_ERROR',
           message: `Block polling error: ${err.message}`,
           originalError: err,
         })
       },
     )
-    this._emitter.emit('connect', undefined)
+    this._safeEmit('connect', undefined)
   }
 
   private _teardown(): void {
@@ -344,7 +355,7 @@ export class KleverEventManager {
     }
 
     if (this._wsConnected || this._poller !== null) {
-      this._emitter.emit('disconnect', undefined)
+      this._safeEmit('disconnect', undefined)
     }
 
     if (this._ws) {
@@ -367,6 +378,14 @@ export class KleverEventManager {
       this._poller = null
     }
   }
+  private _safeEmit<K extends keyof ProviderEventMap>(event: K, data: ProviderEventMap[K]): void {
+    try {
+      this._emitter.emit(event, data)
+    } catch (err) {
+      this._log(`Listener threw for event "${String(event)}": ${String(err)}`)
+    }
+  }
+
   private _log(message: string): void {
     if (this._debug) {
       console.log(`[KleverEventManager] ${message}`)
