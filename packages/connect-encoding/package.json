@@ -24,6 +24,8 @@
     "build": "pnpm build:proto && tsup",
     "dev": "pnpm build:proto && tsup --watch",
     "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rm -rf dist .turbo",
     "benchmark": "vitest bench benchmarks"
