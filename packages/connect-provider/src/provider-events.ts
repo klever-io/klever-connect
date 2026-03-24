@@ -6,6 +6,7 @@ const BLOCK_POLL_INTERVAL_MS = 3_000
 const RECONNECT_BASE_DELAY_MS = 1_000
 const RECONNECT_MAX_DELAY_MS = 30_000
 const RECONNECT_MAX_ATTEMPTS = 5
+const WS_CONNECT_TIMEOUT_MS = 15_000
 
 const WS_EVENT_TYPES = ['blocks', 'transactions', 'accounts', 'user_transactions'] as const
 type WsEventType = (typeof WS_EVENT_TYPES)[number]
@@ -95,6 +96,7 @@ export class KleverEventManager {
   private _ws: WebSocket | null = null
   private _wsConnected = false
   private _wsAvailable: boolean
+  private _wsConnectTimer: ReturnType<typeof setTimeout> | null = null
   private _reconnectAttempts = 0
   private _reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private _poller: BlockPoller | null = null
@@ -162,7 +164,24 @@ export class KleverEventManager {
       const ws = new globalThis.WebSocket(url)
       this._ws = ws
 
+      this._wsConnectTimer = setTimeout(() => {
+        this._wsConnectTimer = null
+        if (!this._wsConnected && this._ws === ws) {
+          this._log(`WebSocket connection timed out after ${WS_CONNECT_TIMEOUT_MS}ms`)
+          ws.onopen = null
+          ws.onerror = null
+          ws.onclose = null
+          ws.close()
+          this._ws = null
+          if (!this._disposed) this._scheduleReconnect(url)
+        }
+      }, WS_CONNECT_TIMEOUT_MS)
+
       ws.onopen = () => {
+        if (this._wsConnectTimer !== null) {
+          clearTimeout(this._wsConnectTimer)
+          this._wsConnectTimer = null
+        }
         if (this._disposed) {
           ws.close()
           return
@@ -182,6 +201,10 @@ export class KleverEventManager {
       }
 
       ws.onerror = (event: Event) => {
+        if (this._wsConnectTimer !== null) {
+          clearTimeout(this._wsConnectTimer)
+          this._wsConnectTimer = null
+        }
         this._log(`WebSocket error: ${event.type}`)
         // ErrorEvent is a browser-only global; guard against it being absent in
         // Node.js environments (e.g. during tests or server-side rendering).
@@ -206,6 +229,10 @@ export class KleverEventManager {
       }
 
       ws.onclose = (event: CloseEvent) => {
+        if (this._wsConnectTimer !== null) {
+          clearTimeout(this._wsConnectTimer)
+          this._wsConnectTimer = null
+        }
         // Guard: if onerror already cleaned up (Node.js behaviour), skip
         if (this._ws !== ws) return
         this._ws = null
@@ -258,22 +285,19 @@ export class KleverEventManager {
           ? (parsed.data as Record<string, unknown>)
           : undefined
       const blockNumber = blockData?.['nonce']
-      const hash = blockData?.['hash'] ?? parsed.hash
-      const timestamp = blockData?.['timestamp']
 
-      if (
-        typeof blockNumber !== 'number' ||
-        typeof hash !== 'string' ||
-        typeof timestamp !== 'number'
-      ) {
+      if (typeof blockNumber !== 'number') {
         this._log(`Dropping malformed block frame: ${raw}`)
         return
       }
 
+      const hash = blockData?.['hash'] ?? parsed.hash
+      const timestamp = blockData?.['timestamp']
+
       this._safeEmit('block', {
         blockNumber,
-        hash,
-        timestamp,
+        ...(typeof hash === 'string' && { hash }),
+        ...(typeof timestamp === 'number' && { timestamp }),
       })
       return
     }
@@ -345,6 +369,11 @@ export class KleverEventManager {
   }
 
   private _teardown(): void {
+    if (this._wsConnectTimer !== null) {
+      clearTimeout(this._wsConnectTimer)
+      this._wsConnectTimer = null
+    }
+
     if (this._reconnectTimer !== null) {
       clearTimeout(this._reconnectTimer)
       this._reconnectTimer = null
