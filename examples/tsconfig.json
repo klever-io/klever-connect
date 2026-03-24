@@ -6,6 +6,7 @@
     "noUnusedParameters": false,
     "jsx": "react",
     "lib": ["ES2022", "DOM"],
+    "types": ["node"],
     "paths": {
       "@klever/connect": ["packages/connect/src"],
       "@klever/connect-core": ["packages/connect-core/src"],
