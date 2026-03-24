@@ -8,7 +8,6 @@ export const NETWORKS: Record<NetworkName, Network> = {
     config: {
       api: 'https://api.mainnet.klever.org', // Indexer (fast, cached)
       node: 'https://node.mainnet.klever.org', // Direct node (raw, up-to-date)
-      ws: 'wss://api.mainnet.klever.org',
       explorer: 'https://kleverscan.org',
     },
     isTestnet: false,
@@ -24,7 +23,6 @@ export const NETWORKS: Record<NetworkName, Network> = {
     config: {
       api: 'https://api.testnet.klever.org', // Indexer (fast, cached)
       node: 'https://node.testnet.klever.org', // Direct node (raw, up-to-date)
-      ws: 'wss://api.testnet.klever.org',
       explorer: 'https://testnet.kleverscan.org',
     },
     isTestnet: true,
@@ -40,7 +38,6 @@ export const NETWORKS: Record<NetworkName, Network> = {
     config: {
       api: 'https://api.devnet.klever.org', // Indexer (fast, cached)
       node: 'https://node.devnet.klever.org', // Direct node (raw, up-to-date)
-      ws: 'wss://api.devnet.klever.org',
       explorer: 'https://devnet.kleverscan.org',
     },
     isTestnet: true,
@@ -56,7 +53,7 @@ export const NETWORKS: Record<NetworkName, Network> = {
     config: {
       api: 'http://localhost:8080', // Indexer
       node: 'http://localhost:8080', // Node (same in local dev)
-      ws: 'ws://localhost:8080',
+      ws: 'ws://localhost:8080/subscribe',
       explorer: 'http://localhost:3000',
     },
     isTestnet: true,
@@ -69,11 +66,7 @@ export const NETWORKS: Record<NetworkName, Network> = {
   custom: {
     name: 'custom',
     chainId: '420420',
-    config: {
-      api: '', // User must provide
-      ws: '', // User must provide
-      explorer: '',
-    },
+    config: {},
     isTestnet: true,
     nativeCurrency: {
       name: 'Klever',

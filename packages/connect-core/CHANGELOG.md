@@ -1,5 +1,13 @@
 # @klever/connect-core
 
+## 0.1.3
+
+### Patch Changes
+
+- 5e09d0a: Fix Dependabot security alerts by updating dependencies and resolving vulnerabilities in transitive packages
+- Updated dependencies [5e09d0a]
+  - @klever/connect-encoding@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes

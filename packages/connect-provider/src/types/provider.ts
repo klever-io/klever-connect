@@ -62,6 +62,8 @@ export interface ProviderConfigObject {
   cache?: CacheOptions | false
   /** Retry configuration (default: 3 retries with exponential backoff) */
   retry?: RetryOptions | false
+  /** WebSocket URL for subscriptions (optional, overrides network.ws) */
+  ws?: string
   /** Enable debug logging (default: false) */
   debug?: boolean
 }

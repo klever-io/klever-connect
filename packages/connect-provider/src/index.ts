@@ -1,5 +1,7 @@
 export { KleverProvider } from './provider'
 export { HttpClient } from './http-client'
+export { TypedEventEmitter } from './event-emitter'
+export { KleverEventManager } from './provider-events'
 export * from './types'
 export * from './networks'
 export { parseReceipt, ReceiptParseError } from './utils/receipt-parser'
