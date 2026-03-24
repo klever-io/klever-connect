@@ -147,8 +147,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages (required for coverage)
-        run: pnpm build
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: packages
 
       - name: Run tests with coverage
         run: pnpm test:coverage --concurrency=1
