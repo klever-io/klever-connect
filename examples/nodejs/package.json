@@ -14,7 +14,7 @@
     "server": "node server/src/server.js",
     "bulk-transfer": "node batch/bulk-transfer.js",
     "csv-import": "node batch/csv-import.js",
-    "monitor": "node monitoring/block-monitor.js",
+    "monitor": "node monitoring/block-monitor.js"
   },
   "dependencies": {
     "@klever/connect": "workspace:*",
