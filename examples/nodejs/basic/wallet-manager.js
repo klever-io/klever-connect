@@ -16,7 +16,7 @@
  *
  * Environment variables:
  *   NETWORK           - Network to use (default: testnet)
- *   KEYSTORE_PASSWORD - Password to encrypt/decrypt keystore (default: prompts)
+ *   KEYSTORE_PASSWORD - Password to encrypt/decrypt keystore (required)
  *   KEYSTORE_PATH     - Where to save the keystore file (default: ./keystore.json)
  */
 

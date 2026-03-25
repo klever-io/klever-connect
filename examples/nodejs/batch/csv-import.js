@@ -152,7 +152,8 @@ async function main() {
       signedTxs.push(await wallet.signTransaction(tx))
     }
 
-    // Submit batch
+    // Submit batch — broadcastTransactions is all-or-nothing: either all hashes are returned
+    // or an error is thrown with no partial results. For large batches, consider chunking.
     const hashes = await wallet.broadcastTransactions(signedTxs)
 
     console.log(`\nBatch submitted! ${hashes.length} transactions:`)
