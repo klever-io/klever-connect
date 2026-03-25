@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Environment variables (never commit!)
+.env
+
+# Logs
+logs/
+*.log
+
+# Keystores
+keystore.json
+*.keystore.json
+
+# Runtime
+.DS_Store
