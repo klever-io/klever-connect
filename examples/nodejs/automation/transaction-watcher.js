@@ -104,6 +104,11 @@ async function main() {
       // Still pending — wait and retry
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
     } catch (err) {
+      const isNotFound = /not found|404/i.test(err.message)
+      if (!isNotFound) {
+        console.error(`\nFatal error: ${err.message}`)
+        process.exit(1)
+      }
       // Transaction may not be indexed yet — keep waiting
       process.stdout.write(`[${attempt}] Not found yet (${(elapsed / 1000).toFixed(1)}s elapsed)\r`)
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))

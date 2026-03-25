@@ -53,6 +53,15 @@ const LOW_THRESHOLD_KLV_STR = process.env.LOW_THRESHOLD_KLV || '10'
 const LOW_THRESHOLD_KLV = parseFloat(LOW_THRESHOLD_KLV_STR)
 const LOW_THRESHOLD_RAW = parseKLV(LOW_THRESHOLD_KLV_STR)
 
+if (isNaN(POLL_INTERVAL_MS) || POLL_INTERVAL_MS <= 0) {
+  logger.error('POLL_INTERVAL_MS must be a positive integer')
+  process.exit(1)
+}
+if (isNaN(LOW_THRESHOLD_KLV) || LOW_THRESHOLD_KLV <= 0) {
+  logger.error('LOW_THRESHOLD_KLV must be a positive number')
+  process.exit(1)
+}
+
 const rawAddresses = (process.env.WATCH_ADDRESSES || '')
   .split(',')
   .map((a) => a.trim())

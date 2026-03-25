@@ -104,7 +104,7 @@ class BlockMonitor extends EventEmitter {
         const blockInfo = {
           number: n,
           hash: block.hash,
-          txCount: block.transactions?.length ?? 0,
+          txCount: block.txCount ?? 0,
           blockTimeSec: blockTime?.toFixed(2),
         }
 

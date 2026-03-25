@@ -48,26 +48,27 @@ async function main() {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log(`Network:   ${network}`)
-  console.log(`From:      ${wallet.address}`)
-  console.log(`To:        ${receiver}`)
-  console.log(`Amount:    ${amountKLV} ${assetId ?? 'KLV'}`)
-  console.log('')
+  try {
+    console.log(`Network:   ${network}`)
+    console.log(`From:      ${wallet.address}`)
+    console.log(`To:        ${receiver}`)
+    console.log(`Amount:    ${amountKLV} ${assetId ?? 'KLV'}`)
+    console.log('')
 
-  // wallet.transfer() builds, signs, and broadcasts the transaction
-  const result = await wallet.transfer({
-    receiver,
-    amount: parseKLV(amountKLV),
-    ...(assetId ? { kda: assetId } : {}),
-  })
+    // wallet.transfer() builds, signs, and broadcasts the transaction
+    const result = await wallet.transfer({
+      receiver,
+      amount: parseKLV(amountKLV),
+      ...(assetId ? { kda: assetId } : {}),
+    })
 
-  console.log(`Transaction submitted!`)
-  console.log(`Hash:   ${result.hash}`)
-  console.log(`Status: ${result.status}`)
-  console.log(`Explorer: ${provider.getTransactionUrl(result.hash)}`)
-
-  // Securely clear private key from memory
-  await wallet.disconnect(true)
+    console.log(`Transaction submitted!`)
+    console.log(`Hash:   ${result.hash}`)
+    console.log(`Status: ${result.status}`)
+    console.log(`Explorer: ${provider.getTransactionUrl(result.hash)}`)
+  } finally {
+    await wallet.disconnect(true)
+  }
 }
 
 main().catch((err) => {

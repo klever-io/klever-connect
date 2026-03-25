@@ -71,6 +71,13 @@ function parseCSV(filePath) {
       continue
     }
 
+    try {
+      parseKLV(amountRaw)
+    } catch {
+      errors.push(`Line ${i + 1}: amount "${amountRaw}" is not a valid KLV decimal`)
+      continue
+    }
+
     transfers.push({ receiver: addressRaw, amount: amountRaw })
   }
 
