@@ -16,6 +16,8 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo"

@@ -10,6 +10,11 @@
       "outputs": [],
       "cache": false
     },
+    "test:coverage": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "cache": false
+    },
     "benchmark": {
       "outputs": [],
       "cache": false
