@@ -26,7 +26,12 @@ import { KleverProvider, NodeWallet, WalletFactory } from '@klever/connect'
 
 const NETWORK = process.env.NETWORK || 'testnet'
 const KEYSTORE_PATH = process.env.KEYSTORE_PATH || './keystore.json'
-const PASSWORD = process.env.KEYSTORE_PASSWORD || 'my-secure-password'
+const PASSWORD = process.env.KEYSTORE_PASSWORD
+
+if (!PASSWORD) {
+  console.error('Error: KEYSTORE_PASSWORD environment variable is required')
+  process.exit(1)
+}
 
 async function main() {
   const provider = new KleverProvider({ network: NETWORK })
@@ -49,7 +54,7 @@ async function main() {
 
   // ─── Step 3: Save keystore to disk ────────────────────────────────────────
   console.log(`Step 3: Saving keystore to ${KEYSTORE_PATH}...`)
-  writeFileSync(KEYSTORE_PATH, JSON.stringify(keystore, null, 2))
+  writeFileSync(KEYSTORE_PATH, JSON.stringify(keystore, null, 2), { mode: 0o600 })
   console.log(`  Saved!`)
   console.log('')
 

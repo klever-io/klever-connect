@@ -28,15 +28,15 @@ cp .env.example .env
 
 ## Categories
 
-| Category                     | Description           | Examples                                |
-| ---------------------------- | --------------------- | --------------------------------------- |
-| [basic/](./basic/)           | Core operations       | balance, transfer, account info         |
-| [cli/](./cli/)               | CLI wallet tools      | interactive wallet manager              |
-| [server/](./server/)         | Express REST API      | transaction endpoints, account queries  |
-| [automation/](./automation/) | Automated bots        | reward claiming, delegation rebalancing |
-| [batch/](./batch/)           | Bulk operations       | multi-transfer, CSV import              |
-| [monitoring/](./monitoring/) | Blockchain monitoring | block monitor with alerts               |
-| [webhooks/](./webhooks/)     | Event webhooks        | transaction confirmation handler        |
+| Category                     | Description           | Examples                               |
+| ---------------------------- | --------------------- | -------------------------------------- |
+| [basic/](./basic/)           | Core operations       | balance, transfer, account info        |
+| [cli/](./cli/)               | CLI wallet tools      | interactive wallet manager             |
+| [server/](./server/)         | Express REST API      | transaction endpoints, account queries |
+| [automation/](./automation/) | Automated bots        | balance alerts, transaction watcher    |
+| [batch/](./batch/)           | Bulk operations       | multi-transfer, CSV import             |
+| [monitoring/](./monitoring/) | Blockchain monitoring | block monitor with alerts              |
+| [webhooks/](./webhooks/)     | Event webhooks        | transaction confirmation handler       |
 
 ## Quick Start
 

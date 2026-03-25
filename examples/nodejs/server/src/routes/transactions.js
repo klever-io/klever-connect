@@ -25,7 +25,7 @@ export function createTransactionRoutes(provider, wallet) {
     if (!receiver || !isValidAddress(receiver)) {
       return res.status(400).json({ error: 'Invalid or missing receiver address' })
     }
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       return res.status(400).json({ error: 'Invalid or missing amount' })
     }
 

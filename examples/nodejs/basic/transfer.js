@@ -33,6 +33,10 @@ async function main() {
   const privateKey = requireEnv('PRIVATE_KEY')
   const receiver = requireEnv('RECEIVER_ADDRESS')
   const amountKLV = process.env.TRANSFER_AMOUNT || '0.1'
+  if (isNaN(Number(amountKLV)) || Number(amountKLV) <= 0) {
+    console.error(`Error: Invalid TRANSFER_AMOUNT: ${amountKLV}`)
+    process.exit(1)
+  }
   const assetId = process.env.ASSET_ID // undefined = KLV
 
   if (!isValidAddress(receiver)) {

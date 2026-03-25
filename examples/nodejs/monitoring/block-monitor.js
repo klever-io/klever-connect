@@ -51,6 +51,7 @@ class BlockMonitor extends EventEmitter {
     this.lastBlockTime = null
     this._intervalId = null
     this._running = false
+    this._pollInFlight = false
   }
 
   async start() {
@@ -82,6 +83,9 @@ class BlockMonitor extends EventEmitter {
   }
 
   async _poll() {
+    if (this._pollInFlight) return
+    this._pollInFlight = true
+
     try {
       const currentBlock = await this.provider.getBlockNumber()
 
@@ -92,6 +96,8 @@ class BlockMonitor extends EventEmitter {
       // Process all new blocks since last poll
       for (let n = this.lastBlockNumber + 1; n <= currentBlock; n++) {
         const block = await this.provider.getBlock(n)
+        if (!block) continue // Block not available yet
+
         const now = Date.now()
         const blockTime = this.lastBlockTime ? (now - this.lastBlockTime) / 1000 : null
 
@@ -118,6 +124,8 @@ class BlockMonitor extends EventEmitter {
     } catch (err) {
       logger.error('Poll error', { error: err.message })
       this.emit('error', err)
+    } finally {
+      this._pollInFlight = false
     }
   }
 }
@@ -127,6 +135,11 @@ class BlockMonitor extends EventEmitter {
 async function main() {
   const NETWORK = process.env.NETWORK || 'testnet'
   const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS || '4000', 10)
+
+  if (isNaN(POLL_INTERVAL_MS) || POLL_INTERVAL_MS <= 0) {
+    logger.error('POLL_INTERVAL_MS must be a positive integer')
+    process.exit(1)
+  }
 
   const provider = new KleverProvider({
     network: NETWORK,

@@ -53,11 +53,11 @@ async function main() {
   }
 
   const account = await provider.getAccount(address)
-  const assetCount = Object.keys(account.assets ?? {}).length
-  if (assetCount > 0) {
-    console.log(`\nAll assets (${assetCount}):`)
-    for (const [id, asset] of Object.entries(account.assets ?? {})) {
-      console.log(`  ${id}: ${asset.balance.toString()}`)
+  const assets = account.assets ?? []
+  if (assets.length > 0) {
+    console.log(`\nAll assets (${assets.length}):`)
+    for (const asset of assets) {
+      console.log(`  ${asset.assetId}: ${asset.balance.toString()}`)
     }
   }
 }

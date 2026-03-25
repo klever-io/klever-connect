@@ -26,8 +26,8 @@ export function createAccountRoutes(provider) {
 
       // Serialize assets — BigInt values must be converted to strings
       const assets = {}
-      for (const [id, asset] of Object.entries(account.assets ?? {})) {
-        assets[id] = {
+      for (const asset of account.assets ?? []) {
+        assets[asset.assetId] = {
           ...asset,
           balance: asset.balance?.toString(),
           frozenBalance: asset.frozenBalance?.toString(),
@@ -50,7 +50,7 @@ export function createAccountRoutes(provider) {
   // GET /accounts/:address/balance
   router.get('/:address/balance', async (req, res, next) => {
     try {
-      const assetId = req.query.asset
+      const assetId = typeof req.query.asset === 'string' ? req.query.asset : undefined
       const balance = await provider.getBalance(req.params.address, assetId)
       res.json({
         address: req.params.address,

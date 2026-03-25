@@ -13,7 +13,7 @@
  *   pm2 stop klever-api
  */
 
-export default {
+module.exports = {
   apps: [
     {
       name: 'klever-api',

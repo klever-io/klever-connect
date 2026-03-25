@@ -49,8 +49,9 @@ const logger = winston.createLogger({
 
 const NETWORK = process.env.NETWORK || 'testnet'
 const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS || '15000', 10)
-const LOW_THRESHOLD_KLV = parseFloat(process.env.LOW_THRESHOLD_KLV || '10')
-const LOW_THRESHOLD_RAW = parseKLV(LOW_THRESHOLD_KLV.toString())
+const LOW_THRESHOLD_KLV_STR = process.env.LOW_THRESHOLD_KLV || '10'
+const LOW_THRESHOLD_KLV = parseFloat(LOW_THRESHOLD_KLV_STR)
+const LOW_THRESHOLD_RAW = parseKLV(LOW_THRESHOLD_KLV_STR)
 
 const rawAddresses = (process.env.WATCH_ADDRESSES || '')
   .split(',')
@@ -72,6 +73,9 @@ if (invalid.length > 0) {
 
 /** @type {Map<string, bigint>} address → last known balance */
 const lastBalances = new Map()
+
+/** @type {Set<string>} addresses currently below the low-balance threshold */
+const lowBalanceAlerted = new Set()
 
 // ─── Alert handlers ───────────────────────────────────────────────────────────
 
@@ -122,7 +126,12 @@ async function pollAddresses(provider) {
       }
 
       if (balance < LOW_THRESHOLD_RAW) {
-        onLowBalance(address, balance)
+        if (!lowBalanceAlerted.has(address)) {
+          onLowBalance(address, balance)
+          lowBalanceAlerted.add(address)
+        }
+      } else {
+        lowBalanceAlerted.delete(address)
       }
 
       lastBalances.set(address, balance)

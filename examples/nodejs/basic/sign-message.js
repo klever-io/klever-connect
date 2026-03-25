@@ -39,45 +39,47 @@ async function main() {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log(`Address:   ${wallet.address}`)
-  console.log(`Public key: ${wallet.publicKey}`)
-  console.log(`Message:   "${MESSAGE}"`)
-  console.log('')
+  try {
+    console.log(`Address:   ${wallet.address}`)
+    console.log(`Public key: ${wallet.publicKey}`)
+    console.log(`Message:   "${MESSAGE}"`)
+    console.log('')
 
-  // ─── Sign ─────────────────────────────────────────────────────────────────
-  const signature = await wallet.signMessage(MESSAGE)
+    // ─── Sign ───────────────────────────────────────────────────────────────
+    const signature = await wallet.signMessage(MESSAGE)
 
-  console.log(`Signature (hex):    ${signature.toHex()}`)
-  console.log(`Signature (base64): ${signature.toBase64()}`)
-  console.log('')
+    console.log(`Signature (hex):    ${signature.toHex()}`)
+    console.log(`Signature (base64): ${signature.toBase64()}`)
+    console.log('')
 
-  // ─── Verify via wallet (simplest) ─────────────────────────────────────────
-  const validViaWallet = await wallet.verifyMessage(MESSAGE, signature)
-  console.log(`Verify via wallet:     ${validViaWallet ? '✓ valid' : '✗ invalid'}`)
+    // ─── Verify via wallet (simplest) ───────────────────────────────────────
+    const validViaWallet = await wallet.verifyMessage(MESSAGE, signature)
+    console.log(`Verify via wallet:     ${validViaWallet ? '✓ valid' : '✗ invalid'}`)
 
-  // ─── Verify via wallet using hex string ───────────────────────────────────
-  const validHex = await wallet.verifyMessage(MESSAGE, signature.toHex())
-  console.log(`Verify via hex string: ${validHex ? '✓ valid' : '✗ invalid'}`)
+    // ─── Verify via wallet using hex string ─────────────────────────────────
+    const validHex = await wallet.verifyMessage(MESSAGE, signature.toHex())
+    console.log(`Verify via hex string: ${validHex ? '✓ valid' : '✗ invalid'}`)
 
-  // ─── Verify standalone (server-side simulation) ───────────────────────────
-  // This is what a server would do — it only needs the public key, message, and signature.
-  // No private key or wallet instance needed.
-  const messageBytes = new TextEncoder().encode(MESSAGE)
-  const signatureBytes = signature.bytes
-  const publicKeyBytes = hexDecode(wallet.publicKey)
+    // ─── Verify standalone (server-side simulation) ─────────────────────────
+    // This is what a server would do — it only needs the public key, message, and signature.
+    // No private key or wallet instance needed.
+    const messageBytes = new TextEncoder().encode(MESSAGE)
+    const signatureBytes = signature.bytes
+    const publicKeyBytes = hexDecode(wallet.publicKey)
 
-  const validStandalone = await verifySignature(messageBytes, signatureBytes, publicKeyBytes)
-  console.log(`Verify standalone:     ${validStandalone ? '✓ valid' : '✗ invalid'}`)
+    const validStandalone = await verifySignature(messageBytes, signatureBytes, publicKeyBytes)
+    console.log(`Verify standalone:     ${validStandalone ? '✓ valid' : '✗ invalid'}`)
 
-  // ─── Tamper test ─────────────────────────────────────────────────────────
-  const tamperedMessage = MESSAGE + ' (tampered)'
-  const tamperedBytes = new TextEncoder().encode(tamperedMessage)
-  const tampered = await verifySignature(tamperedBytes, signatureBytes, publicKeyBytes)
-  console.log(
-    `Tampered message:      ${tampered ? '✗ unexpectedly valid' : '✓ correctly rejected'}`,
-  )
-
-  await wallet.disconnect(true)
+    // ─── Tamper test ───────────────────────────────────────────────────────
+    const tamperedMessage = MESSAGE + ' (tampered)'
+    const tamperedBytes = new TextEncoder().encode(tamperedMessage)
+    const tampered = await verifySignature(tamperedBytes, signatureBytes, publicKeyBytes)
+    console.log(
+      `Tampered message:      ${tampered ? '✗ unexpectedly valid' : '✓ correctly rejected'}`,
+    )
+  } finally {
+    await wallet.disconnect(true)
+  }
 }
 
 main().catch((err) => {

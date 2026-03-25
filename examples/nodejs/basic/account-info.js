@@ -17,7 +17,7 @@
 import 'dotenv/config'
 import { KleverProvider, NodeWallet, formatKLV, isValidAddress } from '@klever/connect'
 
-const network = process.env.NETWORK || 'mainnet'
+const network = process.env.NETWORK || 'testnet'
 
 async function main() {
   const provider = new KleverProvider({ network })
@@ -49,13 +49,11 @@ async function main() {
   console.log(`Nonce:    ${account.nonce}`)
   console.log(`Balance:  ${formatKLV(account.balance)} KLV`)
 
-  const assets = account.assets ?? {}
-  const assetKeys = Object.keys(assets)
-  if (assetKeys.length > 0) {
-    console.log(`\nAssets (${assetKeys.length}):`)
-    for (const id of assetKeys) {
-      const asset = assets[id]
-      console.log(`  ${id}: ${asset.balance.toString()}`)
+  const assets = account.assets ?? []
+  if (assets.length > 0) {
+    console.log(`\nAssets (${assets.length}):`)
+    for (const asset of assets) {
+      console.log(`  ${asset.assetId}: ${asset.balance.toString()}`)
       if (asset.frozenBalance && asset.frozenBalance > 0n) {
         console.log(`    Frozen: ${asset.frozenBalance.toString()}`)
       }

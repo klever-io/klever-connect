@@ -23,12 +23,13 @@ node server/src/server.js
 pm2 start server/ecosystem.config.js --env production
 pm2 logs klever-api
 
-# With Docker
-docker build -t klever-api -f server/Dockerfile .
+# With Docker (run from monorepo root):
+docker build -t klever-api -f examples/nodejs/server/Dockerfile .
 docker run -p 3000:3000 \
   -e NETWORK=testnet \
   -e PRIVATE_KEY=your_key \
   klever-api
+# Note: use Docker secrets or a secrets manager for PRIVATE_KEY in production
 ```
 
 ## Example Requests

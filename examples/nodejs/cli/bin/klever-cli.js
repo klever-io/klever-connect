@@ -102,7 +102,11 @@ async function resolveAddress(provider) {
     return values.address
   }
   const wallet = await getWallet(provider)
-  return wallet.address
+  try {
+    return wallet.address
+  } finally {
+    await wallet.disconnect(true)
+  }
 }
 
 // ─── Commands ─────────────────────────────────────────────────────────────────
@@ -124,27 +128,31 @@ async function cmdTransfer() {
     console.error('Error: --to <address> is required and must be a valid Klever address')
     process.exit(1)
   }
-  if (!values.amount || isNaN(parseFloat(values.amount))) {
-    console.error('Error: --amount <value> is required')
+  const amount = Number(values.amount)
+  if (!values.amount || !Number.isFinite(amount) || amount <= 0) {
+    console.error('Error: --amount <value> is required and must be > 0')
     process.exit(1)
   }
 
   const provider = getProvider()
   const wallet = await getWallet(provider)
 
-  console.log(`Sending ${values.amount} ${values.asset ?? 'KLV'} to ${values.to}...`)
+  try {
+    console.log(`Sending ${values.amount} ${values.asset ?? 'KLV'} to ${values.to}...`)
 
-  const result = await wallet.transfer({
-    receiver: values.to,
-    amount: parseKLV(values.amount),
-    ...(values.asset ? { kda: values.asset } : {}),
-  })
+    const result = await wallet.transfer({
+      receiver: values.to,
+      amount: parseKLV(values.amount),
+      ...(values.asset ? { kda: values.asset } : {}),
+    })
 
-  console.log(`✓ Transaction submitted`)
-  console.log(`  Hash:     ${result.hash}`)
-  console.log(`  Status:   ${result.status}`)
-  console.log(`  Explorer: ${provider.getTransactionUrl(result.hash)}`)
-  await wallet.disconnect(true)
+    console.log(`✓ Transaction submitted`)
+    console.log(`  Hash:     ${result.hash}`)
+    console.log(`  Status:   ${result.status}`)
+    console.log(`  Explorer: ${provider.getTransactionUrl(result.hash)}`)
+  } finally {
+    await wallet.disconnect(true)
+  }
 }
 
 async function cmdAccount() {
@@ -157,12 +165,11 @@ async function cmdAccount() {
   console.log(`Nonce:   ${account.nonce}`)
   console.log(`Balance: ${formatKLV(account.balance)} KLV`)
 
-  const assets = account.assets ?? {}
-  const assetKeys = Object.keys(assets)
-  if (assetKeys.length > 0) {
+  const assets = account.assets ?? []
+  if (assets.length > 0) {
     console.log(`\nAssets:`)
-    for (const id of assetKeys) {
-      console.log(`  ${id}: ${assets[id].balance.toString()}`)
+    for (const asset of assets) {
+      console.log(`  ${asset.assetId}: ${asset.balance.toString()}`)
     }
   }
 }

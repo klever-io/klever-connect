@@ -54,44 +54,46 @@ async function main() {
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log(`Network:  ${NETWORK}`)
-  console.log(`Sender:   ${wallet.address}`)
-  console.log(`Batch:    ${TRANSFERS.length} transfers`)
-  console.log('')
+  try {
+    console.log(`Network:  ${NETWORK}`)
+    console.log(`Sender:   ${wallet.address}`)
+    console.log(`Batch:    ${TRANSFERS.length} transfers`)
+    console.log('')
 
-  // Get current nonce once (avoids N network calls)
-  const account = await provider.getAccount(wallet.address)
-  let nonce = account.nonce
+    // Get current nonce once (avoids N network calls)
+    const account = await provider.getAccount(wallet.address)
+    let nonce = account.nonce
 
-  // Build and sign all transactions (node fills version/fees, nonce is set manually)
-  const signedTxs = []
-  for (const transfer of TRANSFERS) {
-    const tx = await new TransactionBuilder(provider)
-      .sender(wallet.address)
-      .nonce(nonce++)
-      .transfer({
-        receiver: transfer.receiver,
-        amount: parseKLV(transfer.amount),
-      })
-      .build()
+    // Build and sign all transactions (node fills version/fees, nonce is set manually)
+    const signedTxs = []
+    for (const transfer of TRANSFERS) {
+      const tx = await new TransactionBuilder(provider)
+        .sender(wallet.address)
+        .nonce(nonce++)
+        .transfer({
+          receiver: transfer.receiver,
+          amount: parseKLV(transfer.amount),
+        })
+        .build()
 
-    const signed = await wallet.signTransaction(tx)
-    signedTxs.push(signed)
+      const signed = await wallet.signTransaction(tx)
+      signedTxs.push(signed)
+    }
+
+    console.log(`Built and signed ${signedTxs.length} transactions`)
+
+    // Broadcast all at once
+    const hashes = await wallet.broadcastTransactions(signedTxs)
+
+    console.log(`\nBatch submitted successfully!`)
+    hashes.forEach((hash, i) => {
+      const t = TRANSFERS[i]
+      console.log(`  [${i + 1}] ${t.amount} KLV → ${t.receiver.slice(0, 20)}...`)
+      console.log(`      Hash: ${hash}`)
+    })
+  } finally {
+    await wallet.disconnect(true)
   }
-
-  console.log(`Built and signed ${signedTxs.length} transactions`)
-
-  // Broadcast all at once
-  const hashes = await wallet.broadcastTransactions(signedTxs)
-
-  console.log(`\nBatch submitted successfully!`)
-  hashes.forEach((hash, i) => {
-    const t = TRANSFERS[i]
-    console.log(`  [${i + 1}] ${t.amount} KLV → ${t.receiver.slice(0, 20)}...`)
-    console.log(`      Hash: ${hash}`)
-  })
-
-  await wallet.disconnect(true)
 }
 
 main().catch((err) => {

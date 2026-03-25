@@ -84,12 +84,6 @@ async function main() {
     process.exit(1)
   }
 
-  const privateKey = process.env.PRIVATE_KEY
-  if (!privateKey) {
-    console.error('Error: PRIVATE_KEY is required')
-    process.exit(1)
-  }
-
   // Parse CSV
   const { transfers, errors } = parseCSV(csvPath)
 
@@ -118,41 +112,49 @@ async function main() {
     process.exit(0)
   }
 
+  const privateKey = process.env.PRIVATE_KEY
+  if (!privateKey) {
+    console.error('Error: PRIVATE_KEY is required')
+    process.exit(1)
+  }
+
   const provider = new KleverProvider({ network: NETWORK })
   const wallet = new NodeWallet(provider, privateKey)
   await wallet.connect()
 
-  console.log(`Sender: ${wallet.address}`)
+  try {
+    console.log(`Sender: ${wallet.address}`)
 
-  // Get nonce once
-  const account = await provider.getAccount(wallet.address)
-  let nonce = account.nonce
+    // Get nonce once
+    const account = await provider.getAccount(wallet.address)
+    let nonce = account.nonce
 
-  // Build and sign all transactions offline
-  const signedTxs = []
-  for (const transfer of transfers) {
-    const tx = await new TransactionBuilder(provider)
-      .sender(wallet.address)
-      .nonce(nonce++)
-      .transfer({
-        receiver: transfer.receiver,
-        amount: parseKLV(transfer.amount),
-        ...(ASSET_ID ? { kda: ASSET_ID } : {}),
-      })
-      .build()
+    // Build and sign all transactions offline
+    const signedTxs = []
+    for (const transfer of transfers) {
+      const tx = await new TransactionBuilder(provider)
+        .sender(wallet.address)
+        .nonce(nonce++)
+        .transfer({
+          receiver: transfer.receiver,
+          amount: parseKLV(transfer.amount),
+          ...(ASSET_ID ? { kda: ASSET_ID } : {}),
+        })
+        .build()
 
-    signedTxs.push(await wallet.signTransaction(tx))
+      signedTxs.push(await wallet.signTransaction(tx))
+    }
+
+    // Submit batch
+    const hashes = await wallet.broadcastTransactions(signedTxs)
+
+    console.log(`\nBatch submitted! ${hashes.length} transactions:`)
+    hashes.forEach((hash, i) => {
+      console.log(`  [${i + 1}] ${hash}`)
+    })
+  } finally {
+    await wallet.disconnect(true)
   }
-
-  // Submit batch
-  const hashes = await wallet.broadcastTransactions(signedTxs)
-
-  console.log(`\nBatch submitted! ${hashes.length} transactions:`)
-  hashes.forEach((hash, i) => {
-    console.log(`  [${i + 1}] ${hash}`)
-  })
-
-  await wallet.disconnect(true)
 }
 
 main().catch((err) => {

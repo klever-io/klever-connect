@@ -34,9 +34,18 @@ const TX_HASH = process.env.TX_HASH
 const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS || '3000', 10)
 const TIMEOUT_MS = parseInt(process.env.TIMEOUT_MS || '60000', 10)
 
+if (isNaN(POLL_INTERVAL_MS) || POLL_INTERVAL_MS <= 0) {
+  console.error('Error: POLL_INTERVAL_MS must be a positive integer')
+  process.exit(1)
+}
+if (isNaN(TIMEOUT_MS) || TIMEOUT_MS <= 0) {
+  console.error('Error: TIMEOUT_MS must be a positive integer')
+  process.exit(1)
+}
+
 // Terminal statuses returned by the Klever node
 const SUCCESS_STATUSES = new Set(['success'])
-const FAILURE_STATUSES = new Set(['fail', 'failed', 'invalid'])
+const FAILURE_STATUSES = new Set(['failed', 'invalid'])
 
 if (!TX_HASH) {
   console.error('Error: TX_HASH environment variable is required')
