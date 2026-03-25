@@ -36,7 +36,6 @@ cp .env.example .env
 | [automation/](./automation/) | Automated bots        | balance alerts, transaction watcher    |
 | [batch/](./batch/)           | Bulk operations       | multi-transfer, CSV import             |
 | [monitoring/](./monitoring/) | Blockchain monitoring | block monitor with alerts              |
-| [webhooks/](./webhooks/)     | Event webhooks        | transaction confirmation handler       |
 
 ## Quick Start
 
