@@ -5,7 +5,7 @@ These examples cover backend applications, CLI tools, automation scripts, and pr
 
 ## Prerequisites
 
-- Node.js >= 18.0.0
+- Node.js >= 18.3.0
 - pnpm (used in this monorepo)
 - A Klever testnet account with some KLV
 
