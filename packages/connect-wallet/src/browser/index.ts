@@ -997,7 +997,9 @@ export class BrowserWallet extends BaseWallet {
   /**
    * Validate a signature using the extension
    * Extension mode only
-   * @param payload - Signature payload to validate
+   * @param message - The original message that was signed
+   * @param signature - The signature to validate
+   * @param address - The address of the expected signer
    * @returns Validation result with signer information
    */
   async validateSignature(

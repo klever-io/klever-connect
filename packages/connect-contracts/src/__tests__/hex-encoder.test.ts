@@ -80,14 +80,14 @@ describe('encodeLengthPlusData', () => {
     expect(encodeLengthPlusData('abc', '', false)).toBe('616263')
   })
 
-  it('returns empty string for empty string input', () => {
-    expect(encodeLengthPlusData('', '', true)).toBe('')
+  it('returns length prefix for empty string input', () => {
+    expect(encodeLengthPlusData('', '', true)).toBe('00000000')
   })
 
   it('encodes array of values with length prefix', () => {
     const result = encodeLengthPlusData(['1', '2'], 'u8', true)
-    expect(typeof result).toBe('string')
-    expect((result as string).startsWith('00000002')).toBe(true)
+    // 2 elements (00000002) + '1' as u8 (01) + '2' as u8 (02)
+    expect(result).toBe('000000020102')
   })
 })
 
@@ -126,11 +126,12 @@ describe('encodeWithABI', () => {
 
     const withValue = { value: 10, optional: 5 }
     const result = encodeWithABI(abi, withValue, 'MyStruct')
-    expect(result).toContain('0000000a')
-    expect(result).toContain('01')
+    // value=10 as u32 (0000000a) + option present (01) + optional=5 as u64 (0000000000000005)
+    expect(result).toBe('0000000a010000000000000005')
 
     const withNull = { value: 10, optional: null }
     const resultNull = encodeWithABI(abi, withNull, 'MyStruct')
-    expect(resultNull).toContain('00')
+    // value=10 as u32 (0000000a) + option absent (00)
+    expect(resultNull).toBe('0000000a00')
   })
 })

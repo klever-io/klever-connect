@@ -48,7 +48,6 @@ export const ABITypeMap: Record<string, string[]> = {
     '&[u8]',
     'vec<u8>',
     '&str',
-    'bytes',
     'managedvec',
   ],
   array: ['tuple', 'array', 'list'],

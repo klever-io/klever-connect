@@ -22,7 +22,8 @@
  * ```
  */
 
-import { getCleanType, getJSType, ABITypeMap } from './type-mapper'
+import { bech32Decode } from '@klever/connect-encoding'
+import { getCleanType, getJSType } from './type-mapper'
 
 const BUILTIN_TYPES = [
   'u64',
@@ -68,12 +69,8 @@ function encodeHexLen(size: number): string {
   return size.toString(16).padStart(8, '0')
 }
 
-function toByteArray(str: string): number[] {
-  const byteArray: number[] = []
-  for (let i = 0; i < str.length; i++) {
-    byteArray.push(str.charCodeAt(i) & 0xff)
-  }
-  return byteArray
+function toByteArray(str: string): Uint8Array {
+  return new TextEncoder().encode(str)
 }
 
 function twosComplement(value: number, bitsSize: number, isNested = true): string {
@@ -100,9 +97,12 @@ function twosComplement(value: number, bitsSize: number, isNested = true): strin
     }
   }
 
-  let hexComplement = parseInt(complement.slice(0, bitsSize / 2), 2).toString(16)
-  hexComplement += parseInt(complement.slice(bitsSize / 2, bitsSize), 2).toString(16)
-
+  const halfBits = bitsSize / 2
+  const hexLen = halfBits / 4
+  let hexComplement = parseInt(complement.slice(0, halfBits), 2).toString(16).padStart(hexLen, '0')
+  hexComplement += parseInt(complement.slice(halfBits, bitsSize), 2)
+    .toString(16)
+    .padStart(hexLen, '0')
   return hexComplement
 }
 
@@ -135,13 +135,13 @@ function padValue(value: string, length: number, isNested = true): string {
 
 function encodeAddress(value: string): string {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { bech32 } = require('bech32')
-    const decoded = bech32.decode(value)
-    if (decoded.prefix !== 'klv') return value
-    const pubkey = Buffer.from(bech32.fromWords(decoded.words))
-    if (pubkey.length !== 32) return value
-    return pubkey.toString('hex')
+    const { prefix, data } = bech32Decode(value)
+    if (prefix !== 'klv') return value
+    let hex = ''
+    for (let i = 0; i < data.length; i++) {
+      hex += data[i].toString(16).padStart(2, '0')
+    }
+    return hex
   } catch {
     return value
   }
@@ -161,7 +161,7 @@ export function encodeLengthPlusData(
   value: string | unknown[],
   innerType: string,
   isNested = true,
-): string | string[] {
+): string {
   if (typeof value !== 'string') {
     const data = value.map((v) => encodeABIValue(v, innerType, true)).join('')
     const length = value.length.toString(16).padStart(8, '0')
@@ -169,8 +169,9 @@ export function encodeLengthPlusData(
     return length + data
   } else {
     const byteArr = toByteArray(value)
-    if (byteArr.length === 0) return ''
-    const dataHex = byteArr.map((b) => b.toString(16).padStart(2, '0')).join('')
+    const dataHex = Array.from(byteArr)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
     if (!isNested) return dataHex
     const length = byteArr.length.toString(16).padStart(8, '0')
     return length + dataHex
@@ -178,21 +179,16 @@ export function encodeLengthPlusData(
 }
 
 function encodeVariadic(value: unknown[], type: string): string {
-  const allKnown = Object.values(ABITypeMap).flat()
+  const types = type.split(',')
 
-  let hasInnerType = false
-  if (type.includes('<')) {
-    const types = type.split(',')
-    const innerType = types.find((item) => item.includes('<'))
-    hasInnerType = !!allKnown.find((item) => item === innerType?.toLowerCase())
-  }
-
-  if ((type.includes('<') && hasInnerType) || !type.includes('<')) {
-    const types = type.split(',')
-    const values = types.map((type, index) => encodeABIValue(value[index], type, false))
+  if (types.length > 1) {
+    // multi<type1,type2,...>: encode one value per type positionally
+    const values = types.map((t, index) => encodeABIValue(value[index], t.trim(), false))
     return values.join('@')
   }
-  const encodedValues = value.map((_item, index) => encodeABIValue(value[index], type, false))
+
+  // variadic<type>: encode all items with the single inner type
+  const encodedValues = value.map((item) => encodeABIValue(item, type, false))
   return encodedValues.join('@')
 }
 
@@ -210,7 +206,8 @@ function encodeVariadic(value: unknown[], type: string): string {
  */
 export function encodeABIValue(value: unknown, type: string, isNested = true): string {
   const outerType = getCleanType(type, false).split('<')[0] ?? type
-  const innerType = type.slice(type.indexOf('<') + 1, type.length - 1)
+  const ltIndex = type.indexOf('<')
+  const innerType = ltIndex >= 0 ? type.slice(ltIndex + 1, type.length - 1) : ''
 
   let typeParsedValue = value
   const jsType = getJSType(type)
@@ -263,11 +260,7 @@ export function encodeABIValue(value: unknown, type: string, isNested = true): s
     case 'TokenIdentifier':
     case 'List':
     case 'Array':
-      return encodeLengthPlusData(
-        typeParsedValue as string | unknown[],
-        innerType,
-        isNested,
-      ) as string
+      return encodeLengthPlusData(typeParsedValue as string | unknown[], innerType, isNested)
     case 'Address':
       return encodeAddress(typeParsedValue as string)
     case 'variadic':
@@ -291,7 +284,7 @@ function encodeWithABIRecursive(
 
   abiType.fields.forEach((item: { name: string; type: string }) => {
     if (item.type.startsWith('Option<')) {
-      const not = value[item.name] == null || value[item.name] == undefined
+      const not = value[item.name] == null
       if (not) {
         result += '00'
         return
@@ -301,12 +294,12 @@ function encodeWithABIRecursive(
         result = encodeWithABIRecursive(
           abiTypes,
           value[item.name] as Record<string, unknown>,
-          item.type,
+          convertedType,
           result + '01',
         )
         return
       }
-      result += '01' + encodeABIValue(value[item.name], item.type, true)
+      result += '01' + encodeABIValue(value[item.name], convertedType, true)
       return
     }
 
