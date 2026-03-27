@@ -137,11 +137,9 @@ function encodeAddress(value: string): string {
   try {
     const { prefix, data } = bech32Decode(value)
     if (prefix !== 'klv') return value
-    let hex = ''
-    for (let i = 0; i < data.length; i++) {
-      hex += data[i].toString(16).padStart(2, '0')
-    }
-    return hex
+    return Array.from(data)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
   } catch {
     return value
   }

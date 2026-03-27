@@ -69,6 +69,18 @@ describe('encodeABIValue', () => {
       expect(encodeABIValue(1, 'Option<u64>', true)).toBe('0000000000000001')
     })
   })
+
+  describe('variadic and multi', () => {
+    it('encodes variadic<u64> with all items', () => {
+      const result = encodeABIValue([1, 2, 3], 'variadic<u64>', false)
+      expect(result).toBe('01@02@03')
+    })
+
+    it('encodes multi<u64,u32> positionally', () => {
+      const result = encodeABIValue([1, 2], 'multi<u64,u32>', false)
+      expect(result).toBe('01@02')
+    })
+  })
 })
 
 describe('encodeLengthPlusData', () => {
@@ -133,5 +145,28 @@ describe('encodeWithABI', () => {
     const resultNull = encodeWithABI(abi, withNull, 'MyStruct')
     // value=10 as u32 (0000000a) + option absent (00)
     expect(resultNull).toBe('0000000a00')
+  })
+
+  it('encodes Option<CustomType> with null and non-null values', () => {
+    const abi = {
+      types: {
+        Outer: {
+          type: 'struct',
+          fields: [{ name: 'inner', type: 'Option<Inner>' }],
+        },
+        Inner: {
+          type: 'struct',
+          fields: [{ name: 'x', type: 'u32' }],
+        },
+      },
+    }
+
+    const withValue = { inner: { x: 42 } }
+    // option present (01) + x=42 as u32 (0000002a)
+    expect(encodeWithABI(abi, withValue, 'Outer')).toBe('010000002a')
+
+    const withNull = { inner: null }
+    // option absent (00)
+    expect(encodeWithABI(abi, withNull, 'Outer')).toBe('00')
   })
 })
