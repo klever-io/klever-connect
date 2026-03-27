@@ -57,7 +57,7 @@ export interface KleverWeb {
   getProvider(): NetworkURI
 
   signMessage(payload: string): Promise<string>
-  validateSignature(payload: string): Promise<IVerifyResponse>
+  validateSignature(message: string, signature: string, address: string): Promise<IVerifyResponse>
   buildTransaction(
     contracts: IContractRequest[],
     txData?: string[],
