@@ -39,7 +39,7 @@ export {
 export { encodeConstructor, encodeFunctionCall, FunctionEncoder } from './encoder/function-encoder'
 
 // Export type mapper utilities
-export { ABITypeMap, getCleanType, getJSType } from './encoder/type-mapper'
+export { ABITypeMap, getCleanType, getJSType } from './type-mapper'
 
 // Export ABI-aware encoding/decoding
 export { ABIEncoder, encodeArguments, encodeByType } from './encoder/abi-encoder'

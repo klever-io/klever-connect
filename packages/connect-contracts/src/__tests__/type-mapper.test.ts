@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getCleanType, getJSType, ABITypeMap } from '../encoder/type-mapper'
+import { getCleanType, getJSType, ABITypeMap } from '../type-mapper'
 
 describe('ABITypeMap', () => {
   it('has all expected categories', () => {
