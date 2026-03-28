@@ -41,10 +41,6 @@ export { encodeConstructor, encodeFunctionCall, FunctionEncoder } from './encode
 // Export type mapper utilities
 export { ABITypeMap, getCleanType, getJSType } from './encoder/type-mapper'
 
-// Export hex-string encoder
-export { encodeABIValue, encodeLengthPlusData, encodeWithABI } from './encoder/hex-encoder'
-export type { ABITypes } from './encoder/hex-encoder'
-
 // Export ABI-aware encoding/decoding
 export { ABIEncoder, encodeArguments, encodeByType } from './encoder/abi-encoder'
 export {
