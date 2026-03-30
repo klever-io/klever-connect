@@ -1,5 +1,18 @@
 # @klever/connect-contracts
 
+## 0.2.0
+
+### Minor Changes
+
+- f734f59: feat(contracts): add ABI type mapper utilities (ABITypeMap, getCleanType, getJSType) for mapping smart contract types to JS/UI categories
+- fca12aa: feat(contracts): add deploy metadata support (upgradeable, readable, payable, payableBySC)
+
+### Patch Changes
+
+- Updated dependencies [f667c43]
+  - @klever/connect-provider@0.2.0
+  - @klever/connect-transactions@0.1.4
+
 ## 0.1.4
 
 ### Patch Changes
