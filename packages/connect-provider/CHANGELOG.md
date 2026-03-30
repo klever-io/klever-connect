@@ -1,5 +1,11 @@
 # @klever/connect-provider
 
+## 0.2.0
+
+### Minor Changes
+
+- f667c43: add typed event system (on/off/once) to KleverProvider with WebSocket and polling support
+
 ## 0.1.3
 
 ### Patch Changes

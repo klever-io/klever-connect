@@ -1,5 +1,12 @@
 # @klever/connect-transactions
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [f667c43]
+  - @klever/connect-provider@0.2.0
+
 ## 0.1.3
 
 ### Patch Changes
