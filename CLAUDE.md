@@ -16,7 +16,7 @@ Modular TypeScript SDK for building applications on Klever Blockchain. Provides 
 
 ### Package Structure
 
-```
+```text
 @klever/connect             - Main entry point (re-exports all packages)
 @klever/connect-core        - Types, errors, constants, formatters
 @klever/connect-encoding    - Proto encoding/decoding
@@ -162,7 +162,7 @@ isKleverAddress('klv1...') // true/false
 
 ### Wallet Architecture
 
-```
+```text
 Wallet (interface)
 ├── BaseWallet (abstract base class)
 │   ├── NodeWallet (private key, server-side)
@@ -183,7 +183,7 @@ Custom error classes with codes in `@klever/connect-core`:
 
 ### Project Structure
 
-```
+```text
 klever-connect/
 ├── packages/
 │   ├── connect/              - Main entry point
@@ -318,7 +318,7 @@ Turbo handles this automatically, but for manual builds:
 
 Follow conventional commits:
 
-```
+```text
 feat(contracts): add event filtering support
 fix(provider): handle network timeout errors
 docs(readme): update installation instructions
@@ -330,7 +330,7 @@ chore(deps): update dependencies
 
 - All PRs target `develop`, never `master` directly (except hotfixes)
 - PR title should include `[KLC-XXX]` prefix if related to Jira issue
-- Every PR must include a changeset (`pnpm changeset`) — prefer `minor`/`patch`, use `major` only for drastic breaking changes
+- Every PR that affects published packages must include a changeset (`pnpm changeset`) — prefer `minor`/`patch`, use `major` only for drastic breaking changes. Docs-only, test-only, or chore-only PRs that don't change package behavior do not require a changeset.
 - PRs are **squash merged** to `develop`
 - Link related Jira issues in description
 - CI must pass before merge
@@ -349,9 +349,7 @@ chore(deps): update dependencies
 
 ### Release Process
 
-See `RELEASE_GUIDE.md` for the full quick-reference.
-
-```
+```text
 PR → develop (squash) → Version Packages workflow → PR to master (merge, NO squash) → Publish workflow
 ```
 
