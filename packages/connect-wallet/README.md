@@ -880,7 +880,7 @@ new BrowserWallet(provider: IProvider, config?: WalletConfig)
 - `parsePemFileData(pemData: string): Promise<{ privateKey: string; address: string }>` - Parse PEM via extension
 - `setWalletAddress(address: string): Promise<void>` - Set wallet address in extension
 - `setPrivateKey(privateKey: string): Promise<void>` - Set private key in extension
-- `validateSignature(payload: string): Promise<{ isValid: boolean; signer?: string }>` - Validate signature
+- `validateSignature(message: string, signature: string, address: string): Promise<{ isValid: boolean; signer?: string }>` - Validate signature
 
 **Example:**
 

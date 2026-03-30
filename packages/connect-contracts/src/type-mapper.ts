@@ -55,12 +55,16 @@ export const ABITypeMap: Record<string, string[]> = {
   variadic: ['multi', 'variadic'],
 }
 
+const allKnownTypes = Object.values(ABITypeMap).flat()
+
 /**
  * Strip Option<> wrapper and generics from an ABI type string.
  *
  * @param abiType - The raw ABI type (e.g. 'Option<u64>', 'List<MyStruct>')
  * @param toLower - Whether to lowercase the result (default: true)
  * @returns The cleaned type string
+ * @note For collection types (List, Array, Tuple), returns the **container** type
+ * (e.g. `'list'`), not the element type. The inner type information is discarded.
  */
 export function getCleanType(abiType: string, toLower = true): string {
   const isOptional = abiType.toLowerCase().startsWith('option')
@@ -70,8 +74,7 @@ export function getCleanType(abiType: string, toLower = true): string {
     if (matches && matches.length > 1) abiType = matches[1] ?? abiType
   }
 
-  const allKnown = Object.values(ABITypeMap).flat()
-  if (!allKnown.includes(abiType.toLowerCase())) {
+  if (!allKnownTypes.includes(abiType.toLowerCase())) {
     abiType = abiType.split('<')[0] ?? abiType
   }
 
@@ -85,7 +88,7 @@ export function getCleanType(abiType: string, toLower = true): string {
  * Map an ABI type to a JavaScript/UI type category.
  *
  * Returns one of: 'number', 'string', 'array', 'checkbox', 'variadic',
- * or the original type name if it's a custom struct/enum.
+ * or the cleaned type name if it's a custom struct/enum.
  *
  * @param abiType - The raw ABI type (e.g. 'u64', 'Address', 'Option<bool>')
  * @returns The JS type category
@@ -99,5 +102,5 @@ export function getJSType(abiType: string): string {
     }
   }
 
-  return abiType
+  return cleanType
 }
