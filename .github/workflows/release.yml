@@ -1,12 +1,13 @@
 name: Version Packages
 
 # Manual workflow to version packages based on changesets
-# Run this after merging PRs with changesets to develop
+# Creates a PR with version bumps instead of pushing directly to develop
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   version:
@@ -63,19 +64,42 @@ jobs:
         if: steps.check-changesets.outputs.has_changesets == 'true'
         run: pnpm test
 
-      - name: Commit Version Changes
+      - name: Create Version PR
         if: steps.check-changesets.outputs.has_changesets == 'true'
         run: |
+          BRANCH="chore/version-packages-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
           git add .
-          git commit -m "chore: version packages" || echo "No changes to commit"
-          git push
+          git commit -m "chore: version packages"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "chore: version packages" \
+            --body "## Summary
+
+          Automated version bump from changesets.
+
+          - Updated package.json versions
+          - Generated/updated CHANGELOG.md files
+          - Deleted consumed changeset files
+
+          ## Next Steps
+
+          1. Merge this PR to develop (squash is fine)
+          2. Create release PR from develop → master
+          3. Merge release PR (regular merge, no squash)
+          4. Trigger Publish Packages workflow on master"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Summary
         run: |
           echo "## 📦 Version Packages Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.check-changesets.outputs.has_changesets }}" == "true" ]; then
-            echo "✅ Packages versioned successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Version PR created successfully!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 📋 Changes" >> $GITHUB_STEP_SUMMARY
             echo "- Updated package.json versions" >> $GITHUB_STEP_SUMMARY
@@ -83,8 +107,9 @@ jobs:
             echo "- Deleted consumed changeset files" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
-            echo "1. Merge develop to master" >> $GITHUB_STEP_SUMMARY
-            echo "2. Trigger the 'Publish Packages' workflow from master branch" >> $GITHUB_STEP_SUMMARY
+            echo "1. Merge the version PR to develop" >> $GITHUB_STEP_SUMMARY
+            echo "2. Create release PR from develop to master" >> $GITHUB_STEP_SUMMARY
+            echo "3. Trigger the 'Publish Packages' workflow from master branch" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ No changesets found - nothing to version" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
