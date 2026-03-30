@@ -102,5 +102,5 @@ export function getJSType(abiType: string): string {
     }
   }
 
-  return cleanType
+  return getCleanType(abiType, false)
 }
