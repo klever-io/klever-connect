@@ -328,7 +328,7 @@ chore(deps): update dependencies
 
 #### Pull Requests
 
-- All PRs target `develop`, never `master` directly (except hotfixes)
+- All PRs target `develop`, never `master` directly (except hotfixes and release PRs)
 - PR title should include `[KLC-XXX]` prefix if related to Jira issue
 - Every PR that affects published packages must include a changeset (`pnpm changeset`) — prefer `minor`/`patch`, use `major` only for drastic breaking changes. Docs-only, test-only, or chore-only PRs that don't change package behavior do not require a changeset.
 - PRs are **squash merged** to `develop`
@@ -353,7 +353,7 @@ chore(deps): update dependencies
 PR → develop (squash) → Version Packages workflow → PR to master (merge, NO squash) → Publish workflow
 ```
 
-1. PRs go to `develop` with changesets, squash merged
+1. Feature PRs go to `develop` with changesets, squash merged
 2. Run "Version Packages" workflow on `develop` (or `pnpm run version` locally)
 3. Create PR from `develop` → `master`
 4. **Merge to master with regular merge** (do NOT squash — preserves version bump commits)
