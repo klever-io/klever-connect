@@ -350,15 +350,16 @@ chore(deps): update dependencies
 ### Release Process
 
 ```text
-PR → develop (squash) → Version Packages workflow → PR to master (merge, NO squash) → Publish workflow
+Feature PRs → develop (squash) → Version Packages workflow → version PR → develop → release PR → master (no squash) → Publish workflow
 ```
 
 1. Feature PRs go to `develop` with changesets, squash merged
-2. Run "Version Packages" workflow on `develop` (or `pnpm run version` locally)
-3. Create PR from `develop` → `master`
-4. **Merge to master with regular merge** (do NOT squash — preserves version bump commits)
-5. Run "Publish Packages" workflow on `master`
-6. Verify: `npm view @klever/connect version`
+2. Run "Version Packages" workflow on `develop` — creates a PR with version bumps
+3. Merge the version PR to `develop`
+4. Create release PR from `develop` → `master`
+5. **Merge to master with regular merge** (do NOT squash — preserves version bump commits)
+6. Run "Publish Packages" workflow on `master`
+7. Verify: `npm view @klever/connect version`
 
 ### Adding a New Feature
 
