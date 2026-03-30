@@ -342,6 +342,23 @@ describe('ContractFactory', () => {
       expect(newFactory.signer).toBe(newSigner)
       expect(newFactory.bytecode).toEqual(bytecode)
     })
+
+    it('should preserve metadata when connecting to a new signer', () => {
+      const customMetadata = {
+        upgradeable: false,
+        payable: false,
+        readable: true,
+        payableBySC: true,
+      }
+      const factory = new ContractFactory(abi, bytecode, mockSigner, customMetadata)
+      const newSigner = createMockSigner()
+
+      const newFactory = factory.connect(newSigner)
+
+      // byte0: readable(0x04) = 0x04, byte1: payableBySC(0x04) = 0x04  =>  "0404"
+      const connectedTx = newFactory.getDeployTransaction()
+      expect(connectedTx.data).toBe('010203@0500@0404')
+    })
   })
 
   describe('getDeployTransaction', () => {
@@ -349,7 +366,9 @@ describe('ContractFactory', () => {
       const factory = new ContractFactory(abi, bytecode, mockSigner)
       const deployTx = factory.getDeployTransaction()
 
-      expect(deployTx.data).toBe('010203')
+      // Format: {bytecode}@{vmType}@{metadataHex} with default metadata
+      // byte0 = upgradeable(0x01)|readable(0x04) = 0x05, byte1 = payable(0x02)|payableBySC(0x04) = 0x06
+      expect(deployTx.data).toBe('010203@0500@0506')
     })
 
     it('should get deployment data with constructor args', async () => {

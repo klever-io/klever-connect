@@ -12,6 +12,8 @@
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:coverage:ui": "vitest --coverage --ui",
     "test:integration": "pnpm --filter '@klever/connect-provider' --filter '@klever/connect-transactions' run test:integration",
     "benchmark": "turbo run benchmark",
     "lint": "turbo run lint",
@@ -44,6 +46,7 @@
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "@typhonjs-typedoc/typedoc-theme-dmt": "^0.4.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
@@ -62,17 +65,17 @@
   },
   "pnpm": {
     "overrides": {
-      "glob": ">=13.0.1",
-      "@isaacs/brace-expansion": ">=5.0.1",
-      "rollup": ">=4.59.0",
+      "glob": "13.0.1",
+      "@isaacs/brace-expansion": "5.0.1",
+      "rollup": "4.59.0",
       "glob>minimatch": "10.2.3",
-      "markdown-it": ">=14.1.1",
-      "underscore": ">=1.13.8",
-      "flatted": ">=3.4.0",
-      "undici": ">=7.24.0",
-      "yaml": ">=2.8.3",
-      "picomatch": ">=4.0.4",
-      "brace-expansion": ">=5.0.5"
+      "markdown-it": "14.1.1",
+      "underscore": "1.13.8",
+      "flatted": "3.4.2",
+      "undici": "7.24.5",
+      "yaml": "2.8.3",
+      "picomatch": "4.0.4",
+      "brace-expansion": "5.0.5"
     }
   }
 }

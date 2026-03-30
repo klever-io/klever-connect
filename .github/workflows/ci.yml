@@ -11,7 +11,7 @@ jobs:
   all-checks:
     runs-on: ubuntu-latest
     if: always()
-    needs: [format, typecheck, lint, build, test]
+    needs: [format, typecheck, lint, build, test, coverage]
 
     steps:
       - name: Check all jobs
@@ -20,7 +20,8 @@ jobs:
              [[ "${{ needs.typecheck.result }}" != "success" ]] || \
              [[ "${{ needs.lint.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]] || \
-             [[ "${{ needs.test.result }}" != "success" ]]; then
+             [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.coverage.result }}" != "success" ]]; then
             echo "One or more checks failed"
             exit 1
           fi
@@ -128,6 +129,7 @@ jobs:
           retention-days: 7
 
   test:
+    needs: [build]
     runs-on: ubuntu-latest
 
     steps:
@@ -146,19 +148,51 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages (required for tests)
-        run: pnpm build
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: packages
 
       - name: Run tests
         run: pnpm test
 
-      - name: Upload coverage
-        if: success()
+  coverage:
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: packages
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage --concurrency=1
+
+      - name: Upload coverage reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-reports
           path: |
             packages/*/coverage
             coverage
-          retention-days: 7
+          retention-days: 30
           if-no-files-found: ignore
