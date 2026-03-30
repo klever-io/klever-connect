@@ -387,11 +387,15 @@ describe('BrowserWallet', () => {
       const wallet = new BrowserWallet(mockProvider)
       await wallet.connect()
 
-      const result = await wallet.validateSignature('signature-payload')
+      const result = await wallet.validateSignature('test message', 'test-signature', 'klv1test')
 
       expect(result.isValid).toBe(true)
       expect(result.signer).toBe('klv1test')
-      expect(mockKleverWeb.validateSignature).toHaveBeenCalledWith('signature-payload')
+      expect(mockKleverWeb.validateSignature).toHaveBeenCalledWith(
+        'test message',
+        'test-signature',
+        'klv1test',
+      )
     })
 
     it('should throw error for extension-only methods without extension', async () => {
@@ -408,7 +412,7 @@ describe('BrowserWallet', () => {
         'KleverWeb extension not available',
       )
       await expect(wallet.setPrivateKey('key')).rejects.toThrow('KleverWeb extension not available')
-      await expect(wallet.validateSignature('sig')).rejects.toThrow(
+      await expect(wallet.validateSignature('msg', 'sig', 'addr')).rejects.toThrow(
         'KleverWeb extension not available',
       )
     })
