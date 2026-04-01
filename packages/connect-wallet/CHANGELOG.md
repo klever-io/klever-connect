@@ -1,5 +1,17 @@
 # @klever/connect-wallet
 
+## 0.2.0
+
+### Minor Changes
+
+- f734f59: fix(wallet): update validateSignature to accept separate message, signature, and address parameters matching KleverWeb extension API
+
+### Patch Changes
+
+- Updated dependencies [f667c43]
+  - @klever/connect-provider@0.2.0
+  - @klever/connect-transactions@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
