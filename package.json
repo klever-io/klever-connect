@@ -12,6 +12,8 @@
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:coverage:ui": "vitest --coverage --ui",
     "test:integration": "pnpm --filter '@klever/connect-provider' --filter '@klever/connect-transactions' run test:integration",
     "benchmark": "turbo run benchmark",
     "lint": "turbo run lint",
@@ -38,17 +40,18 @@
     ]
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.8",
+    "@changesets/cli": "^2.30.0",
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.10.10",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "@typhonjs-typedoc/typedoc-theme-dmt": "^0.4.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
-    "lint-staged": "^16.3.0",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
     "protobufjs": "^7.5.4",
     "protobufjs-cli": "^1.2.0",
@@ -62,11 +65,14 @@
   },
   "pnpm": {
     "overrides": {
-      "glob": ">=13.0.1",
-      "@isaacs/brace-expansion": ">=5.0.1",
-      "rollup": ">=4.59.0",
+      "glob": "13.0.1",
+      "@isaacs/brace-expansion": "5.0.1",
+      "rollup": "4.59.0",
       "glob>minimatch": "10.2.3",
-      "markdown-it": ">=14.1.1"
+      "markdown-it": "14.1.1",
+      "underscore": "1.13.8",
+      "flatted": "3.4.2",
+      "undici": "7.24.5"
     }
   }
 }

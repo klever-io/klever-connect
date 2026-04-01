@@ -1,0 +1,28 @@
+{
+  "name": "@klever/connect-examples-nodejs",
+  "version": "1.0.1",
+  "description": "Node.js examples for the Klever Connect SDK",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "balance": "node basic/balance.js",
+    "transfer": "node basic/transfer.js",
+    "account": "node basic/account-info.js",
+    "sign": "node basic/sign-message.js",
+    "wallet": "node basic/wallet-manager.js",
+    "cli": "node cli/bin/klever-cli.js",
+    "server": "node server/src/server.js",
+    "bulk-transfer": "node batch/bulk-transfer.js",
+    "csv-import": "node batch/csv-import.js",
+    "monitor": "node monitoring/block-monitor.js"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "winston": "^3.13.0"
+  },
+  "engines": {
+    "node": ">=18.3.0"
+  }
+}

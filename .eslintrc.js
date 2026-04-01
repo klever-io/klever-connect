@@ -51,5 +51,7 @@ module.exports = {
     '**/proto/compiled.js',
     '**/proto/compiled.d.ts',
     '**/proto/generated/**',
+    '**/vitest.config.ts',
+    '**/vitest.integration.config.ts',
   ],
 }

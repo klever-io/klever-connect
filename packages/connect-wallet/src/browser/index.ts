@@ -997,16 +997,22 @@ export class BrowserWallet extends BaseWallet {
   /**
    * Validate a signature using the extension
    * Extension mode only
-   * @param payload - Signature payload to validate
+   * @param message - The original message that was signed
+   * @param signature - The signature to validate
+   * @param address - The address of the expected signer
    * @returns Validation result with signer information
    */
-  async validateSignature(payload: string): Promise<{ isValid: boolean; signer?: string }> {
+  async validateSignature(
+    message: string,
+    signature: string,
+    address: string,
+  ): Promise<{ isValid: boolean; signer?: string }> {
     if (!this._kleverWeb) {
       throw new WalletError('KleverWeb extension not available')
     }
 
     try {
-      return await this._kleverWeb.validateSignature(payload)
+      return await this._kleverWeb.validateSignature(message, signature, address)
     } catch (error) {
       throw new WalletError(
         `Failed to validate signature: ${error instanceof Error ? error.message : 'Unknown error'}`,

@@ -124,7 +124,7 @@ export function encodeByType(
     }
     return encodeU16(numValue)
   }
-  if (type === 'u32') {
+  if (type === 'u32' || type === 'usize') {
     const numValue = toNumber(value)
     if (nested) {
       // Nested: fixed 4 bytes, no length prefix
@@ -159,7 +159,7 @@ export function encodeByType(
     }
     return encodeU16(unsigned)
   }
-  if (type === 'i32') {
+  if (type === 'i32' || type === 'isize') {
     const numValue = toNumber(value)
     const unsigned = numValue < 0 ? numValue + 4294967296 : numValue
     if (nested) {
@@ -176,21 +176,29 @@ export function encodeByType(
     return encodeU64(unsigned)
   }
 
-  if (type === 'bool') {
+  if (type === 'bool' || type === 'boolean') {
     // Bool is always 1 byte (no length prefix even when nested)
     return encodeBool(value as boolean)
   }
-  if (type === 'Address') {
+  const isAddressAlias = type === 'Address' || ((type === 'a' || type === 'A') && !abi.types[type])
+  if (isAddressAlias) {
     return encodeAddress(value as string)
   }
 
   // Handle variable-length types
-  if (type === 'bytes') {
+  if (type === 'bytes' || type === 'BoxedBytes' || type === 'Vec<u8>' || type === '&[u8]') {
     return encodeBytes(value as Uint8Array, nested)
   }
 
-  // Handle strings (TokenIdentifier, etc.)
-  if (type.startsWith('utf-8 string') || type === 'TokenIdentifier' || type === 'KdaTokenType') {
+  // Handle strings (TokenIdentifier, ManagedBuffer, etc.)
+  if (
+    type.startsWith('utf-8 string') ||
+    type === 'TokenIdentifier' ||
+    type === 'KdaTokenType' ||
+    type === 'String' ||
+    type === '&str' ||
+    type === 'ManagedBuffer'
+  ) {
     return encodeString(value as string, nested)
   }
 
@@ -250,6 +258,12 @@ export function encodeByType(
     const innerType = type.slice(9, -1) // Extract T from variadic<T>
     // Each variadic item is encoded individually as top-level (nested = false)
     return encodeByType(value, innerType, abi, nested)
+  }
+
+  // Handle hex passthrough — value is used as-is
+  if (type === 'hex') {
+    const hex = typeof value === 'string' ? value : String(value)
+    return encodeBytes(hexToBytes(hex), nested)
   }
 
   // If type is already Uint8Array, return as-is

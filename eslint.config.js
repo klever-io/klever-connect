@@ -54,6 +54,9 @@ export default tseslint.config(
       '**/*.test.ts',
       '**/*.spec.ts',
       '**/__tests__/**',
+      '**/vitest.config.ts',
+      '**/vitest.integration.config.ts',
+      '**/tsup.config.ts',
     ],
   },
 )
