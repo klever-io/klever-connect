@@ -78,6 +78,15 @@ export class Transaction extends ProtoTransaction {
   public override toJSON(): { [k: string]: unknown } {
     const json = super.toJSON()
 
+    // Convert GasLimit from string to number (top-level field)
+    if (typeof json['GasLimit'] === 'string') {
+      const gasLimit = Number(json['GasLimit'])
+      if (!Number.isFinite(gasLimit)) {
+        throw new Error('Invalid GasLimit value')
+      }
+      json['GasLimit'] = gasLimit
+    }
+
     // Convert numeric string fields to actual numbers
     if (json['RawData'] && typeof json['RawData'] === 'object') {
       const rawData = json['RawData'] as { [k: string]: unknown }
@@ -85,11 +94,6 @@ export class Transaction extends ProtoTransaction {
       // Convert nonce from string to number
       if (typeof rawData['Nonce'] === 'string') {
         rawData['Nonce'] = Number(rawData['Nonce'])
-      }
-
-      // Convert GasLimit from string to number
-      if (typeof json['GasLimit'] === 'string') {
-        json['GasLimit'] = Number(json['GasLimit'])
       }
 
       // Convert other numeric fields inside RawData
