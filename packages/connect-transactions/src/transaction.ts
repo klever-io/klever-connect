@@ -81,8 +81,8 @@ export class Transaction extends ProtoTransaction {
     // Convert GasLimit from string to number (top-level field)
     if (typeof json['GasLimit'] === 'string') {
       const gasLimit = Number(json['GasLimit'])
-      if (!Number.isFinite(gasLimit)) {
-        throw new Error('Invalid GasLimit value')
+      if (!Number.isSafeInteger(gasLimit) || gasLimit < 0) {
+        throw new TransactionError('Invalid GasLimit value')
       }
       json['GasLimit'] = gasLimit
     }
