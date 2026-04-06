@@ -87,7 +87,12 @@ export class Transaction extends ProtoTransaction {
         rawData['Nonce'] = Number(rawData['Nonce'])
       }
 
-      // Convert other numeric fields
+      // Convert GasLimit from string to number
+      if (typeof json['GasLimit'] === 'string') {
+        json['GasLimit'] = Number(json['GasLimit'])
+      }
+
+      // Convert other numeric fields inside RawData
       const numericFields = ['KAppFee', 'BandwidthFee', 'PermID']
       for (const field of numericFields) {
         if (typeof rawData[field] === 'string') {
