@@ -1,5 +1,14 @@
 # @klever/connect
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [4c310fc]
+  - @klever/connect-transactions@0.1.5
+  - @klever/connect-contracts@0.2.1
+  - @klever/connect-wallet@0.2.1
+
 ## 0.1.5
 
 ### Patch Changes
