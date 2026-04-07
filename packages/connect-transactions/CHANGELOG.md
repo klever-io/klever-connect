@@ -1,5 +1,11 @@
 # @klever/connect-transactions
 
+## 0.1.5
+
+### Patch Changes
+
+- 4c310fc: fix(transactions): convert GasLimit from string to number when parsing transaction JSON
+
 ## 0.1.4
 
 ### Patch Changes

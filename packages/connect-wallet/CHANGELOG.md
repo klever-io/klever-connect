@@ -1,5 +1,12 @@
 # @klever/connect-wallet
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [4c310fc]
+  - @klever/connect-transactions@0.1.5
+
 ## 0.2.0
 
 ### Minor Changes
