@@ -1,4 +1,4 @@
-# Klever Connect SDK
+0xfaa9ff80d01d6dfdbaad1ef46f19f1ad6fa9ac64# Klever Connect SDK
 
 > **The official JavaScript/TypeScript SDK for Klever Blockchain** - A comprehensive Web3 library inspired by ethers.js, CosmJS, and @solana/web3.js
 
