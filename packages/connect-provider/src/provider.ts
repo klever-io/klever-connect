@@ -983,6 +983,16 @@ export class KleverProvider implements IProvider {
             resolve(tx)
           }
         } catch (error) {
+          if (this.isPendingTransactionLookupError(error)) {
+            onProgress?.('pending', { attempts, maxAttempts })
+            if (attempts >= maxAttempts) {
+              clearInterval(interval)
+              onProgress?.('timeout', { attempts, maxAttempts })
+              resolve(null)
+            }
+            return
+          }
+
           clearInterval(interval)
           reject(
             new Error(
@@ -1001,6 +1011,10 @@ export class KleverProvider implements IProvider {
         void checkTransaction()
       }, pollInterval)
     })
+  }
+
+  private isPendingTransactionLookupError(error: unknown): boolean {
+    return error instanceof Error && error.message.includes('HTTP 404')
   }
 
   /**

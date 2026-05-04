@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { KleverProvider } from '../provider'
 import { NETWORKS } from '../networks'
-import type { IAccount } from '../types/api-types'
+import { TransactionStatus, type IAccount, type ITransactionResponse } from '../types/api-types'
 import type { KleverAddress, TransactionHash } from '@klever/connect-core'
 
 // Mock the HttpClient
@@ -929,6 +929,44 @@ describe('KleverProvider', () => {
 
       const tx = await promise
       expect(tx).toBeNull()
+
+      vi.useRealTimers()
+    })
+
+    it('should keep polling when transaction lookup returns HTTP 404', async () => {
+      vi.useFakeTimers()
+
+      const confirmedTx: ITransactionResponse = {
+        hash: '0x123',
+        blockNum: 10,
+        sender: 'klv1sender',
+        nonce: 1,
+        timestamp: 1234567890,
+        kAppFee: 0,
+        bandwidthFee: 0,
+        totalFee: 0,
+        status: TransactionStatus.Success,
+        version: 1,
+        chainID: '1001',
+        signature: [],
+        receipts: [],
+      }
+      const onProgress = vi.fn()
+
+      vi.spyOn(provider, 'getTransaction')
+        .mockRejectedValueOnce(new Error('HTTP 404: Not Found'))
+        .mockRejectedValueOnce(new Error('HTTP 404: Not Found'))
+        .mockResolvedValueOnce(confirmedTx)
+
+      const promise = provider.waitForTransaction('0x123' as TransactionHash, undefined, onProgress)
+
+      await vi.advanceTimersByTimeAsync(6000)
+
+      const tx = await promise
+      expect(tx).toBe(confirmedTx)
+      expect(provider.getTransaction).toHaveBeenCalledTimes(3)
+      expect(onProgress).toHaveBeenCalledWith('pending', { attempts: 1, maxAttempts: 40 })
+      expect(onProgress).toHaveBeenCalledWith('pending', { attempts: 2, maxAttempts: 40 })
 
       vi.useRealTimers()
     })
