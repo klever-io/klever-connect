@@ -412,6 +412,38 @@ describe('TransactionBuilder', () => {
         }),
       ).toThrow('Invalid contract address')
     })
+
+    it('should add smart contract without address', () => {
+      const builder = new TransactionBuilder()
+      builder.smartContract({
+        scType: 1,
+        callValue: { KLV: 1000000n },
+      })
+
+      const request = builder.buildRequest()
+      expect(request.contracts).toHaveLength(1)
+      expect(request.contracts[0]).toMatchObject({
+        contractType: TXType.SmartContract,
+        scType: 1,
+        callValue: { KLV: 1000000 },
+      })
+      expect(request.contracts[0]).not.toHaveProperty('address')
+    })
+
+    it('should omit empty smart contract address', () => {
+      const builder = new TransactionBuilder()
+      builder.smartContract({
+        scType: 1,
+        address: '',
+      })
+
+      const request = builder.buildRequest()
+      expect(request.contracts[0]).toMatchObject({
+        contractType: TXType.SmartContract,
+        scType: 1,
+      })
+      expect(request.contracts[0]).not.toHaveProperty('address')
+    })
   })
 
   describe('buildRequest', () => {

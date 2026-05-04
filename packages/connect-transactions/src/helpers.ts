@@ -650,8 +650,8 @@ export function createSetAccountName(params: { name: string }): SetAccountNameRe
  * Interacts with deployed smart contracts on the Klever blockchain
  *
  * @param params - Smart contract call parameters
- * @param params.address - Contract's bech32 address
- * @param params.scType - Contract call type (0 = deploy, 1 = invoke, etc.)
+ * @param params.address - Optional contract bech32 address
+ * @param params.scType - Contract call type (0 = invoke, 1 = deploy, 2 = upgrade)
  * @param params.callValue - Optional KLV or KDA amounts to send with the call
  * @returns SmartContractRequest object ready to use with builder.smartContract()
  *
@@ -659,7 +659,7 @@ export function createSetAccountName(params: { name: string }): SetAccountNameRe
  * ```typescript
  * const scCall = createSmartContractCall({
  *   address: 'klv1contract...',
- *   scType: 1, // Invoke
+ *   scType: 0, // Invoke
  *   callValue: {
  *     'KLV': '1000000'
  *   }
@@ -673,7 +673,7 @@ export function createSetAccountName(params: { name: string }): SetAccountNameRe
  * ```
  */
 export function createSmartContractCall(params: {
-  address: string
+  address?: string
   scType: number
   callValue?: Record<string, AmountLike>
 }): SmartContractRequest {

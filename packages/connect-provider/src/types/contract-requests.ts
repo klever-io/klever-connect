@@ -362,7 +362,7 @@ export interface DepositRequest {
 
 export interface SmartContractRequest {
   scType: number
-  address: string
+  address?: string
   callValue?: Record<string, AmountLike>
 }
 
