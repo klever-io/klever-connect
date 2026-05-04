@@ -219,7 +219,6 @@ export class ContractFactory {
 
     builder.sender(this.signer.address).smartContract({
       scType: 1, // Deploy new contract
-      address: '',
     })
 
     // Add deployment data

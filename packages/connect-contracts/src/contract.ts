@@ -310,7 +310,7 @@ export class Contract {
 
     builder.smartContract({
       scType: 0, // Call existing contract
-      address: this.address,
+      address: this.address as KleverAddress,
       ...(options.value && { callValue: options.value }),
     })
 

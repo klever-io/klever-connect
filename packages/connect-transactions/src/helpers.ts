@@ -672,12 +672,8 @@ export function createSetAccountName(params: { name: string }): SetAccountNameRe
  *   .build()
  * ```
  */
-export function createSmartContractCall(params: {
-  address?: string
-  scType: number
-  callValue?: Record<string, AmountLike>
-}): SmartContractRequest {
-  return params as SmartContractRequest
+export function createSmartContractCall(params: SmartContractRequest): SmartContractRequest {
+  return params
 }
 
 // ============================================================================

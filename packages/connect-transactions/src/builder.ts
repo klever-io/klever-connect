@@ -961,18 +961,36 @@ export class TransactionBuilder {
    * ```
    */
   smartContract(params: SmartContractRequest): this {
+    if (params.scType === 1 && 'address' in params) {
+      throw new ValidationError('Contract address is not allowed for smart contract deploy', {
+        scType: params.scType,
+      })
+    }
+
+    if ((params.scType === 0 || params.scType === 2) && !params.address) {
+      throw new ValidationError('Contract address is required for smart contract invoke/upgrade', {
+        scType: params.scType,
+      })
+    }
+
     if (params.address && !isValidAddress(params.address)) {
       throw new ValidationError(`Invalid contract address: ${params.address}`, {
         address: params.address,
       })
     }
 
-    const { address, ...contractParams } = params
+    if (params.scType === 1) {
+      this.contracts.push({
+        contractType: 63,
+        ...params,
+      })
+
+      return this
+    }
 
     this.contracts.push({
       contractType: 63,
-      ...contractParams,
-      ...(address ? { address } : {}),
+      ...params,
     })
 
     return this

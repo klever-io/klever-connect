@@ -5,6 +5,7 @@
  * Each contract type (Transfer, Freeze, etc.) has a corresponding Request interface
  * that defines the parameters needed for that specific operation.
  */
+import type { KleverAddress } from '@klever/connect-core'
 
 // ============================================================================
 // Common Types
@@ -360,11 +361,23 @@ export interface DepositRequest {
 // Smart Contracts
 // ============================================================================
 
-export interface SmartContractRequest {
-  scType: number
-  address?: string
+export interface SmartContractBaseRequest {
   callValue?: Record<string, AmountLike>
 }
+
+export type SmartContractRequest =
+  | (SmartContractBaseRequest & {
+      scType: 0
+      address: KleverAddress
+    })
+  | (SmartContractBaseRequest & {
+      scType: 1
+      address?: never
+    })
+  | (SmartContractBaseRequest & {
+      scType: 2
+      address: KleverAddress
+    })
 
 // ============================================================================
 // Contract Request Data (matching Go API)
