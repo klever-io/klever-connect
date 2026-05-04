@@ -160,7 +160,7 @@ export class ContractFactory {
    * signs it, and broadcasts it to the network.
    *
    * @param args - Constructor arguments (if any)
-   * @returns Contract instance (note: address will be 'klv1pending' until receipt is parsed)
+   * @returns Contract instance (note: address will be the valid zero-address placeholder until receipt is parsed)
    * @throws Error if provider is not available
    * @throws Error if transaction signing fails
    *
@@ -191,7 +191,8 @@ export class ContractFactory {
    * ```
    *
    * @remarks
-   * The returned Contract instance has a placeholder address ('klv1pending').
+   * The returned Contract instance has the valid zero-address placeholder
+   * (`klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z`).
    * You must wait for the deployment transaction to be mined and then use
    * `ContractFactory.getDeployedAddress(receipt)` to get the actual address.
    */
