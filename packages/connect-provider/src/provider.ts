@@ -344,6 +344,7 @@ export class KleverProvider implements IProvider {
    * Retrieves transaction information by hash
    *
    * @param hash - The transaction hash (as TransactionHash branded type or string)
+   * @param options - Additional options
    * @returns Transaction details including receipts, or null if not found
    * @throws {NetworkError} If there's a network error
    *
@@ -358,10 +359,13 @@ export class KleverProvider implements IProvider {
    * }
    * ```
    */
-  async getTransaction(hash: TransactionHash | string): Promise<ITransactionResponse | null> {
+  async getTransaction(
+    hash: TransactionHash | string,
+    options?: { skipCache?: boolean },
+  ): Promise<ITransactionResponse | null> {
     const cacheKey = `tx:${hash}`
 
-    if (this.cache) {
+    if (!options?.skipCache && this.cache) {
       const cached = this.cache.get(cacheKey)
       if (cached) {
         return cached as ITransactionResponse
@@ -952,7 +956,7 @@ export class KleverProvider implements IProvider {
 
         let tx: ITransactionResponse | null
         try {
-          tx = await this.getTransaction(hash)
+          tx = await this.getTransaction(hash, { skipCache: true })
         } catch (error) {
           if (this.isPendingTransactionLookupError(error)) {
             handlePendingTransactionLookup()

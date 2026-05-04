@@ -86,7 +86,10 @@ export interface IProvider {
   getNetwork(): Network
   getBlockNumber(): Promise<number>
   getBlock(blockHashOrNumber: BlockIdentifier): Promise<IBlockResponse | null>
-  getTransaction(hash: TransactionHash | string): Promise<ITransactionResponse | null>
+  getTransaction(
+    hash: TransactionHash | string,
+    options?: { skipCache?: boolean },
+  ): Promise<ITransactionResponse | null>
   getTransactionReceipt(hash: TransactionHash | string): Promise<IReceipt[] | null>
   getTransactionUrl(hash: TransactionHash | string): string
   getBalance(address: KleverAddress, assetId?: AssetID): Promise<bigint>

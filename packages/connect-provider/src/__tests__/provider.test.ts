@@ -209,6 +209,30 @@ describe('KleverProvider', () => {
       expect(mockGet).toHaveBeenCalledTimes(1)
     })
 
+    it('should skip cached transaction data when requested', async () => {
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce(mockTxResponse)
+        .mockResolvedValueOnce({
+          error: null,
+          data: {
+            transaction: {
+              hash: mockTxHash,
+              status: 'failed',
+              receipts: [],
+            },
+          },
+        })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      await provider.getTransaction(mockTxHash)
+      const tx = await provider.getTransaction(mockTxHash, { skipCache: true })
+
+      expect(tx?.status).toBe('failed')
+      expect(mockGet).toHaveBeenCalledTimes(2)
+    })
+
     it('should throw error when transaction not found', async () => {
       const mockGet = vi.fn().mockResolvedValue({
         error: 'Transaction not found',
@@ -967,6 +991,46 @@ describe('KleverProvider', () => {
       expect(provider.getTransaction).toHaveBeenCalledTimes(3)
       expect(onProgress).toHaveBeenCalledWith('pending', { attempts: 1, maxAttempts: 40 })
       expect(onProgress).toHaveBeenCalledWith('pending', { attempts: 2, maxAttempts: 40 })
+
+      vi.useRealTimers()
+    })
+
+    it('should bypass cached pending transactions while polling', async () => {
+      vi.useFakeTimers()
+
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce({
+          error: null,
+          data: {
+            transaction: {
+              hash: '0x123',
+              status: TransactionStatus.Pending,
+              receipts: [],
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          error: null,
+          data: {
+            transaction: {
+              hash: '0x123',
+              blockNum: 10,
+              status: TransactionStatus.Success,
+              receipts: [],
+            },
+          },
+        })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const promise = provider.waitForTransaction('0x123' as TransactionHash)
+
+      await vi.advanceTimersByTimeAsync(3000)
+
+      const tx = await promise
+      expect(tx?.status).toBe(TransactionStatus.Success)
+      expect(mockGet).toHaveBeenCalledTimes(2)
 
       vi.useRealTimers()
     })
