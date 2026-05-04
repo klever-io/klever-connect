@@ -10,8 +10,14 @@ import type { ContractABI } from '../types/abi'
 import type { Provider, Signer } from '../contract'
 import type { Transaction } from '@klever/connect-transactions'
 import type { TransactionLog } from '../event-parser'
+import type { KleverAddress } from '@klever/connect-core'
 import { loadABI } from '../utils'
 import diceAbi from '../../examples/dice/dice.abi.json'
+
+const contractAddress =
+  'klv1qqqqqqqqqqqqqqqqqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs2s0e3q98' as KleverAddress
+const otherContractAddress =
+  'klv1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqergd3c8g7rusqw75vj2' as KleverAddress
 
 // Mock implementations for testing
 const createMockProvider = (): Provider => ({
@@ -149,7 +155,6 @@ describe('Interface', () => {
 
 describe('Contract', () => {
   const abi = loadABI(diceAbi)
-  const contractAddress = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
 
   describe('constructor', () => {
     it('should create contract without signer/provider', () => {
@@ -173,6 +178,10 @@ describe('Contract', () => {
       const contract = new Contract(contractAddress, abi, mockSigner)
       expect(contract.signer).toBe(mockSigner)
       expect(contract.provider).toBe(mockSigner.provider)
+    })
+
+    it('should reject invalid contract addresses', () => {
+      expect(() => new Contract('klv1invalid', abi)).toThrow('Invalid Klever address: klv1invalid')
     })
   })
 
@@ -217,7 +226,7 @@ describe('Contract', () => {
 
     it('should attach to new address', () => {
       const contract = new Contract(contractAddress, abi)
-      const newAddress = 'klv1different'
+      const newAddress = otherContractAddress
 
       const attached = contract.attach(newAddress)
       expect(attached.address).toBe(newAddress)
@@ -325,7 +334,7 @@ describe('ContractFactory', () => {
   describe('attach', () => {
     it('should attach to existing contract', () => {
       const factory = new ContractFactory(abi, bytecode, mockSigner)
-      const address = 'klv1test'
+      const address = contractAddress
 
       const contract = factory.attach(address)
       expect(contract.address).toBe(address)

@@ -246,7 +246,8 @@ export class ContractFactory {
     // Extract contract address from transaction
     // We return a Contract instance with a placeholder address
     // Users should wait for the receipt to get the actual deployed address
-    const contractAddress = 'klv1pending' // Placeholder - use getDeployedAddress() after receipt
+    // Valid zero address placeholder — real address is extracted from the receipt after the tx is mined
+    const contractAddress = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
 
     // Create contract instance with deployment transaction reference
     const contract = new Contract(contractAddress, this.interface.abi, this.signer)

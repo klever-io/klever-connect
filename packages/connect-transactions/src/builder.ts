@@ -927,14 +927,18 @@ export class TransactionBuilder {
    * **Important:**
    * - Use `.data()` to specify function name and arguments
    * - callValue allows sending KLV or KDA tokens with the call
-   * - Contract address is optional, but must be valid bech32 format when provided
+   * - Invoke and upgrade require a valid contract address
+   * - Deploy must not include an address
    *
    * @param params - Smart contract parameters
-   * @param params.address - Optional contract bech32 address
+   * @param params.address - Required contract bech32 address for invoke/upgrade; forbidden for deploy
    * @param params.scType - Contract call type (0 = invoke, 1 = deploy, 2 = upgrade)
    * @param params.callValue - Optional amounts to send (e.g., { KLV: '1000000' })
    * @returns This builder instance for chaining
-   * @throws {ValidationError} If contract address is provided and invalid
+   * @throws {ValidationError} If scType is unsupported
+   * @throws {ValidationError} If invoke/upgrade is missing a contract address
+   * @throws {ValidationError} If deploy includes a contract address
+   * @throws {ValidationError} If contract address format is invalid
    *
    * @example
    * ```typescript
@@ -961,6 +965,11 @@ export class TransactionBuilder {
    * ```
    */
   smartContract(params: SmartContractRequest): this {
+    const scType = (params as { scType?: unknown }).scType
+    if (scType !== 0 && scType !== 1 && scType !== 2) {
+      throw new ValidationError(`Unsupported smart contract type: ${String(scType)}`, { scType })
+    }
+
     if (params.scType === 1 && 'address' in params) {
       throw new ValidationError('Contract address is not allowed for smart contract deploy', {
         scType: params.scType,

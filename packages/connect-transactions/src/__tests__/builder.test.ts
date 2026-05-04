@@ -416,6 +416,16 @@ describe('TransactionBuilder', () => {
       ).toThrow('Invalid contract address')
     })
 
+    it('should throw error for unsupported smart contract type', () => {
+      const builder = new TransactionBuilder()
+
+      expect(() =>
+        builder.smartContract({
+          scType: 99,
+        } as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Unsupported smart contract type')
+    })
+
     it('should throw error when invoke is missing contract address', () => {
       const builder = new TransactionBuilder()
 

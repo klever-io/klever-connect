@@ -361,10 +361,28 @@ export interface DepositRequest {
 // Smart Contracts
 // ============================================================================
 
+/**
+ * Shared fields for smart contract transaction requests.
+ *
+ * `callValue` sends KLV or KDA amounts along with the smart contract operation.
+ * Keys are asset identifiers such as `KLV`; values are raw amounts in the asset's
+ * smallest unit.
+ */
 export interface SmartContractBaseRequest {
   callValue?: Record<string, AmountLike>
 }
 
+/**
+ * Smart contract transaction request.
+ *
+ * Discriminated by `scType`:
+ * - `0` invokes an existing contract and requires a branded `KleverAddress`.
+ * - `1` deploys a new contract and must not include an address.
+ * - `2` upgrades an existing contract and requires a branded `KleverAddress`.
+ *
+ * Use `createKleverAddress()` from `@klever/connect-core` or another validating
+ * path to create the branded address value before building invoke/upgrade calls.
+ */
 export type SmartContractRequest =
   | (SmartContractBaseRequest & {
       scType: 0

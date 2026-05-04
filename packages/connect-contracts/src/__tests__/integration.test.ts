@@ -19,7 +19,7 @@ import type { TransactionReceipt } from '../receipt-parser'
 import type { Transaction } from '@klever/connect-transactions'
 
 // Mock contract address
-const MOCK_CONTRACT_ADDRESS = 'klv1qqqqqqqqqqqqqpgqfzydpd30f6gy0ylqvgr5wgk3qhkxfms6z8vspns0pz'
+const MOCK_CONTRACT_ADDRESS = 'klv1qqqqqqqqqqqqqqqqqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs2s0e3q98'
 
 // Mock user address
 const MOCK_USER_ADDRESS = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
@@ -438,7 +438,7 @@ describe('Integration Tests - Dice Contract', () => {
       expect(contract2.address).toBe(MOCK_CONTRACT_ADDRESS)
 
       // 3. Attach to different address
-      const newAddress = 'klv1qqqqqqqqqqqqqqpgq0000000000000000000000000000000qg8s8am'
+      const newAddress = 'klv1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqergd3c8g7rusqw75vj2'
       const contract3 = contract1.attach(newAddress)
 
       expect(contract3.address).toBe(newAddress)

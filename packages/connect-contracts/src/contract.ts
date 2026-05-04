@@ -62,7 +62,7 @@ import { ABIEncoder } from './encoder/abi-encoder'
 import { ABIDecoder } from './decoder/abi-decoder'
 import { TransactionBuilder } from '@klever/connect-transactions'
 import type { Transaction } from '@klever/connect-transactions'
-import type { KleverAddress, Network } from '@klever/connect-core'
+import { isValidAddress, type KleverAddress, type Network } from '@klever/connect-core'
 import type { TransactionHash } from '@klever/connect-core'
 import type { TransactionSubmitResult, ITransactionResponse } from '@klever/connect-provider'
 import { base64Encode } from '@klever/connect-encoding'
@@ -72,6 +72,14 @@ import {
   type ContractEventFilter,
   type TransactionLog,
 } from './event-parser'
+
+function createValidatedKleverAddress(address: string | KleverAddress): KleverAddress {
+  if (!isValidAddress(address)) {
+    throw new Error(`Invalid Klever address: ${address}`)
+  }
+
+  return address as KleverAddress
+}
 
 /**
  * Signer interface (compatible with @klever/connect-wallet)
@@ -175,7 +183,7 @@ export interface Provider {
  * @see {@link ABIDecoder} for result decoding
  */
 export class Contract {
-  readonly address: string
+  readonly address: KleverAddress
   readonly interface: Interface
   readonly provider?: Provider
   readonly signer?: Signer
@@ -186,8 +194,12 @@ export class Contract {
   // Dynamic methods will be added here
   [key: string]: unknown
 
-  constructor(address: string, abi: string | ContractABI, signerOrProvider?: Signer | Provider) {
-    this.address = address
+  constructor(
+    address: string | KleverAddress,
+    abi: string | ContractABI,
+    signerOrProvider?: Signer | Provider,
+  ) {
+    this.address = createValidatedKleverAddress(address)
     this.interface = new Interface(abi)
     this.encoder = new ABIEncoder(this.interface.abi)
     this.decoder = new ABIDecoder(this.interface.abi)
@@ -310,7 +322,7 @@ export class Contract {
 
     builder.smartContract({
       scType: 0, // Call existing contract
-      address: this.address as KleverAddress,
+      address: this.address,
       ...(options.value && { callValue: options.value }),
     })
 
@@ -663,7 +675,7 @@ export class Contract {
    * const balance2 = await token2.balanceOf(address)
    * ```
    */
-  attach(address: string): Contract {
+  attach(address: string | KleverAddress): Contract {
     return new Contract(address, this.interface.abi, this.signer || this.provider)
   }
 
