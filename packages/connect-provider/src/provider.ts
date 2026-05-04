@@ -344,6 +344,7 @@ export class KleverProvider implements IProvider {
    * Retrieves transaction information by hash
    *
    * @param hash - The transaction hash (as TransactionHash branded type or string)
+   * @param options - Additional options
    * @returns Transaction details including receipts, or null if not found
    * @throws {NetworkError} If there's a network error
    *
@@ -358,10 +359,13 @@ export class KleverProvider implements IProvider {
    * }
    * ```
    */
-  async getTransaction(hash: TransactionHash | string): Promise<ITransactionResponse | null> {
+  async getTransaction(
+    hash: TransactionHash | string,
+    options?: { skipCache?: boolean },
+  ): Promise<ITransactionResponse | null> {
     const cacheKey = `tx:${hash}`
 
-    if (this.cache) {
+    if (!options?.skipCache && this.cache) {
       const cached = this.cache.get(cacheKey)
       if (cached) {
         return cached as ITransactionResponse
@@ -927,11 +931,43 @@ export class KleverProvider implements IProvider {
     let attempts = 0
 
     return new Promise((resolve, reject) => {
+      const rejectWaitError = (error: unknown): void => {
+        clearInterval(interval)
+        reject(
+          new Error(
+            `Error while waiting for transaction: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
+          ),
+        )
+      }
+
+      const handlePendingTransactionLookup = (): void => {
+        onProgress?.('pending', { attempts, maxAttempts })
+        if (attempts >= maxAttempts) {
+          clearInterval(interval)
+          onProgress?.('timeout', { attempts, maxAttempts })
+          resolve(null)
+        }
+      }
+
       const checkTransaction = async (): Promise<void> => {
         attempts++
-        try {
-          const tx = await this.getTransaction(hash)
 
+        let tx: ITransactionResponse | null
+        try {
+          tx = await this.getTransaction(hash, { skipCache: true })
+        } catch (error) {
+          if (this.isPendingTransactionLookupError(error)) {
+            handlePendingTransactionLookup()
+            return
+          }
+
+          rejectWaitError(error)
+          return
+        }
+
+        try {
           // Transaction not found yet
           if (!tx) {
             onProgress?.('pending', { attempts, maxAttempts })
@@ -983,14 +1019,7 @@ export class KleverProvider implements IProvider {
             resolve(tx)
           }
         } catch (error) {
-          clearInterval(interval)
-          reject(
-            new Error(
-              `Error while waiting for transaction: ${
-                error instanceof Error ? error.message : 'Unknown error'
-              }`,
-            ),
-          )
+          rejectWaitError(error)
         }
       }
 
@@ -1001,6 +1030,10 @@ export class KleverProvider implements IProvider {
         void checkTransaction()
       }, pollInterval)
     })
+  }
+
+  private isPendingTransactionLookupError(error: unknown): boolean {
+    return error instanceof Error && error.message.includes('HTTP 404')
   }
 
   /**

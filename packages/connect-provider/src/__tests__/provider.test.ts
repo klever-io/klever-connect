@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { KleverProvider } from '../provider'
 import { NETWORKS } from '../networks'
-import type { IAccount } from '../types/api-types'
+import { TransactionStatus, type IAccount, type ITransactionResponse } from '../types/api-types'
 import type { KleverAddress, TransactionHash } from '@klever/connect-core'
 
 // Mock the HttpClient
@@ -207,6 +207,30 @@ describe('KleverProvider', () => {
       await provider.getTransaction(mockTxHash)
 
       expect(mockGet).toHaveBeenCalledTimes(1)
+    })
+
+    it('should skip cached transaction data when requested', async () => {
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce(mockTxResponse)
+        .mockResolvedValueOnce({
+          error: null,
+          data: {
+            transaction: {
+              hash: mockTxHash,
+              status: 'failed',
+              receipts: [],
+            },
+          },
+        })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      await provider.getTransaction(mockTxHash)
+      const tx = await provider.getTransaction(mockTxHash, { skipCache: true })
+
+      expect(tx?.status).toBe('failed')
+      expect(mockGet).toHaveBeenCalledTimes(2)
     })
 
     it('should throw error when transaction not found', async () => {
@@ -931,6 +955,129 @@ describe('KleverProvider', () => {
       expect(tx).toBeNull()
 
       vi.useRealTimers()
+    })
+
+    it('should keep polling when transaction lookup returns HTTP 404', async () => {
+      vi.useFakeTimers()
+
+      const confirmedTx: ITransactionResponse = {
+        hash: '0x123',
+        blockNum: 10,
+        sender: 'klv1sender',
+        nonce: 1,
+        timestamp: 1234567890,
+        kAppFee: 0,
+        bandwidthFee: 0,
+        totalFee: 0,
+        status: TransactionStatus.Success,
+        version: 1,
+        chainID: '1001',
+        signature: [],
+        receipts: [],
+      }
+      const onProgress = vi.fn()
+
+      vi.spyOn(provider, 'getTransaction')
+        .mockRejectedValueOnce(new Error('HTTP 404: Not Found'))
+        .mockRejectedValueOnce(new Error('HTTP 404: Not Found'))
+        .mockResolvedValueOnce(confirmedTx)
+
+      const promise = provider.waitForTransaction('0x123' as TransactionHash, undefined, onProgress)
+
+      await vi.advanceTimersByTimeAsync(6000)
+
+      const tx = await promise
+      expect(tx).toBe(confirmedTx)
+      expect(provider.getTransaction).toHaveBeenCalledTimes(3)
+      expect(onProgress).toHaveBeenCalledWith('pending', { attempts: 1, maxAttempts: 40 })
+      expect(onProgress).toHaveBeenCalledWith('pending', { attempts: 2, maxAttempts: 40 })
+
+      vi.useRealTimers()
+    })
+
+    it('should bypass cached pending transactions while polling', async () => {
+      vi.useFakeTimers()
+
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce({
+          error: null,
+          data: {
+            transaction: {
+              hash: '0x123',
+              status: TransactionStatus.Pending,
+              receipts: [],
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          error: null,
+          data: {
+            transaction: {
+              hash: '0x123',
+              blockNum: 10,
+              status: TransactionStatus.Success,
+              receipts: [],
+            },
+          },
+        })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const promise = provider.waitForTransaction('0x123' as TransactionHash)
+
+      await vi.advanceTimersByTimeAsync(3000)
+
+      const tx = await promise
+      expect(tx?.status).toBe(TransactionStatus.Success)
+      expect(mockGet).toHaveBeenCalledTimes(2)
+
+      vi.useRealTimers()
+    })
+
+    it('should reject immediately when transaction lookup returns a non-404 error', async () => {
+      const onProgress = vi.fn()
+      const getTransaction = vi
+        .spyOn(provider, 'getTransaction')
+        .mockRejectedValue(new Error('HTTP 500: Internal Server Error'))
+
+      await expect(
+        provider.waitForTransaction('0x123' as TransactionHash, undefined, onProgress),
+      ).rejects.toThrow('Error while waiting for transaction: HTTP 500: Internal Server Error')
+
+      expect(getTransaction).toHaveBeenCalledTimes(1)
+      expect(onProgress).not.toHaveBeenCalled()
+    })
+
+    it('should reject when confirmation block lookup returns HTTP 404', async () => {
+      const confirmedTx: ITransactionResponse = {
+        hash: '0x123',
+        blockNum: 10,
+        sender: 'klv1sender',
+        nonce: 1,
+        timestamp: 1234567890,
+        kAppFee: 0,
+        bandwidthFee: 0,
+        totalFee: 0,
+        status: TransactionStatus.Success,
+        version: 1,
+        chainID: '1001',
+        signature: [],
+        receipts: [],
+      }
+      const onProgress = vi.fn()
+      const getTransaction = vi.spyOn(provider, 'getTransaction').mockResolvedValue(confirmedTx)
+      const getBlockNumber = vi
+        .spyOn(provider, 'getBlockNumber')
+        .mockRejectedValue(new Error('HTTP 404: Not Found'))
+
+      await expect(
+        provider.waitForTransaction('0x123' as TransactionHash, 2, onProgress),
+      ).rejects.toThrow('Error while waiting for transaction: HTTP 404: Not Found')
+
+      expect(getTransaction).toHaveBeenCalledTimes(1)
+      expect(getBlockNumber).toHaveBeenCalledTimes(1)
+      expect(onProgress).not.toHaveBeenCalled()
     })
   })
 
