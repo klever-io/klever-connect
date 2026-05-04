@@ -970,6 +970,51 @@ describe('KleverProvider', () => {
 
       vi.useRealTimers()
     })
+
+    it('should reject immediately when transaction lookup returns a non-404 error', async () => {
+      const onProgress = vi.fn()
+      const getTransaction = vi
+        .spyOn(provider, 'getTransaction')
+        .mockRejectedValue(new Error('HTTP 500: Internal Server Error'))
+
+      await expect(
+        provider.waitForTransaction('0x123' as TransactionHash, undefined, onProgress),
+      ).rejects.toThrow('Error while waiting for transaction: HTTP 500: Internal Server Error')
+
+      expect(getTransaction).toHaveBeenCalledTimes(1)
+      expect(onProgress).not.toHaveBeenCalled()
+    })
+
+    it('should reject when confirmation block lookup returns HTTP 404', async () => {
+      const confirmedTx: ITransactionResponse = {
+        hash: '0x123',
+        blockNum: 10,
+        sender: 'klv1sender',
+        nonce: 1,
+        timestamp: 1234567890,
+        kAppFee: 0,
+        bandwidthFee: 0,
+        totalFee: 0,
+        status: TransactionStatus.Success,
+        version: 1,
+        chainID: '1001',
+        signature: [],
+        receipts: [],
+      }
+      const onProgress = vi.fn()
+      const getTransaction = vi.spyOn(provider, 'getTransaction').mockResolvedValue(confirmedTx)
+      const getBlockNumber = vi
+        .spyOn(provider, 'getBlockNumber')
+        .mockRejectedValue(new Error('HTTP 404: Not Found'))
+
+      await expect(
+        provider.waitForTransaction('0x123' as TransactionHash, 2, onProgress),
+      ).rejects.toThrow('Error while waiting for transaction: HTTP 404: Not Found')
+
+      expect(getTransaction).toHaveBeenCalledTimes(1)
+      expect(getBlockNumber).toHaveBeenCalledTimes(1)
+      expect(onProgress).not.toHaveBeenCalled()
+    })
   })
 
   describe('event listeners', () => {

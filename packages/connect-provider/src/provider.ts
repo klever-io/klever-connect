@@ -927,11 +927,43 @@ export class KleverProvider implements IProvider {
     let attempts = 0
 
     return new Promise((resolve, reject) => {
+      const rejectWaitError = (error: unknown): void => {
+        clearInterval(interval)
+        reject(
+          new Error(
+            `Error while waiting for transaction: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
+          ),
+        )
+      }
+
+      const handlePendingTransactionLookup = (): void => {
+        onProgress?.('pending', { attempts, maxAttempts })
+        if (attempts >= maxAttempts) {
+          clearInterval(interval)
+          onProgress?.('timeout', { attempts, maxAttempts })
+          resolve(null)
+        }
+      }
+
       const checkTransaction = async (): Promise<void> => {
         attempts++
-        try {
-          const tx = await this.getTransaction(hash)
 
+        let tx: ITransactionResponse | null
+        try {
+          tx = await this.getTransaction(hash)
+        } catch (error) {
+          if (this.isPendingTransactionLookupError(error)) {
+            handlePendingTransactionLookup()
+            return
+          }
+
+          rejectWaitError(error)
+          return
+        }
+
+        try {
           // Transaction not found yet
           if (!tx) {
             onProgress?.('pending', { attempts, maxAttempts })
@@ -983,24 +1015,7 @@ export class KleverProvider implements IProvider {
             resolve(tx)
           }
         } catch (error) {
-          if (this.isPendingTransactionLookupError(error)) {
-            onProgress?.('pending', { attempts, maxAttempts })
-            if (attempts >= maxAttempts) {
-              clearInterval(interval)
-              onProgress?.('timeout', { attempts, maxAttempts })
-              resolve(null)
-            }
-            return
-          }
-
-          clearInterval(interval)
-          reject(
-            new Error(
-              `Error while waiting for transaction: ${
-                error instanceof Error ? error.message : 'Unknown error'
-              }`,
-            ),
-          )
+          rejectWaitError(error)
         }
       }
 
