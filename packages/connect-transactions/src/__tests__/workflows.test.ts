@@ -252,7 +252,7 @@ describe('Transaction Workflows: Real-world scenarios', () => {
       const builder = new TransactionBuilder(mockProvider)
       const caller = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
       const contractAddress =
-        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
+        'klv1qqqqqqqqqqqqqpgqhe7lg537aszyv48xpuhqh2jykx986wnd932qrd2478' as KleverAddress
 
       builder
         .sender(caller)

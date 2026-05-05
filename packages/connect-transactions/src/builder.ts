@@ -15,7 +15,7 @@ import type {
   SmartContractRequest,
   ContractRequestData,
 } from '@klever/connect-provider'
-import { isValidAddress } from '@klever/connect-core'
+import { isValidAddress, isValidContractAddress } from '@klever/connect-core'
 import { Transaction } from './transaction'
 
 import { bech32Decode, base64Encode } from '@klever/connect-encoding'
@@ -986,6 +986,15 @@ export class TransactionBuilder {
       throw new ValidationError(`Invalid contract address: ${params.address}`, {
         address: params.address,
       })
+    }
+
+    if ((params.scType === 0 || params.scType === 2) && params.address) {
+      if (!isValidContractAddress(params.address)) {
+        throw new ValidationError(`Invalid smart contract address: ${params.address}`, {
+          address: params.address,
+          scType: params.scType,
+        })
+      }
     }
 
     if (params.scType === 1) {

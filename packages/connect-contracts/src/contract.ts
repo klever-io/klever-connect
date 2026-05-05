@@ -62,7 +62,12 @@ import { ABIEncoder } from './encoder/abi-encoder'
 import { ABIDecoder } from './decoder/abi-decoder'
 import { TransactionBuilder } from '@klever/connect-transactions'
 import type { Transaction } from '@klever/connect-transactions'
-import { isValidAddress, type KleverAddress, type Network } from '@klever/connect-core'
+import {
+  isValidAddress,
+  isValidContractAddress,
+  type KleverAddress,
+  type Network,
+} from '@klever/connect-core'
 import type { TransactionHash } from '@klever/connect-core'
 import type { TransactionSubmitResult, ITransactionResponse } from '@klever/connect-provider'
 import { base64Encode } from '@klever/connect-encoding'
@@ -76,6 +81,10 @@ import {
 function createValidatedKleverAddress(address: string | KleverAddress): KleverAddress {
   if (!isValidAddress(address)) {
     throw new Error(`Invalid Klever address: ${address}`)
+  }
+
+  if (!isValidContractAddress(address)) {
+    throw new Error(`Invalid smart contract address: ${address}`)
   }
 
   return address as KleverAddress

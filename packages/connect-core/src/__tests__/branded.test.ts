@@ -69,6 +69,11 @@ describe('Branded Types', () => {
       expect(isValidContractAddress(contractAddress2)).toBe(true)
     })
 
+    it('should validate the all-zero address', () => {
+      const zeroAddress = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
+      expect(isValidContractAddress(zeroAddress)).toBe(true)
+    })
+
     it('should reject regular addresses that do not start with 8 zero bytes', () => {
       // Regular address that doesn't start with 8 zero bytes
       const regularAddress = 'klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj'

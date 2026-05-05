@@ -110,24 +110,30 @@ export function isValidAddress(address: string): boolean {
   }
 }
 
+const SMART_CONTRACT_ADDRESS_MARKER_LENGTH = 10
+const SMART_CONTRACT_VM_TYPE_LENGTH = 2
+const WASM_VM_TYPE = new Uint8Array([5, 0])
+
+function isEmptyAddress(data: Uint8Array): boolean {
+  return data.every((byte) => byte === 0)
+}
+
 /**
- * Validates if an address is a smart contract address
+ * Validates if an address is a smart contract address.
  *
- * Contract addresses are special Klever addresses that start with 10 zero bytes
- * (20 zero characters in hex). This function decodes the bech32 address and checks
- * if the first 10 bytes of the decoded data are all zeros.
+ * Mirrors klever-go core.IsSmartContractAddress:
+ * - a valid all-zero Klever address is accepted
+ * - otherwise bytes 0..7 must be zero
+ * - bytes 8..9 must match the Wasm VM type (05 00)
  *
  * @param address - The address string to validate
- * @returns True if the address is a valid contract address (klv1 prefix + starts with 10 zero bytes)
+ * @returns True if the address is a valid smart contract address
  *
  * @example
  * ```typescript
  * if (isValidContractAddress('klv1qqqqqqqqqqqqqpgqxwklx...')) {
- *   console.log('Valid contract address')
+ *   console.log('Valid smart contract address')
  * }
- *
- * // Regular addresses will return false
- * isValidContractAddress('klv1abc123...') // false
  * ```
  *
  * @see {@link isValidAddress} for general address validation
@@ -136,21 +142,29 @@ export function isValidContractAddress(address: string): boolean {
   try {
     const { prefix, data } = bech32Decode(address)
 
-    // Check if it's a valid Klever address first
     if (prefix !== KLEVER_ADDRESS_PREFIX || data.length !== KLEVER_ADDRESS_LENGTH) {
       return false
     }
 
-    // Check if the first 8 bytes are all zeros (contract address marker)
-    for (let i = 0; i < 8; i++) {
+    if (data.length <= SMART_CONTRACT_ADDRESS_MARKER_LENGTH) {
+      return false
+    }
+
+    if (isEmptyAddress(data)) {
+      return true
+    }
+
+    const zeroPrefixLength = SMART_CONTRACT_ADDRESS_MARKER_LENGTH - SMART_CONTRACT_VM_TYPE_LENGTH
+    for (let i = 0; i < zeroPrefixLength; i++) {
       if (data[i] !== 0) {
         return false
       }
     }
 
-    // check VM version or other contract-specific validations here
-    if (data[8] !== 5 || data[9] !== 0) {
-      return false
+    for (let i = 0; i < SMART_CONTRACT_VM_TYPE_LENGTH; i++) {
+      if (data[zeroPrefixLength + i] !== WASM_VM_TYPE[i]) {
+        return false
+      }
     }
 
     return true
