@@ -430,6 +430,18 @@ describe('TransactionBuilder', () => {
       ).toThrow('Invalid smart contract address')
     })
 
+    it('should throw error when upgrading a valid address that is not a smart contract address', () => {
+      const builder = new TransactionBuilder()
+
+      expect(() =>
+        builder.smartContract({
+          scType: 2,
+          address: validAddress,
+          callValue: {},
+        }),
+      ).toThrow('Invalid smart contract address')
+    })
+
     it('should throw error for unsupported smart contract type', () => {
       const builder = new TransactionBuilder()
 
