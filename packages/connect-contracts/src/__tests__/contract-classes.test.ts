@@ -15,9 +15,10 @@ import { loadABI } from '../utils'
 import diceAbi from '../../examples/dice/dice.abi.json'
 
 const contractAddress =
-  'klv1qqqqqqqqqqqqqqqqqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs2s0e3q98' as KleverAddress
+  'klv1qqqqqqqqqqqqqpgqhe7lg537aszyv48xpuhqh2jykx986wnd932qrd2478' as KleverAddress
 const otherContractAddress =
-  'klv1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqergd3c8g7rusqw75vj2' as KleverAddress
+  'klv1qqqqqqqqqqqqqpgqqypqxpq9e0la8m4xymxrthek25r0kv93uwysysdf2c' as KleverAddress
+const signerAddress = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
 
 // Mock implementations for testing
 const createMockProvider = (): Provider => ({
@@ -27,7 +28,7 @@ const createMockProvider = (): Provider => ({
 })
 
 const createMockSigner = (provider?: Provider): Signer => ({
-  address: 'klv1mock',
+  address: signerAddress,
   signTransaction: async (tx: Transaction) => tx,
   provider: provider || createMockProvider(),
 })
@@ -182,6 +183,10 @@ describe('Contract', () => {
 
     it('should reject invalid contract addresses', () => {
       expect(() => new Contract('klv1invalid', abi)).toThrow('Invalid Klever address: klv1invalid')
+    })
+
+    it('should reject non-smart-contract addresses', () => {
+      expect(() => new Contract(signerAddress, abi)).toThrow('Invalid smart contract address')
     })
   })
 

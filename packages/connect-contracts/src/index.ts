@@ -79,6 +79,7 @@ export { ContractFactory } from './contract-factory'
 
 // Export utility functions
 export { loadABI, isValidABI } from './utils'
+export { isValidContractAddress } from '@klever/connect-core'
 
 // Export event parser
 export { EventParser } from './event-parser'
