@@ -1,5 +1,12 @@
 # @klever/connect-crypto
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [e65a5de]
+  - @klever/connect-core@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes

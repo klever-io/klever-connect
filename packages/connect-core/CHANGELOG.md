@@ -1,5 +1,11 @@
 # @klever/connect-core
 
+## 0.1.4
+
+### Patch Changes
+
+- e65a5de: Validate smart contract addresses using the Klever VM address marker. Smart contract builders and contract instances now reject regular Klever addresses for invoke and upgrade calls. The contracts package also re-exports `isValidContractAddress`.
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@klever/connect-react",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "React hooks and components for Klever Connect SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -45,10 +45,11 @@
     "@klever/connect-wallet": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^16.8.0 || ^17.0.0 || ^18.0.0"
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0"
+    "@types/react": "^19.2.14",
+    "react": "^19.0.0"
   },
   "repository": {
     "type": "git",

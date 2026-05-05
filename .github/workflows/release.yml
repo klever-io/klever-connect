@@ -1,12 +1,17 @@
 name: Version Packages
 
-# Manual workflow to version packages based on changesets
-# Run this after merging PRs with changesets to develop
+# Opens (or updates) a "Release Packages" PR with version bumps and changelog
+# updates. Triggered manually so the maintainer controls release timing.
+#
+# Merging the resulting PR (signed by a human) lands the version bumps on the
+# target branch — sidestepping the "signed commits required" branch protection
+# that blocks bot pushes.
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   version:
@@ -14,11 +19,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Validate Branch
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$REF_NAME" != "develop" && "$REF_NAME" != "master" ]]; then
+            echo "::error::Version Packages must run on 'develop' or 'master', got '$REF_NAME'"
+            exit 1
+          fi
+          echo "✅ Running on allowed branch: $REF_NAME"
+
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -31,65 +45,40 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
 
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check for Changesets
-        id: check-changesets
-        run: |
-          if [ -z "$(find .changeset -name '*.md' ! -name 'README.md' -type f)" ]; then
-            echo "has_changesets=false" >> $GITHUB_OUTPUT
-            echo "⚠️ No changeset files found in .changeset/ directory"
-          else
-            echo "has_changesets=true" >> $GITHUB_OUTPUT
-            echo "✅ Found changeset files:"
-            find .changeset -name '*.md' ! -name 'README.md' -type f -exec basename {} \;
-          fi
-
-      - name: Version Packages
-        if: steps.check-changesets.outputs.has_changesets == 'true'
-        run: pnpm run version
-
-      - name: Build Packages
-        if: steps.check-changesets.outputs.has_changesets == 'true'
-        run: pnpm build
-
-      - name: Run Tests
-        if: steps.check-changesets.outputs.has_changesets == 'true'
-        run: pnpm test
-
-      - name: Commit Version Changes
-        if: steps.check-changesets.outputs.has_changesets == 'true'
-        run: |
-          git add .
-          git commit -m "chore: version packages" || echo "No changes to commit"
-          git push
+      - name: Create Release Pull Request
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm run version
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Summary
+        env:
+          PR_CREATED: ${{ steps.changesets.outputs.hasChangesets }}
+          PR_NUMBER: ${{ steps.changesets.outputs.pullRequestNumber }}
         run: |
-          echo "## 📦 Version Packages Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.check-changesets.outputs.has_changesets }}" == "true" ]; then
-            echo "✅ Packages versioned successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📋 Changes" >> $GITHUB_STEP_SUMMARY
-            echo "- Updated package.json versions" >> $GITHUB_STEP_SUMMARY
-            echo "- Generated/updated CHANGELOG.md files" >> $GITHUB_STEP_SUMMARY
-            echo "- Deleted consumed changeset files" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
-            echo "1. Merge develop to master" >> $GITHUB_STEP_SUMMARY
-            echo "2. Trigger the 'Publish Packages' workflow from master branch" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ No changesets found - nothing to version" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Make sure changesets are created with PRs using:" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-            echo "pnpm changeset" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          fi
+          {
+            echo "## 📦 Version Packages Summary"
+            echo ""
+            if [[ "$PR_CREATED" == "true" ]]; then
+              echo "✅ Release PR opened/updated: #${PR_NUMBER:-?}"
+              echo ""
+              echo "### 🚀 Next Steps"
+              echo "1. Review and merge the release PR (your signed merge lands the version bumps)"
+              echo "2. PR develop → master with a regular merge (preserves version commits)"
+              echo "3. Run the 'Publish Packages' workflow on master"
+            else
+              echo "⚠️ No changesets found — nothing to version"
+              echo ""
+              echo "Create one with:"
+              echo '```bash'
+              echo "pnpm changeset"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

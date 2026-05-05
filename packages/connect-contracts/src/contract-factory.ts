@@ -160,7 +160,7 @@ export class ContractFactory {
    * signs it, and broadcasts it to the network.
    *
    * @param args - Constructor arguments (if any)
-   * @returns Contract instance (note: address will be 'klv1pending' until receipt is parsed)
+   * @returns Contract instance (note: address will be the valid zero-address placeholder until receipt is parsed)
    * @throws Error if provider is not available
    * @throws Error if transaction signing fails
    *
@@ -191,7 +191,8 @@ export class ContractFactory {
    * ```
    *
    * @remarks
-   * The returned Contract instance has a placeholder address ('klv1pending').
+   * The returned Contract instance has the valid zero-address placeholder
+   * (`klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z`).
    * You must wait for the deployment transaction to be mined and then use
    * `ContractFactory.getDeployedAddress(receipt)` to get the actual address.
    */
@@ -219,7 +220,6 @@ export class ContractFactory {
 
     builder.sender(this.signer.address).smartContract({
       scType: 1, // Deploy new contract
-      address: '',
     })
 
     // Add deployment data
@@ -247,7 +247,8 @@ export class ContractFactory {
     // Extract contract address from transaction
     // We return a Contract instance with a placeholder address
     // Users should wait for the receipt to get the actual deployed address
-    const contractAddress = 'klv1pending' // Placeholder - use getDeployedAddress() after receipt
+    // Valid zero address placeholder — real address is extracted from the receipt after the tx is mined
+    const contractAddress = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
 
     // Create contract instance with deployment transaction reference
     const contract = new Contract(contractAddress, this.interface.abi, this.signer)
