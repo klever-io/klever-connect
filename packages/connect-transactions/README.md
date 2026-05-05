@@ -773,8 +773,7 @@ Interact with deployed smart contracts.
 const tx = await TransactionBuilder.create(provider)
   .sender('klv1...')
   .smartContract({
-    address: 'klv1000...', // Zero address for deployment
-    scType: 0, // 0 = Deploy
+    scType: 1, // 1 = Deploy
   })
   .data(['contractCode', 'initArgs'])
   .build()
@@ -784,7 +783,7 @@ const tx = await TransactionBuilder.create(provider)
   .sender('klv1...')
   .smartContract({
     address: 'klv1contract...',
-    scType: 1, // 1 = Invoke
+    scType: 0, // 0 = Invoke
     callValue: {
       KLV: '1000000', // Send 1 KLV with call
     },
@@ -797,7 +796,7 @@ const tx = await TransactionBuilder.create(provider)
   .sender('klv1...')
   .smartContract({
     address: 'klv1contract...',
-    scType: 1,
+    scType: 0,
   })
   .data(['getBalance', 'klv1address...'])
   .build()

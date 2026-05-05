@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TransactionBuilder } from '../builder'
 import { Transaction } from '../transaction'
 import type { IProvider } from '@klever/connect-provider'
-import { TXType } from '@klever/connect-core'
+import { TXType, type KleverAddress } from '@klever/connect-core'
+
+const validAddress =
+  'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
 
 describe('TransactionBuilder', () => {
   let mockProvider: IProvider
@@ -388,7 +391,7 @@ describe('TransactionBuilder', () => {
       const builder = new TransactionBuilder()
       builder.smartContract({
         scType: 0,
-        address: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
+        address: validAddress,
         callValue: { KLV: 1000000n },
       })
 
@@ -396,7 +399,7 @@ describe('TransactionBuilder', () => {
       expect(request.contracts).toHaveLength(1)
       expect(request.contracts[0].contractType).toBe(TXType.SmartContract)
       expect(request.contracts[0]).toMatchObject({
-        address: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
+        address: validAddress,
         callValue: { KLV: 1000000 },
       })
     })
@@ -407,10 +410,79 @@ describe('TransactionBuilder', () => {
       expect(() =>
         builder.smartContract({
           scType: 0,
-          address: 'invalid-address',
+          address: 'invalid-address' as KleverAddress,
           callValue: {},
         }),
       ).toThrow('Invalid contract address')
+    })
+
+    it('should throw error for unsupported smart contract type', () => {
+      const builder = new TransactionBuilder()
+
+      expect(() =>
+        builder.smartContract({
+          scType: 99,
+        } as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Unsupported smart contract type')
+    })
+
+    it('should throw error when invoke is missing contract address', () => {
+      const builder = new TransactionBuilder()
+
+      expect(() =>
+        builder.smartContract({
+          scType: 0,
+        } as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Contract address is required')
+    })
+
+    it('should throw error when upgrade is missing contract address', () => {
+      const builder = new TransactionBuilder()
+
+      expect(() =>
+        builder.smartContract({
+          scType: 2,
+        } as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Contract address is required')
+    })
+
+    it('should add smart contract without address', () => {
+      const builder = new TransactionBuilder()
+      builder.smartContract({
+        scType: 1,
+        callValue: { KLV: 1000000n },
+      })
+
+      const request = builder.buildRequest()
+      expect(request.contracts).toHaveLength(1)
+      expect(request.contracts[0]).toMatchObject({
+        contractType: TXType.SmartContract,
+        scType: 1,
+        callValue: { KLV: 1000000 },
+      })
+      expect(request.contracts[0]).not.toHaveProperty('address')
+    })
+
+    it('should throw error when deploy receives a contract address', () => {
+      const builder = new TransactionBuilder()
+
+      expect(() =>
+        builder.smartContract({
+          scType: 1,
+          address: validAddress,
+        } as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Contract address is not allowed')
+    })
+
+    it('should throw error when deploy receives an empty contract address', () => {
+      const builder = new TransactionBuilder()
+
+      expect(() =>
+        builder.smartContract({
+          scType: 1,
+          address: '',
+        } as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Contract address is not allowed')
     })
   })
 

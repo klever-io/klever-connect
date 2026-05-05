@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TransactionBuilder } from '../builder'
 import { Transaction } from '../transaction'
 import type { IProvider } from '@klever/connect-provider'
-import { TXType } from '@klever/connect-core'
+import { TXType, type KleverAddress } from '@klever/connect-core'
 import { cryptoProvider } from '@klever/connect-crypto'
 
 describe('Transaction Workflows: Real-world scenarios', () => {
@@ -251,7 +251,8 @@ describe('Transaction Workflows: Real-world scenarios', () => {
     it('should build a smart contract call transaction', () => {
       const builder = new TransactionBuilder(mockProvider)
       const caller = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
-      const contractAddress = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
+      const contractAddress =
+        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
 
       builder
         .sender(caller)

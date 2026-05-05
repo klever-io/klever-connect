@@ -138,18 +138,22 @@ export function parseDeployReceipt(receipt: TransactionReceipt): DeployReceiptDa
     throw new ContractReceiptError('No receipts found in deployment transaction', receipt, 'deploy')
   }
 
-  // Find SmartContract receipt (type 21)
+  // Find SmartContract (type 21) or SCTrigger (type 25) deploy receipt
   const scReceipt = receipt.receipts.find(
     (r): r is typeof r & Record<string, unknown> =>
-      r.type === 21 || r.typeString === 'SmartContract',
+      r.type === 21 ||
+      r.typeString === 'SmartContract' ||
+      r.type === 25 ||
+      r.typeString === 'SCTrigger',
   )
 
   if (!scReceipt) {
     throw new ContractReceiptError('No SmartContract receipt found', receipt, 'deploy')
   }
 
-  // Extract contract address from receipt
-  const contractAddress = scReceipt['address'] || scReceipt['contractAddress']
+  // Extract contract address from receipt (SCTrigger uses 'contract', others use 'address')
+  const contractAddress =
+    scReceipt['contract'] || scReceipt['address'] || scReceipt['contractAddress']
 
   if (!contractAddress || typeof contractAddress !== 'string') {
     throw new ContractReceiptError(
