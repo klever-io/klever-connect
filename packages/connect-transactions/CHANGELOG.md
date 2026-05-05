@@ -1,5 +1,18 @@
 # @klever/connect-transactions
 
+## 0.1.6
+
+### Patch Changes
+
+- ab9a82b: Support smart contract transaction building without a contract address for deploy-style calls.
+- e65a5de: Validate smart contract addresses using the Klever VM address marker. Smart contract builders and contract instances now reject regular Klever addresses for invoke and upgrade calls. The contracts package also re-exports `isValidContractAddress`.
+- Updated dependencies [ab9a82b]
+- Updated dependencies [f57e9e6]
+- Updated dependencies [e65a5de]
+  - @klever/connect-provider@0.2.1
+  - @klever/connect-core@0.1.4
+  - @klever/connect-crypto@0.1.4
+
 ## 0.1.5
 
 ### Patch Changes
