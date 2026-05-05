@@ -1,5 +1,15 @@
 # @klever/connect-provider
 
+## 0.2.1
+
+### Patch Changes
+
+- ab9a82b: Support smart contract transaction building without a contract address for deploy-style calls.
+- f57e9e6: Treat transaction lookup 404 responses as pending while waiting for transaction confirmation.
+- Updated dependencies [e65a5de]
+  - @klever/connect-core@0.1.4
+  - @klever/connect-crypto@0.1.4
+
 ## 0.2.0
 
 ### Minor Changes
