@@ -53,7 +53,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
-    "protobufjs": "^7.5.4",
+    "protobufjs": "^7.5.6",
     "protobufjs-cli": "^1.2.0",
     "tsup": "^8.5.1",
     "turbo": "^2.8.12",
@@ -73,7 +73,8 @@
       "markdown-it": "14.1.1",
       "underscore": "1.13.8",
       "flatted": "3.4.2",
-      "undici": "7.24.5"
+      "undici": "7.24.5",
+      "postcss": "^8.5.10"
     }
   }
 }
