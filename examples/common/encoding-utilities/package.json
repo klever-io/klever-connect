@@ -1,0 +1,23 @@
+{
+  "name": "@klever-examples/common-encoding-utilities",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Hex / base58 / base64 / bech32 / BLAKE2b helpers from @klever/connect-encoding.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:testnet": "vitest run src/encoding-utilities.testnet.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*",
+    "@klever/connect-encoding": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

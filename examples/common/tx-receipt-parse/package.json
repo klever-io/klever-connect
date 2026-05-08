@@ -1,0 +1,23 @@
+{
+  "name": "@klever-examples/common-tx-receipt-parse",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Decode tagged transaction receipts (Freeze -> bucketId, Delegate -> amount, etc.).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:testnet": "vitest run src/tx-receipt-parse.testnet.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*",
+    "@klever/connect-provider": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}
