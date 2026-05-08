@@ -1,0 +1,30 @@
+{
+  "name": "counter",
+  "endpoints": [
+    {
+      "name": "increment",
+      "mutability": "mutable",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "add",
+      "mutability": "mutable",
+      "inputs": [{ "name": "value", "type": "u32" }],
+      "outputs": []
+    },
+    {
+      "name": "deposit_and_increment",
+      "mutability": "mutable",
+      "payableInTokens": ["KLV"],
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "get_value",
+      "mutability": "readonly",
+      "inputs": [],
+      "outputs": [{ "type": "u32" }]
+    }
+  ]
+}
