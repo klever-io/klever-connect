@@ -1,0 +1,29 @@
+[package]
+name = "counter"
+version = "0.0.1"
+edition = "2021"
+authors = ["Klever Connect SDK examples"]
+description = "Tiny counter smart contract used as a fixture for klever-connect examples (sc-deploy, sc-invoke, sc-events-parse)."
+license = "Apache-2.0"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+# klever-sc is the Rust SC framework for Klever (analogous to multiversx-sc).
+# TODO(KLC-2322): pin to the same version that packages/connect-contracts/examples/dice
+# was compiled against (dice was built with klever-sc 0.45.0 per its README).
+[dependencies.klever-sc]
+version = "0.45.0"
+
+[dev-dependencies.klever-sc-scenario]
+version = "0.45.0"
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = false
