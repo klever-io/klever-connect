@@ -1,0 +1,35 @@
+# Per-example artifacts
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/.turbo/
+
+# Env files (never commit real secrets)
+**/.env
+**/.env.*
+!**/.env.example
+
+# TypeScript build info
+**/*.tsbuildinfo
+
+# Vite
+**/.vite/
+
+# Vitest
+**/coverage/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Compiled smart-contract artifacts (committed only when explicitly needed)
+_fixtures/**/output/
+_fixtures/**/target/
+_fixtures/**/wasm/
