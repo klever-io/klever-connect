@@ -1,0 +1,19 @@
+{
+  "name": "@klever/example-nodejs-send-nft-transfer-with-royalties",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Transfer an NFT and pay royalties to the collection's royalty receiver.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/send-nft-transfer-with-royalties.test.ts",
+    "test:testnet": "vitest run src/send-nft-transfer-with-royalties.testnet.test.ts"
+  },
+  "dependencies": { "@klever/connect": "^0.1.7" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

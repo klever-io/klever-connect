@@ -1,0 +1,19 @@
+{
+  "name": "@klever/example-nodejs-kda-create-nft-collection",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Create a new NFT collection (CreateAsset, AssetType.NonFungible).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/kda-create-nft-collection.test.ts",
+    "test:testnet": "vitest run src/kda-create-nft-collection.testnet.test.ts"
+  },
+  "dependencies": { "@klever/connect": "^0.1.7" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

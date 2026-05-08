@@ -1,0 +1,19 @@
+{
+  "name": "@klever/example-nodejs-kda-set-royalties",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Configure on-chain royalties for an NFT collection (AssetTrigger triggerType 14).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/kda-set-royalties.test.ts",
+    "test:testnet": "vitest run src/kda-set-royalties.testnet.test.ts"
+  },
+  "dependencies": { "@klever/connect": "^0.1.7" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

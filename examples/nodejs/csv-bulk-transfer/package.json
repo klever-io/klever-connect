@@ -1,0 +1,22 @@
+{
+  "name": "@klever/example-nodejs-csv-bulk-transfer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read recipients from a CSV file and broadcast transfers as a managed batch (with dry-run flag).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/csv-bulk-transfer.test.ts",
+    "test:testnet": "vitest run src/csv-bulk-transfer.testnet.test.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7",
+    "csv-parse": "^5.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

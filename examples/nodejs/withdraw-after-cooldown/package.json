@@ -1,0 +1,19 @@
+{
+  "name": "@klever/example-nodejs-withdraw-after-cooldown",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Final stage of the staking lifecycle: withdraw funds after the unfreeze cooldown elapses.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/withdraw-after-cooldown.test.ts",
+    "test:testnet": "vitest run src/withdraw-after-cooldown.testnet.test.ts"
+  },
+  "dependencies": { "@klever/connect": "^0.1.7" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

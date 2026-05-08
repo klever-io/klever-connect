@@ -1,0 +1,21 @@
+{
+  "name": "@klever/example-nodejs-marketplace-cancel-order",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cancel a pending marketplace order (contractType 19).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/marketplace-cancel-order.test.ts",
+    "test:testnet": "vitest run src/marketplace-cancel-order.testnet.test.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

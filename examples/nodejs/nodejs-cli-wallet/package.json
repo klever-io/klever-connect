@@ -1,0 +1,24 @@
+{
+  "name": "@klever/example-nodejs-nodejs-cli-wallet",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Multi-command CLI wallet (balance / transfer / account / faucet / tx) using node:util.parseArgs.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/nodejs-cli-wallet.test.ts",
+    "test:testnet": "vitest run src/nodejs-cli-wallet.testnet.test.ts"
+  },
+  "bin": {
+    "klever-cli": "./src/index.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

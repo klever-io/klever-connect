@@ -1,0 +1,21 @@
+{
+  "name": "@klever/example-nodejs-block-monitor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Class-based polling block monitor with EventEmitter and slow-block alerting.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/block-monitor.test.ts",
+    "test:testnet": "vitest run src/block-monitor.testnet.test.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

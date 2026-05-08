@@ -1,0 +1,21 @@
+{
+  "name": "@klever/example-nodejs-balance-alert-watcher",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Watch one or more addresses and alert on incoming/outgoing balance changes.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/balance-alert-watcher.test.ts",
+    "test:testnet": "vitest run src/balance-alert-watcher.testnet.test.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

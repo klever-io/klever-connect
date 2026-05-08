@@ -1,0 +1,21 @@
+{
+  "name": "@klever/example-nodejs-tx-bulk-broadcast",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build N transactions with manually managed nonces and broadcast them as a batch.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/tx-bulk-broadcast.test.ts",
+    "test:testnet": "vitest run src/tx-bulk-broadcast.testnet.test.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

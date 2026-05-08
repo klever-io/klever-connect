@@ -1,0 +1,19 @@
+{
+  "name": "@klever/example-nodejs-kda-mint",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mint additional fungible supply OR a new NFT (AssetTrigger triggerType 0).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/kda-mint.test.ts",
+    "test:testnet": "vitest run src/kda-mint.testnet.test.ts"
+  },
+  "dependencies": { "@klever/connect": "^0.1.7" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

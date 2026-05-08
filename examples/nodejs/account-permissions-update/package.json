@@ -1,0 +1,21 @@
+{
+  "name": "@klever/example-nodejs-account-permissions-update",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build a multi-sig / weighted permissions update request (contractType 22).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/account-permissions-update.test.ts",
+    "test:testnet": "vitest run src/account-permissions-update.testnet.test.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

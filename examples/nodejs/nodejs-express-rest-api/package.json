@@ -1,0 +1,23 @@
+{
+  "name": "@klever/example-nodejs-nodejs-express-rest-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Express REST server exposing balance / account / transfer / tx endpoints with health check + graceful shutdown.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run src/nodejs-express-rest-api.test.ts",
+    "test:testnet": "vitest run src/nodejs-express-rest-api.testnet.test.ts"
+  },
+  "dependencies": {
+    "@klever/connect": "^0.1.7",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

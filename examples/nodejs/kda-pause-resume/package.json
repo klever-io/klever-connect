@@ -1,0 +1,21 @@
+{
+  "name": "@klever/example-nodejs-kda-pause-resume",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pause (triggerType 3) and Resume (triggerType 4) all transfers of a KDA. Two npm scripts.",
+  "scripts": {
+    "start": "tsx src/index.ts pause",
+    "pause": "tsx src/index.ts pause",
+    "resume": "tsx src/index.ts resume",
+    "test": "vitest run src/kda-pause-resume.test.ts",
+    "test:testnet": "vitest run src/kda-pause-resume.testnet.test.ts"
+  },
+  "dependencies": { "@klever/connect": "^0.1.7" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}
