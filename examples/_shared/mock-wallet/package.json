@@ -1,0 +1,21 @@
+{
+  "name": "@klever/example-shared-mock-wallet",
+  "private": true,
+  "version": "0.0.0",
+  "description": "MockWallet helper used by reactjs/* and common/* example tests. NOT shipped to npm.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
