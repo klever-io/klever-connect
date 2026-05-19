@@ -11,7 +11,9 @@
     "test": "vitest run src/kda-pause-resume.test.ts",
     "test:testnet": "vitest run src/kda-pause-resume.testnet.test.ts"
   },
-  "dependencies": { "@klever/connect": "^0.1.7" },
+  "dependencies": {
+    "@klever/connect": "^0.1.7"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",

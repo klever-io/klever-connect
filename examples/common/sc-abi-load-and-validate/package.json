@@ -6,7 +6,7 @@
   "description": "Load an ABI JSON, validate it, list the endpoints / events.",
   "scripts": {
     "start": "tsx src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run src/sc-abi-load-and-validate.testnet.test.ts",
     "typecheck": "tsc --noEmit"
   },

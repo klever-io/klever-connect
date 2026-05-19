@@ -6,7 +6,7 @@
   "description": "Decode tagged transaction receipts (Freeze -> bucketId, Delegate -> amount, etc.).",
   "scripts": {
     "start": "tsx src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run src/tx-receipt-parse.testnet.test.ts",
     "typecheck": "tsc --noEmit"
   },

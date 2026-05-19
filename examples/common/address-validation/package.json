@@ -6,7 +6,7 @@
   "description": "Validate user-input Klever addresses (regex + bech32 decode).",
   "scripts": {
     "start": "tsx src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run src/address-validation.testnet.test.ts",
     "typecheck": "tsc --noEmit"
   },

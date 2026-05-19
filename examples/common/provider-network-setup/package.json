@@ -6,7 +6,7 @@
   "description": "Build a KleverProvider for testnet, mainnet, devnet, and a custom RPC endpoint.",
   "scripts": {
     "start": "tsx src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run src/provider-network-setup.testnet.test.ts",
     "typecheck": "tsc --noEmit"
   },

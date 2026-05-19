@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@klever/example-reactjs-claim-staking-rewards",
   "private": true,
   "version": "0.0.0",
@@ -8,11 +8,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run -- --testNamePattern testnet"
   },
   "dependencies": {
     "@klever/connect": "workspace:*",
+    "@klever/connect-react": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

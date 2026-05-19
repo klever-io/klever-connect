@@ -6,7 +6,7 @@
   "description": "Hex / base58 / base64 / bech32 / BLAKE2b helpers from @klever/connect-encoding.",
   "scripts": {
     "start": "tsx src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run src/encoding-utilities.testnet.test.ts",
     "typecheck": "tsc --noEmit"
   },

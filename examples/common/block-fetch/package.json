@@ -6,11 +6,13 @@
   "description": "Fetch a block by number or 'latest'; walk its transactions.",
   "scripts": {
     "start": "tsx src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run src/block-fetch.testnet.test.ts",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": { "@klever/connect": "workspace:*" },
+  "dependencies": {
+    "@klever/connect": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsx": "^4.19.0",

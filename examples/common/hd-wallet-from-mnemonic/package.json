@@ -6,7 +6,7 @@
   "description": "BIP39 mnemonic generation, validation, and BIP44 multi-account derivation.",
   "scripts": {
     "start": "tsx src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
     "test:testnet": "vitest run src/hd-wallet-from-mnemonic.testnet.test.ts",
     "typecheck": "tsc --noEmit"
   },
