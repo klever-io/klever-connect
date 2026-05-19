@@ -16,11 +16,7 @@
 
 import 'node:process'
 
-import {
-  KleverProvider,
-  formatKLV,
-  type KleverAddress,
-} from '@klever/connect'
+import { KleverProvider, formatKLV, type KleverAddress } from '@klever/connect'
 
 const NETWORK = (process.env['KLV_NETWORK'] ?? 'testnet') as
   | 'mainnet'
@@ -53,6 +49,7 @@ async function main(): Promise<void> {
   console.log(`Min delta:      ${MIN_DELTA}`)
 
   let pollCount = 0
+  let intervalHandle: NodeJS.Timeout | null = null
   const tick = async (): Promise<void> => {
     pollCount++
     await Promise.all(
@@ -76,20 +73,22 @@ async function main(): Promise<void> {
             last.set(addr, cur)
           }
         } catch (err) {
-          console.error(
-            `[error] ${addr}: ${err instanceof Error ? err.message : String(err)}`,
-          )
+          console.error(`[error] ${addr}: ${err instanceof Error ? err.message : String(err)}`)
         }
       }),
     )
     if (MAX_POLLS > 0 && pollCount >= MAX_POLLS) {
       console.log(`Reached MAX_POLLS=${MAX_POLLS}. Exiting.`)
+      // Clear the interval explicitly so the Node event loop can drain even
+      // when process.exit is stubbed (e.g., under vitest). Without this, the
+      // recurring tick keeps the worker alive past the test deadline.
+      if (intervalHandle) clearInterval(intervalHandle)
       process.exit(0)
     }
   }
 
   await tick()
-  setInterval(() => {
+  intervalHandle = setInterval(() => {
     void tick()
   }, POLL_INTERVAL_MS)
 
