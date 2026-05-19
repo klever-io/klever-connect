@@ -57,6 +57,10 @@ describe('deposit example', () => {
     process.env['CURRENCY_ID'] = 'KLV'
     process.env['AMOUNT'] = '10000000'
     process.env['DRY_RUN'] = 'true'
+    // The example's top-level `main().catch(... process.exit(1))` bubbles up
+    // to vitest as a fatal error when a validation path runs. Stub process.exit
+    // to a no-op so the test can observe the console.error output instead.
+    vi.spyOn(process, 'exit').mockImplementation(((_code?: number) => undefined) as never)
   })
 
   it('builds an FPR deposit', async () => {

@@ -53,7 +53,10 @@ vi.mock('@klever/connect', () => {
   }
   class FakeWallet {
     address = 'klv1' + '0'.repeat(58)
-    constructor(public provider: unknown, public _pk: string) {}
+    constructor(
+      public provider: unknown,
+      public _pk: string,
+    ) {}
     async connect(): Promise<void> {}
     async disconnect(): Promise<void> {}
     async signTransaction(tx: FakeTransaction): Promise<FakeTransaction> {
@@ -83,6 +86,10 @@ describe('validator-create example', () => {
     process.env['VALIDATOR_NAME'] = 'TestValidator'
     process.env['KLV_NETWORK'] = 'testnet'
     process.env['DRY_RUN'] = 'true'
+
+    // The example main()s call process.exit(1) on validation failures; stub it to a no-op
+    // so the test can observe the console.error output instead of vitest bailing fatally.
+    vi.spyOn(process, 'exit').mockImplementation((_code) => undefined)
   })
 
   it('builds a CreateValidator request with the configured fields', async () => {

@@ -58,6 +58,10 @@ describe('marketplace-buy-listing example', () => {
     process.env['AMOUNT'] = ''
     process.env['CURRENCY_AMOUNT'] = '1000000'
     process.env['DRY_RUN'] = 'true'
+
+    // The example main()s call process.exit(1) on validation failures; stub it to a no-op
+    // so the test can observe the console.error output instead of vitest bailing fatally.
+    vi.spyOn(process, 'exit').mockImplementation((_code) => undefined)
   })
 
   it('builds a market Buy', async () => {

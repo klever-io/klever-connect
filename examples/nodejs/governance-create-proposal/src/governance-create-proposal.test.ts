@@ -56,6 +56,10 @@ describe('governance-create-proposal example', () => {
     process.env['PROPOSAL_DESCRIPTION'] = 'Test description'
     process.env['PROPOSAL_EPOCHS_DURATION'] = '10'
     process.env['DRY_RUN'] = 'true'
+
+    // The example main()s call process.exit(1) on validation failures; stub it to a no-op
+    // so the test can observe the console.error output instead of vitest bailing fatally.
+    vi.spyOn(process, 'exit').mockImplementation((_code) => undefined)
   })
 
   it('coerces JSON keys to numeric IDs and forwards every field', async () => {
@@ -75,19 +79,12 @@ describe('governance-create-proposal example', () => {
   it('rejects non-integer parameter ids', async () => {
     process.env['PROPOSAL_PARAMETERS'] = '{"abc":"5000"}'
     vi.resetModules()
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
-      throw new Error('exit')
-    }) as never)
+    // The outer beforeEach already stubs process.exit to a no-op, so the
+    // example's `main().catch(... process.exit(1))` won't bail the test.
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    try {
-      await import('./index.js')
-      await new Promise((r) => setTimeout(r, 10))
-    } catch {
-      // expected
-    }
-    // The example uses console.error then process.exit OR throws inside main().
+    await import('./index.js')
+    await new Promise((r) => setTimeout(r, 10))
     expect(errSpy).toHaveBeenCalled()
-    exitSpy.mockRestore()
     errSpy.mockRestore()
   })
 })
