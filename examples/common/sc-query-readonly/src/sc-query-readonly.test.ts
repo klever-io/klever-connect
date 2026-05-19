@@ -10,13 +10,15 @@ vi.mock('@klever/connect', async () => {
   class MockProvider {
     constructor(public readonly cfg: unknown) {}
     async queryContract(_params: unknown) {
-      // Match the IContractQueryResult shape — returnData is base64-encoded
-      // bytes. For u64 = 42, the big-endian bytes are 0x000000000000002a,
-      // base64 = AAAAAAAAACo=.
+      // Match the IContractQueryResponse shape ({ data: IContractQueryResult }).
+      // returnData is base64-encoded bytes. For u64 = 42, the big-endian bytes
+      // are 0x000000000000002a, base64 = AAAAAAAAACo=.
       return {
-        returnData: ['AAAAAAAAACo='],
-        returnCode: 'Ok',
-        returnMessage: '',
+        data: {
+          returnData: ['AAAAAAAAACo='],
+          returnCode: 'Ok',
+          returnMessage: '',
+        },
       }
     }
   }

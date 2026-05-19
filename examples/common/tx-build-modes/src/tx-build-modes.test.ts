@@ -9,7 +9,9 @@ vi.mock('@klever/connect', async () => {
 
   class MockProvider {
     constructor(public readonly cfg: unknown) {}
-    async getNonce(_addr: string) { return 5 }
+    async getNonce(_addr: string) {
+      return 5
+    }
     async buildTransaction(_request: unknown) {
       // Mimic the testnet response shape used by TransactionBuilder.build().
       return {
@@ -26,22 +28,23 @@ vi.mock('@klever/connect', async () => {
   return { ...actual, KleverProvider: MockProvider }
 })
 
-import {
-  KleverProvider,
-  TransactionBuilder,
-  parseKLV,
-  createKleverAddress,
-} from '@klever/connect'
+import { KleverProvider, TransactionBuilder, parseKLV, createKleverAddress } from '@klever/connect'
 
 const SENDER = createKleverAddress('klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z')
 
 describe('tx-build-modes (mocked)', () => {
-  it('build() returns a Transaction with hex output', async () => {
-    const provider = new KleverProvider({ network: 'testnet' })
-    const tx = await new TransactionBuilder(provider)
-      .sender(SENDER)
+  it('buildProto() returns a Transaction with hex output', () => {
+    // The provider-backed `.build()` path is exercised in the testnet
+    // tests (see *.testnet.test.ts). The offline `.buildProto()` path
+    // is sufficient to verify the hex-output invariant here.
+    const tx = new TransactionBuilder()
       .transfer({ receiver: SENDER, amount: parseKLV('1') })
-      .build()
+      .buildProto({
+        sender: SENDER,
+        nonce: 1,
+        chainId: '109',
+        fees: { kAppFee: 500_000, bandwidthFee: 100_000 },
+      })
 
     expect(typeof tx.toHex()).toBe('string')
     expect(tx.toHex().length).toBeGreaterThan(0)
