@@ -74,6 +74,12 @@ export interface MockWalletOptions {
 const DEFAULT_TEST_ADDRESS = 'klv1qqqqqqqqqqqqqpgqxxx0mocktest0wallet0addressxxxxxxxxxxxxxxxxs0a'
 const DEFAULT_TEST_PUBKEY = '00'.repeat(32)
 
+function assertNonEmptyString(value: string, field: string): void {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`[MockWallet] ${field} must be a non-empty string`)
+  }
+}
+
 /**
  * Deterministic 64-byte zero "signature" object satisfying the SDK Signature
  * shape. Tests assert call shape, not cryptographic content.
@@ -137,6 +143,9 @@ export class MockWallet implements Pick<
   private _onSend?: (contract: ContractRequestData) => string | Promise<string>
 
   constructor(options: MockWalletOptions = {}) {
+    if (options.address !== undefined) assertNonEmptyString(options.address, 'options.address')
+    if (options.publicKey !== undefined)
+      assertNonEmptyString(options.publicKey, 'options.publicKey')
     this._address = options.address ?? DEFAULT_TEST_ADDRESS
     this.publicKey = options.publicKey ?? DEFAULT_TEST_PUBKEY
     this._balance = options.balance ?? 1_000_000_000n // 1000 KLV
@@ -266,6 +275,7 @@ export class MockWallet implements Pick<
 
   /** Simulate the extension switching account in the middle of a test. */
   emitAccountChanged(newAddress: string): void {
+    assertNonEmptyString(newAddress, 'newAddress')
     this._address = newAddress
     this._emit('accountChanged', { address: newAddress })
   }
