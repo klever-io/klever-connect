@@ -71,8 +71,7 @@ export interface MockWalletOptions {
   provider?: IProvider
 }
 
-const DEFAULT_TEST_ADDRESS =
-  'klv1qqqqqqqqqqqqqpgqxxx0mocktest0wallet0addressxxxxxxxxxxxxxxxxs0a'
+const DEFAULT_TEST_ADDRESS = 'klv1qqqqqqqqqqqqqpgqxxx0mocktest0wallet0addressxxxxxxxxxxxxxxxxs0a'
 const DEFAULT_TEST_PUBKEY = '00'.repeat(32)
 
 /**
@@ -105,7 +104,8 @@ function stubSignature(): Signature {
  *   - on / off / removeAllListeners
  *   - 'connect' / 'disconnect' / 'accountChanged' events
  */
-export class MockWallet implements Pick<Wallet,
+export class MockWallet implements Pick<
+  Wallet,
   | 'address'
   | 'publicKey'
   | 'provider'
@@ -207,9 +207,7 @@ export class MockWallet implements Pick<Wallet,
   async sendTransaction(contract: ContractRequestData): Promise<TransactionSubmitResult> {
     this._txLog.push(contract)
 
-    const hash = this._onSend
-      ? await this._onSend(contract)
-      : `mock-tx-hash-${this._txLog.length}`
+    const hash = this._onSend ? await this._onSend(contract) : `mock-tx-hash-${this._txLog.length}`
 
     const wait = async (): Promise<{ hash: string; status: 'success' }> => ({
       hash,
