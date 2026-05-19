@@ -61,17 +61,16 @@ describe('send-klv-transfer', () => {
 
   it('calls sendKLV with parseKLV(amount) on valid submit', async () => {
     render(<App />)
-    // A real klv1 testnet address (32-byte zero, valid bech32):
-    fireEvent.change(screen.getByTestId('to-input'), {
-      target: { value: 'klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg' },
-    })
+    // A valid bech32 klv1 address with correct checksum.
+    const validAddr = 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z'
+    fireEvent.change(screen.getByTestId('to-input'), { target: { value: validAddr } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '2.5' } })
 
     fireEvent.click(screen.getByTestId('submit-btn'))
 
     await waitFor(() => expect(sendKLV).toHaveBeenCalled())
     const [to, amount] = sendKLV.mock.calls[0]
-    expect(to).toBe('klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg')
+    expect(to).toBe(validAddr)
     expect(amount).toBe(2_500_000n) // parseKLV('2.5')
   })
 

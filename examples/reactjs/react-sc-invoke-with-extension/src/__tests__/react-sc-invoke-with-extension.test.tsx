@@ -16,7 +16,11 @@ const klever = {
 const invoke = vi.fn(async () => ({ hash: 'mock_tx_abi' }))
 class FakeContract {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(public address: string, public abi: unknown, public signer: unknown) {}
+  constructor(
+    public address: string,
+    public abi: unknown,
+    public signer: unknown,
+  ) {}
   invoke = invoke
   call = vi.fn()
 }
@@ -48,7 +52,7 @@ beforeEach(() => {
   })) as unknown as typeof fetch
 })
 
-const VALID_CONTRACT = 'klv1qqqqqqqqqqqqqpgqd2qf25aljkylzhyhz4qcnymd2nz4mvgcyqjms65czav'
+const VALID_CONTRACT = 'klv1qqqqqqqqqqqqqpgqpg2ff85tljne96d2jwedj4mkrhsu3up5c0nq0x8g69'
 const { App } = await import('../App')
 
 describe('react-sc-invoke-with-extension', () => {

@@ -2,7 +2,11 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 const sendKDA = vi.fn()
-const txState = { isLoading: false, error: null as Error | null, data: null as { hash: string } | null }
+const txState = {
+  isLoading: false,
+  error: null as Error | null,
+  data: null as { hash: string } | null,
+}
 
 vi.mock('@klever/connect-react', async (orig) => {
   const real = await orig<typeof import('@klever/connect-react')>()
@@ -40,7 +44,7 @@ describe('send-kda-transfer', () => {
   it('passes (to, parseUnits(amount, precision), kda) to sendKDA', async () => {
     render(<App />)
     fireEvent.change(screen.getByTestId('to-input'), {
-      target: { value: 'klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg' },
+      target: { value: 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z' },
     })
     fireEvent.change(screen.getByTestId('kda-input'), { target: { value: 'MTT-ABCD-1A' } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '10' } })
@@ -50,7 +54,7 @@ describe('send-kda-transfer', () => {
 
     await waitFor(() => expect(sendKDA).toHaveBeenCalled())
     const [to, amount, kda] = sendKDA.mock.calls[0]
-    expect(to).toBe('klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg')
+    expect(to).toBe('klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z')
     expect(amount).toBe(1_000_000_000n) // parseUnits('10', 8) = 10 * 10^8
     expect(kda).toBe('MTT-ABCD-1A')
   })

@@ -47,13 +47,13 @@ describe('delegate-to-validator', () => {
   it('passes (validator, bucketId) when both are filled', async () => {
     render(<App />)
     fireEvent.change(screen.getByTestId('validator-input'), {
-      target: { value: 'klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg' },
+      target: { value: 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z' },
     })
     fireEvent.change(screen.getByTestId('bucket-input'), { target: { value: 'bucket-abc' } })
     fireEvent.click(screen.getByTestId('submit-btn'))
     await waitFor(() => expect(delegate).toHaveBeenCalled())
     expect(delegate).toHaveBeenCalledWith(
-      'klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg',
+      'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z',
       'bucket-abc',
     )
   })
@@ -62,12 +62,12 @@ describe('delegate-to-validator', () => {
     delegate.mockClear()
     render(<App />)
     fireEvent.change(screen.getByTestId('validator-input'), {
-      target: { value: 'klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg' },
+      target: { value: 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z' },
     })
     fireEvent.click(screen.getByTestId('submit-btn'))
     await waitFor(() => expect(delegate).toHaveBeenCalled())
     expect(delegate).toHaveBeenCalledWith(
-      'klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg',
+      'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z',
       undefined,
     )
   })

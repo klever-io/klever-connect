@@ -40,7 +40,7 @@ describe('send-nft-transfer-with-royalties', () => {
     render(<App />)
     fireEvent.change(screen.getByTestId('nft-input'), { target: { value: 'MYNFT-A1B2/1' } })
     fireEvent.change(screen.getByTestId('to-input'), {
-      target: { value: 'klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg' },
+      target: { value: 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z' },
     })
     fireEvent.change(screen.getByTestId('klv-royalty-input'), { target: { value: '0.5' } })
     fireEvent.change(screen.getByTestId('kda-royalty-input'), { target: { value: '100' } })
@@ -50,7 +50,7 @@ describe('send-nft-transfer-with-royalties', () => {
     await waitFor(() => expect(sendTransaction).toHaveBeenCalled())
     const arg = sendTransaction.mock.calls[0][0]
     expect(arg.contractType).toBe(0) // Transfer
-    expect(arg.receiver).toBe('klv1qqqqqqqqqqqqqpgqqcyx02a9wzaut7ssrxylwz9p4qy0fkadydq3w53tg')
+    expect(arg.receiver).toBe('klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z')
     expect(arg.amount).toBe(1)
     expect(arg.kda).toBe('MYNFT-A1B2/1')
     expect(arg.klvRoyalties).toBe(500_000n) // parseKLV('0.5')

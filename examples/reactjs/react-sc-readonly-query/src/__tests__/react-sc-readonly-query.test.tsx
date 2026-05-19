@@ -13,7 +13,11 @@ const klever = {
 const call = vi.fn(async () => [42])
 class FakeContract {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(public address: string, public abi: unknown, public signer: unknown) {}
+  constructor(
+    public address: string,
+    public abi: unknown,
+    public signer: unknown,
+  ) {}
   call = call
   invoke = vi.fn()
 }
@@ -28,7 +32,7 @@ vi.mock('@klever/connect', async () => {
   }
 })
 
-const VALID_CONTRACT = 'klv1qqqqqqqqqqqqqpgqd2qf25aljkylzhyhz4qcnymd2nz4mvgcyqjms65czav'
+const VALID_CONTRACT = 'klv1qqqqqqqqqqqqqpgqpg2ff85tljne96d2jwedj4mkrhsu3up5c0nq0x8g69'
 const { App } = await import('../App')
 
 describe('react-sc-readonly-query', () => {
