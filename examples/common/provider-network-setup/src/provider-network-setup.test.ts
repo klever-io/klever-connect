@@ -28,9 +28,11 @@ describe('provider-network-setup (mocked)', () => {
     expect(NETWORKS).toHaveProperty('local')
 
     for (const [key, cfg] of Object.entries(NETWORKS)) {
+      // The 'custom' entry is an empty placeholder for createCustomNetwork() to fill.
+      if (key === 'custom') continue
       expect(cfg, `entry ${key}`).toMatchObject({
         chainId: expect.any(String),
-        api: expect.any(String),
+        config: expect.objectContaining({ api: expect.any(String) }),
       })
     }
   })
@@ -44,7 +46,7 @@ describe('provider-network-setup (mocked)', () => {
     })
 
     expect(customCfg.chainId).toBe('999')
-    expect(customCfg.api).toBe('https://node.example.invalid')
+    expect(customCfg.config.api).toBe('https://node.example.invalid')
 
     // The provider should accept the custom config without error.
     const customProvider = new KleverProvider({ network: customCfg })
