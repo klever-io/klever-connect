@@ -1,0 +1,22 @@
+{
+  "name": "@klever-examples/common-tx-build-modes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Three transaction build modes: build (node-assisted), buildProto (offline), buildRequest (raw object).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
+    "test:testnet": "vitest run src/tx-build-modes.testnet.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

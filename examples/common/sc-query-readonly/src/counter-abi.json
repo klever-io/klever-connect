@@ -1,0 +1,36 @@
+{
+  "buildInfo": {
+    "rustc": { "version": "1.x.x", "commitHash": "n/a", "commitDate": "n/a", "channel": "stable", "short": "n/a" },
+    "contractCrate": { "name": "counter", "version": "0.0.1" },
+    "framework": { "name": "klever-sc", "version": "0.45.0" }
+  },
+  "name": "Counter",
+  "constructor": { "inputs": [], "outputs": [] },
+  "endpoints": [
+    {
+      "name": "increment",
+      "mutability": "mutable",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "add",
+      "mutability": "mutable",
+      "inputs": [{ "name": "value", "type": "u64" }],
+      "outputs": []
+    },
+    {
+      "name": "getValue",
+      "mutability": "readonly",
+      "inputs": [],
+      "outputs": [{ "type": "u64" }]
+    }
+  ],
+  "events": [
+    {
+      "identifier": "counter_changed",
+      "inputs": [{ "name": "new_value", "type": "u64", "indexed": true }]
+    }
+  ],
+  "types": {}
+}

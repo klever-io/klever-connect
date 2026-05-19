@@ -126,6 +126,379 @@ importers:
         specifier: ^22.0.0
         version: 22.18.8
 
+  examples/common/account-info:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/address-validation:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/balance-read:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/block-fetch:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/bucket-list-and-status:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/encoding-utilities:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+      '@klever/connect-encoding':
+        specifier: workspace:*
+        version: link:../../../packages/connect-encoding
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/format-parse-kda:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/format-parse-klv:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/hd-wallet-from-mnemonic:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+      '@klever/connect-crypto':
+        specifier: workspace:*
+        version: link:../../../packages/connect-crypto
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/key-pair-generate-and-import:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/provider-network-setup:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/sc-abi-load-and-validate:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+      '@klever/connect-contracts':
+        specifier: workspace:*
+        version: link:../../../packages/connect-contracts
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/sc-events-parse:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/sc-query-readonly:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/sign-and-verify-message:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/tx-build-modes:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/tx-fetch-by-hash:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/tx-receipt-parse:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+      '@klever/connect-provider':
+        specifier: workspace:*
+        version: link:../../../packages/connect-provider
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
+  examples/common/tx-serialize-deserialize:
+    dependencies:
+      '@klever/connect':
+        specifier: workspace:*
+        version: link:../../../packages/connect
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
+
   packages/connect:
     dependencies:
       '@klever/connect-contracts':
@@ -1200,6 +1573,9 @@ packages:
 
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
+
+  '@types/node@20.19.41':
+    resolution: {integrity: sha512-ECymXOukMnOoVkC2bb1Vc/w/836DXncOg5m8Xj1RH7xSHZJWNYY6Zh7EH477vcnD5egKNNfy2RpNOmuChhFPgQ==}
 
   '@types/node@22.18.8':
     resolution: {integrity: sha512-pAZSHMiagDR7cARo/cch1f3rXy0AEXwsVsVH09FcyeJVAzCnGgmYis7P3JidtTUjyadhTeSo8TgRPswstghDaw==}
@@ -3576,6 +3952,10 @@ snapshots:
 
   '@types/node@12.20.55': {}
 
+  '@types/node@20.19.41':
+    dependencies:
+      undici-types: 6.21.0
+
   '@types/node@22.18.8':
     dependencies:
       undici-types: 6.21.0
@@ -4106,7 +4486,6 @@ snapshots:
       '@esbuild/win32-arm64': 0.25.12
       '@esbuild/win32-ia32': 0.25.12
       '@esbuild/win32-x64': 0.25.12
-    optional: true
 
   esbuild@0.27.2:
     optionalDependencies:
@@ -4347,7 +4726,6 @@ snapshots:
   get-tsconfig@4.14.0:
     dependencies:
       resolve-pkg-maps: 1.0.0
-    optional: true
 
   glob-parent@5.1.2:
     dependencies:
@@ -4913,8 +5291,7 @@ snapshots:
 
   resolve-from@5.0.0: {}
 
-  resolve-pkg-maps@1.0.0:
-    optional: true
+  resolve-pkg-maps@1.0.0: {}
 
   restore-cursor@5.1.0:
     dependencies:
@@ -5209,7 +5586,6 @@ snapshots:
       get-tsconfig: 4.14.0
     optionalDependencies:
       fsevents: 2.3.3
-    optional: true
 
   turbo-darwin-64@2.8.12:
     optional: true
@@ -5288,6 +5664,27 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+  vite-node@3.2.4(@types/node@20.19.41)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3):
+    dependencies:
+      cac: 6.7.14
+      debug: 4.4.3
+      es-module-lexer: 1.7.0
+      pathe: 2.0.3
+      vite: 7.3.2(@types/node@20.19.41)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3)
+    transitivePeerDependencies:
+      - '@types/node'
+      - jiti
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+
   vite-node@3.2.4(@types/node@24.10.10)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3):
     dependencies:
       cac: 6.7.14
@@ -5309,6 +5706,21 @@ snapshots:
       - tsx
       - yaml
 
+  vite@7.3.2(@types/node@20.19.41)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3):
+    dependencies:
+      esbuild: 0.27.2
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
+      postcss: 8.5.14
+      rollup: 4.59.0
+      tinyglobby: 0.2.15
+    optionalDependencies:
+      '@types/node': 20.19.41
+      fsevents: 2.3.3
+      jiti: 2.6.0
+      tsx: 4.20.6
+      yaml: 2.8.3
+
   vite@7.3.2(@types/node@24.10.10)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3):
     dependencies:
       esbuild: 0.27.2
@@ -5323,6 +5735,49 @@ snapshots:
       jiti: 2.6.0
       tsx: 4.20.6
       yaml: 2.8.3
+
+  vitest@3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3):
+    dependencies:
+      '@types/chai': 5.2.3
+      '@vitest/expect': 3.2.4
+      '@vitest/mocker': 3.2.4(vite@7.3.2(@types/node@24.10.10)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3))
+      '@vitest/pretty-format': 3.2.4
+      '@vitest/runner': 3.2.4
+      '@vitest/snapshot': 3.2.4
+      '@vitest/spy': 3.2.4
+      '@vitest/utils': 3.2.4
+      chai: 5.3.3
+      debug: 4.4.3
+      expect-type: 1.3.0
+      magic-string: 0.30.21
+      pathe: 2.0.3
+      picomatch: 4.0.4
+      std-env: 3.10.0
+      tinybench: 2.9.0
+      tinyexec: 0.3.2
+      tinyglobby: 0.2.15
+      tinypool: 1.1.1
+      tinyrainbow: 2.0.0
+      vite: 7.3.2(@types/node@20.19.41)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3)
+      vite-node: 3.2.4(@types/node@20.19.41)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.3)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 20.19.41
+      '@vitest/ui': 3.2.4(vitest@3.2.4)
+      jsdom: 25.0.1
+    transitivePeerDependencies:
+      - jiti
+      - less
+      - lightningcss
+      - msw
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
 
   vitest@3.2.4(@types/node@24.10.10)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3):
     dependencies:

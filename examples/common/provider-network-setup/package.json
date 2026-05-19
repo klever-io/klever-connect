@@ -1,0 +1,22 @@
+{
+  "name": "@klever-examples/common-provider-network-setup",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build a KleverProvider for testnet, mainnet, devnet, and a custom RPC endpoint.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run --exclude \"**/*.testnet.*\"",
+    "test:testnet": "vitest run src/provider-network-setup.testnet.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@klever/connect": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0"
+  }
+}
