@@ -22,11 +22,11 @@ examples/
 
 ## Categories
 
-| Folder                       | Audience                               | Runtime          | Imports                    |
-| ---------------------------- | -------------------------------------- | ---------------- | -------------------------- |
-| [`common/`](./common/)       | All — works in Node, browser, RN       | Pure TypeScript  | `@klever/connect` umbrella |
-| [`nodejs/`](./nodejs/)       | Backend services, CLIs, indexers       | Node 20+ via tsx | `@klever/connect` umbrella |
-| [`reactjs/`](./reactjs/)     | dApp frontends                         | Vite + React 19  | `@klever/connect` umbrella |
+| Folder                   | Audience                         | Runtime          | Imports                    |
+| ------------------------ | -------------------------------- | ---------------- | -------------------------- |
+| [`common/`](./common/)   | All — works in Node, browser, RN | Pure TypeScript  | `@klever/connect` umbrella |
+| [`nodejs/`](./nodejs/)   | Backend services, CLIs, indexers | Node 20+ via tsx | `@klever/connect` umbrella |
+| [`reactjs/`](./reactjs/) | dApp frontends                   | Vite + React 19  | `@klever/connect` umbrella |
 
 `common/` examples are pure-SDK and isomorphic. `nodejs/` examples may use Node-only
 APIs (`fs`, `process`, `node:events`, Express). `reactjs/` examples use the browser
@@ -52,27 +52,27 @@ npm run test:testnet  # live testnet checks (NOT run in CI)
 
 ## Common flows (isomorphic)
 
-| Flow                                                                 | What it shows                                       |
-| -------------------------------------------------------------------- | --------------------------------------------------- |
-| [`provider-network-setup`](./common/provider-network-setup/)         | Build a `KleverProvider` for any network            |
-| [`address-validation`](./common/address-validation/)                 | Validate user input (`isKleverAddress`, bech32)     |
-| [`format-parse-klv`](./common/format-parse-klv/)                     | bigint <-> human-readable for KLV (6 decimals)      |
-| [`format-parse-kda`](./common/format-parse-kda/)                     | Same for arbitrary KDA tokens                       |
-| [`encoding-utilities`](./common/encoding-utilities/)                 | Hex, base58, base64, bech32, BLAKE2b                |
-| [`key-pair-generate-and-import`](./common/key-pair-generate-and-import/) | Ed25519 key generation and import               |
-| [`hd-wallet-from-mnemonic`](./common/hd-wallet-from-mnemonic/)       | BIP39 mnemonic -> derived accounts                  |
-| [`sign-and-verify-message`](./common/sign-and-verify-message/)       | Sign arbitrary text and verify with public key      |
-| [`balance-read`](./common/balance-read/)                             | Read KLV + KDA balance for any address              |
-| [`account-info`](./common/account-info/)                             | Fetch full account: nonce, assets, frozen amounts   |
-| [`tx-fetch-by-hash`](./common/tx-fetch-by-hash/)                     | Look up a tx by hash, render fields                 |
-| [`block-fetch`](./common/block-fetch/)                               | Fetch a block by number / `'latest'`                |
-| [`tx-build-modes`](./common/tx-build-modes/)                         | Three build modes: `build`, `buildProto`, `buildRequest` |
-| [`tx-serialize-deserialize`](./common/tx-serialize-deserialize/)     | `Transaction.toHex()` / `Transaction.fromHex()`     |
-| [`bucket-list-and-status`](./common/bucket-list-and-status/)         | Inspect frozen / delegated buckets (read-only)      |
-| [`tx-receipt-parse`](./common/tx-receipt-parse/)                     | Decode receipts (Freeze -> bucketId, etc.)          |
-| [`sc-query-readonly`](./common/sc-query-readonly/)                   | Read-only smart-contract endpoint                   |
-| [`sc-events-parse`](./common/sc-events-parse/)                       | Parse `ContractEvent`s from a tx receipt's logs     |
-| [`sc-abi-load-and-validate`](./common/sc-abi-load-and-validate/)     | Load ABI JSON, validate, list endpoints             |
+| Flow                                                                     | What it shows                                            |
+| ------------------------------------------------------------------------ | -------------------------------------------------------- |
+| [`provider-network-setup`](./common/provider-network-setup/)             | Build a `KleverProvider` for any network                 |
+| [`address-validation`](./common/address-validation/)                     | Validate user input (`isKleverAddress`, bech32)          |
+| [`format-parse-klv`](./common/format-parse-klv/)                         | bigint <-> human-readable for KLV (6 decimals)           |
+| [`format-parse-kda`](./common/format-parse-kda/)                         | Same for arbitrary KDA tokens                            |
+| [`encoding-utilities`](./common/encoding-utilities/)                     | Hex, base58, base64, bech32, BLAKE2b                     |
+| [`key-pair-generate-and-import`](./common/key-pair-generate-and-import/) | Ed25519 key generation and import                        |
+| [`hd-wallet-from-mnemonic`](./common/hd-wallet-from-mnemonic/)           | BIP39 mnemonic -> derived accounts                       |
+| [`sign-and-verify-message`](./common/sign-and-verify-message/)           | Sign arbitrary text and verify with public key           |
+| [`balance-read`](./common/balance-read/)                                 | Read KLV + KDA balance for any address                   |
+| [`account-info`](./common/account-info/)                                 | Fetch full account: nonce, assets, frozen amounts        |
+| [`tx-fetch-by-hash`](./common/tx-fetch-by-hash/)                         | Look up a tx by hash, render fields                      |
+| [`block-fetch`](./common/block-fetch/)                                   | Fetch a block by number / `'latest'`                     |
+| [`tx-build-modes`](./common/tx-build-modes/)                             | Three build modes: `build`, `buildProto`, `buildRequest` |
+| [`tx-serialize-deserialize`](./common/tx-serialize-deserialize/)         | `Transaction.toHex()` / `Transaction.fromHex()`          |
+| [`bucket-list-and-status`](./common/bucket-list-and-status/)             | Inspect frozen / delegated buckets (read-only)           |
+| [`tx-receipt-parse`](./common/tx-receipt-parse/)                         | Decode receipts (Freeze -> bucketId, etc.)               |
+| [`sc-query-readonly`](./common/sc-query-readonly/)                       | Read-only smart-contract endpoint                        |
+| [`sc-events-parse`](./common/sc-events-parse/)                           | Parse `ContractEvent`s from a tx receipt's logs          |
+| [`sc-abi-load-and-validate`](./common/sc-abi-load-and-validate/)         | Load ABI JSON, validate, list endpoints                  |
 
 ## Node.js flows
 
@@ -116,12 +116,12 @@ examples were migrated-with-rewrite (heavy comments, tests, expected output) and
 
 ## Networks reference
 
-| Network   | Endpoint                       | Faucet                                    |
-| --------- | ------------------------------ | ----------------------------------------- |
-| `mainnet` | https://node.mainnet.klever.org | n/a (real funds)                          |
-| `testnet` | https://node.testnet.klever.org | https://faucet.testnet.klever.finance     |
-| `devnet`  | https://node.devnet.klever.org  | https://faucet.devnet.klever.finance      |
-| `local`   | http://localhost:8080           | n/a                                       |
+| Network   | Endpoint                        | Faucet                                |
+| --------- | ------------------------------- | ------------------------------------- |
+| `mainnet` | https://node.mainnet.klever.org | n/a (real funds)                      |
+| `testnet` | https://node.testnet.klever.org | https://faucet.testnet.klever.finance |
+| `devnet`  | https://node.devnet.klever.org  | https://faucet.devnet.klever.finance  |
+| `local`   | http://localhost:8080           | n/a                                   |
 
 ## Contributing a new example
 

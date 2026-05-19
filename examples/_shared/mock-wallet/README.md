@@ -16,17 +16,17 @@ A deterministic implementation of the public surface of `BrowserWallet` from
 `@klever/connect-wallet` — no network, no extension, no real crypto. Mirrors
 every method called by the `reactjs/*` hooks and the `common/*` SDK examples:
 
-| Method                    | Behaviour                                                              |
-| ------------------------- | ---------------------------------------------------------------------- |
-| `connect()` / `disconnect()` | Toggle internal flag, emit corresponding event.                     |
-| `isConnected()`           | Returns the internal flag.                                             |
-| `signMessage(...)`        | Returns a stub `Signature` of 64 zero bytes.                           |
-| `signTransaction(tx)`     | Returns the same Transaction (no real signature).                      |
-| `transfer(req)` / `sendTransaction(c)` | Records the contract in `wallet.txLog`, returns a fake `TransactionSubmitResult`. |
-| `broadcastTransaction(tx)` | Returns `mock-broadcast-<incrementing nonce>`.                        |
-| `broadcastTransactions(txs)` | Returns one mock hash per input.                                    |
-| `getBalance(asset?)` / `getNonce()` | Return the values you constructed the wallet with.            |
-| `on / off / removeAllListeners` | Standard EventEmitter-style interface for `connect`, `disconnect`, `accountChanged`. |
+| Method                                 | Behaviour                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------------------ |
+| `connect()` / `disconnect()`           | Toggle internal flag, emit corresponding event.                                      |
+| `isConnected()`                        | Returns the internal flag.                                                           |
+| `signMessage(...)`                     | Returns a stub `Signature` of 64 zero bytes.                                         |
+| `signTransaction(tx)`                  | Returns the same Transaction (no real signature).                                    |
+| `transfer(req)` / `sendTransaction(c)` | Records the contract in `wallet.txLog`, returns a fake `TransactionSubmitResult`.    |
+| `broadcastTransaction(tx)`             | Returns `mock-broadcast-<incrementing nonce>`.                                       |
+| `broadcastTransactions(txs)`           | Returns one mock hash per input.                                                     |
+| `getBalance(asset?)` / `getNonce()`    | Return the values you constructed the wallet with.                                   |
+| `on / off / removeAllListeners`        | Standard EventEmitter-style interface for `connect`, `disconnect`, `accountChanged`. |
 
 Constructor options:
 
@@ -71,6 +71,7 @@ await provider.getAccount('klv1abc...' as KleverAddress) // { ...assets }
 ```
 
 Methods provided:
+
 - `getNetwork()`
 - `getBlockNumber()`
 - `getAccount(address)`
@@ -85,7 +86,7 @@ etc.) throw a clear "not mocked" error.
 The earlier draft of this folder tried to bake in an RTL `renderWithKleverContext`
 helper, but that pulled `@klever/connect-react/dist/context.js` — a sub-package
 import, which violates the umbrella-only rule (FLOW-INVENTORY §6.1 Q6). The
-reactjs/* tests instead build a tiny per-example wrapper that mounts a real
+reactjs/\* tests instead build a tiny per-example wrapper that mounts a real
 `<KleverProvider>` with the MockWallet wired through, or stub the hook return
 values via `vi.mock('@klever/connect')`.
 
@@ -109,12 +110,12 @@ wallet (signed by an env private key for `nodejs/`, or the actual extension for
 ```ts
 import type {
   // From @klever/connect (umbrella):
-  Wallet,                  // interface MockWallet implements (subset)
-  IProvider,               // interface createMockProvider returns
-  Transaction,             // arg/return of signTransaction etc.
-  TransferRequest,         // arg of transfer()
-  ContractRequestData,     // arg of sendTransaction(), entries of txLog
+  Wallet, // interface MockWallet implements (subset)
+  IProvider, // interface createMockProvider returns
+  Transaction, // arg/return of signTransaction etc.
+  TransferRequest, // arg of transfer()
+  ContractRequestData, // arg of sendTransaction(), entries of txLog
   TransactionSubmitResult, // return of transfer/sendTransaction
-  Signature,               // return of signMessage
+  Signature, // return of signMessage
 } from '@klever/connect'
 ```

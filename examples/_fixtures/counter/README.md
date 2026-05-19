@@ -17,22 +17,22 @@ because Phase-2 settled on a SC fixture that lives in the examples library.
 
 ## Public surface
 
-| Endpoint     | Kind     | Args         | Returns | Description                                |
-| ------------ | -------- | ------------ | ------- | ------------------------------------------ |
-| `init`       | constructor | none      | -       | Sets the counter to 0.                      |
-| `increment`  | endpoint | none         | -       | Adds 1.                                     |
-| `add`        | endpoint | `value: u64` | -       | Adds `value`.                               |
-| `get_value`  | view     | none         | `u64`   | Returns the current counter (read-only).    |
-| `counter_changed` | event | `new_value: u64` (indexed) | - | Emitted on every state change.   |
+| Endpoint          | Kind        | Args                       | Returns | Description                              |
+| ----------------- | ----------- | -------------------------- | ------- | ---------------------------------------- |
+| `init`            | constructor | none                       | -       | Sets the counter to 0.                   |
+| `increment`       | endpoint    | none                       | -       | Adds 1.                                  |
+| `add`             | endpoint    | `value: u64`               | -       | Adds `value`.                            |
+| `get_value`       | view        | none                       | `u64`   | Returns the current counter (read-only). |
+| `counter_changed` | event       | `new_value: u64` (indexed) | -       | Emitted on every state change.           |
 
 ## Files
 
-| Path                  | Description                                           |
-| --------------------- | ----------------------------------------------------- |
-| `Cargo.toml`          | Minimal manifest — `crate-type = ["cdylib"]`, depends on `klever-sc 0.45.0`. |
-| `src/lib.rs`          | The contract source itself, heavily commented for pedagogy. |
-| `scripts/build.sh`    | One-shot build script — produces `output/counter.wasm` + `output/counter.abi.json`. |
-| `output/`             | Build outputs. **Not committed** until you run `./scripts/build.sh`. |
+| Path               | Description                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `Cargo.toml`       | Minimal manifest — `crate-type = ["cdylib"]`, depends on `klever-sc 0.45.0`.        |
+| `src/lib.rs`       | The contract source itself, heavily commented for pedagogy.                         |
+| `scripts/build.sh` | One-shot build script — produces `output/counter.wasm` + `output/counter.abi.json`. |
+| `output/`          | Build outputs. **Not committed** until you run `./scripts/build.sh`.                |
 
 ## Building
 
