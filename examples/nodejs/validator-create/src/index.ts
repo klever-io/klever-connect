@@ -68,9 +68,7 @@ if (!PRIVATE_KEY) {
 }
 if (!BLS_PUBLIC_KEY) {
   console.error('Error: BLS_PUBLIC_KEY environment variable is required.')
-  console.error(
-    'Generate it with the Klever node CLI BEFORE running this example. The chain will',
-  )
+  console.error('Generate it with the Klever node CLI BEFORE running this example. The chain will')
   console.error('reject any BLS key that has not been registered through the proper channel.')
   process.exit(1)
 }
@@ -102,13 +100,17 @@ async function main(): Promise<void> {
     rewardAddress: REWARD_ADDRESS && REWARD_ADDRESS.length > 0 ? REWARD_ADDRESS : wallet.address,
     canDelegate: CAN_DELEGATE,
     commission,
-    ...(MAX_DELEGATION_AMOUNT
-      ? { maxDelegationAmount: parseKLV(MAX_DELEGATION_AMOUNT) }
-      : {}),
+    ...(MAX_DELEGATION_AMOUNT ? { maxDelegationAmount: parseKLV(MAX_DELEGATION_AMOUNT) } : {}),
     ...(VALIDATOR_NAME ? { name: VALIDATOR_NAME } : {}),
   }
   console.log('CreateValidator request prepared:')
-  console.log(JSON.stringify({ ...request, blsPublicKey: maskBls(request.blsPublicKey) }, null, 2))
+  console.log(
+    JSON.stringify(
+      { ...request, blsPublicKey: maskBls(request.blsPublicKey) },
+      (_k, v) => (typeof v === 'bigint' ? v.toString() : v),
+      2,
+    ),
+  )
 
   // -------------------------------------------------------------------------
   // Step 3 — build the transaction via TransactionBuilder so the example can
