@@ -35,9 +35,16 @@ describe('balance-alert-watcher example', () => {
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never)
     vi.resetModules()
     await import('./index.js')
-    await new Promise((r) => setTimeout(r, 200))
-    expect(lines.some((l) => l.includes('[init]'))).toBe(true)
-    expect(lines.some((l) => l.includes('[alert]') && l.includes('INCOMING'))).toBe(true)
+    // The watcher polls every 20ms × MAX_POLLS=3 ≈ 60ms wall-clock. Under
+    // parallel turbo execution the runner can be starved long enough that a
+    // bare 200ms wait isn't sufficient; poll for the expected lines instead.
+    await vi.waitFor(
+      () => {
+        expect(lines.some((l) => l.includes('[init]'))).toBe(true)
+        expect(lines.some((l) => l.includes('[alert]') && l.includes('INCOMING'))).toBe(true)
+      },
+      { timeout: 5000, interval: 50 },
+    )
     logSpy.mockRestore()
     exitSpy.mockRestore()
   })
