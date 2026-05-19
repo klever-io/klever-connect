@@ -52,27 +52,28 @@ npm run test:testnet  # live testnet checks (NOT run in CI)
 
 ## Common flows (isomorphic)
 
-| Flow                                                                     | What it shows                                            |
-| ------------------------------------------------------------------------ | -------------------------------------------------------- |
-| [`provider-network-setup`](./common/provider-network-setup/)             | Build a `KleverProvider` for any network                 |
-| [`address-validation`](./common/address-validation/)                     | Validate user input (`isKleverAddress`, bech32)          |
-| [`format-parse-klv`](./common/format-parse-klv/)                         | bigint <-> human-readable for KLV (6 decimals)           |
-| [`format-parse-kda`](./common/format-parse-kda/)                         | Same for arbitrary KDA tokens                            |
-| [`encoding-utilities`](./common/encoding-utilities/)                     | Hex, base58, base64, bech32, BLAKE2b                     |
-| [`key-pair-generate-and-import`](./common/key-pair-generate-and-import/) | Ed25519 key generation and import                        |
-| [`hd-wallet-from-mnemonic`](./common/hd-wallet-from-mnemonic/)           | BIP39 mnemonic -> derived accounts                       |
-| [`sign-and-verify-message`](./common/sign-and-verify-message/)           | Sign arbitrary text and verify with public key           |
-| [`balance-read`](./common/balance-read/)                                 | Read KLV + KDA balance for any address                   |
-| [`account-info`](./common/account-info/)                                 | Fetch full account: nonce, assets, frozen amounts        |
-| [`tx-fetch-by-hash`](./common/tx-fetch-by-hash/)                         | Look up a tx by hash, render fields                      |
-| [`block-fetch`](./common/block-fetch/)                                   | Fetch a block by number / `'latest'`                     |
-| [`tx-build-modes`](./common/tx-build-modes/)                             | Three build modes: `build`, `buildProto`, `buildRequest` |
-| [`tx-serialize-deserialize`](./common/tx-serialize-deserialize/)         | `Transaction.toHex()` / `Transaction.fromHex()`          |
-| [`bucket-list-and-status`](./common/bucket-list-and-status/)             | Inspect frozen / delegated buckets (read-only)           |
-| [`tx-receipt-parse`](./common/tx-receipt-parse/)                         | Decode receipts (Freeze -> bucketId, etc.)               |
-| [`sc-query-readonly`](./common/sc-query-readonly/)                       | Read-only smart-contract endpoint                        |
-| [`sc-events-parse`](./common/sc-events-parse/)                           | Parse `ContractEvent`s from a tx receipt's logs          |
-| [`sc-abi-load-and-validate`](./common/sc-abi-load-and-validate/)         | Load ABI JSON, validate, list endpoints                  |
+> Phase 1 scaffolds the three category folders and shared helpers only. The
+> per-flow folders below land in phase 2.
+
+- `provider-network-setup` — Build a `KleverProvider` for any network
+- `address-validation` — Validate user input (`isKleverAddress`, bech32)
+- `format-parse-klv` — bigint <-> human-readable for KLV (6 decimals)
+- `format-parse-kda` — Same for arbitrary KDA tokens
+- `encoding-utilities` — Hex, base58, base64, bech32, BLAKE2b
+- `key-pair-generate-and-import` — Ed25519 key generation and import
+- `hd-wallet-from-mnemonic` — BIP39 mnemonic -> derived accounts
+- `sign-and-verify-message` — Sign arbitrary text and verify with public key
+- `balance-read` — Read KLV + KDA balance for any address
+- `account-info` — Fetch full account: nonce, assets, frozen amounts
+- `tx-fetch-by-hash` — Look up a tx by hash, render fields
+- `block-fetch` — Fetch a block by number / `'latest'`
+- `tx-build-modes` — Three build modes: `build`, `buildProto`, `buildRequest`
+- `tx-serialize-deserialize` — `Transaction.toHex()` / `Transaction.fromHex()`
+- `bucket-list-and-status` — Inspect frozen / delegated buckets (read-only)
+- `tx-receipt-parse` — Decode receipts (Freeze -> bucketId, etc.)
+- `sc-query-readonly` — Read-only smart-contract endpoint
+- `sc-events-parse` — Parse `ContractEvent`s from a tx receipt's logs
+- `sc-abi-load-and-validate` — Load ABI JSON, validate, list endpoints
 
 ## Node.js flows
 
@@ -110,9 +111,9 @@ artifacts (`counter.wasm` + `counter.abi.json`) are produced by running
 ## Legacy
 
 The previous `/examples` content lives untouched under [`_legacy/`](./_legacy/) so
-the diff is auditable. Per the audit in `FLOW-INVENTORY.md`, 20 of 24 prior
-examples were migrated-with-rewrite (heavy comments, tests, expected output) and
-4 were dropped (3 JS duplicates + 1 kitchen-sink TS file).
+the diff is auditable. Most prior examples are migrated-with-rewrite into the
+new layout (heavy comments, tests, expected output); a small number of pure
+duplicates / kitchen-sink files were dropped.
 
 ## Networks reference
 
@@ -125,7 +126,7 @@ examples were migrated-with-rewrite (heavy comments, tests, expected output) and
 
 ## Contributing a new example
 
-1. Pick a flow from `FLOW-INVENTORY.md` not already in the library.
+1. Pick a flow not already in the library.
 2. Choose a category (`common/`, `nodejs/`, `reactjs/`).
 3. Scaffold a folder mirroring the structure of an existing one in that category.
 4. Add `package.json`, `tsconfig.json`, `.env.example`, `src/index.ts`,

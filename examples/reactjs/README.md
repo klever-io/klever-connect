@@ -4,9 +4,8 @@ Front-end examples that demonstrate every public hook and component exported by
 [`@klever/connect-react`](../../packages/connect-react/) — plus a few full-app
 patterns (form validation, toasts, multi-tx monitor).
 
-> This README is a **placeholder**. The per-example folders and the full table
-> are populated by the dedicated `reactjs/` agent in this multi-agent build.
-> See `FLOW-INVENTORY.md §4` for the master list.
+> Phase 1 ships this README and conventions only. The per-example folders below
+> arrive in phases 7-9.
 
 ## Conventions
 

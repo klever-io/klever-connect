@@ -11,27 +11,28 @@ If a flow needs `fs` or the Klever Web Extension, it lives under
 
 ## What's here
 
-| Example                                                           | Flow                                           |
-| ----------------------------------------------------------------- | ---------------------------------------------- |
-| [`provider-network-setup`](./provider-network-setup/)             | 1 — provider for testnet/mainnet/devnet/custom |
-| [`address-validation`](./address-validation/)                     | 2 — validate user-input addresses              |
-| [`format-parse-klv`](./format-parse-klv/)                         | 3 — KLV unit conversion (6 decimals)           |
-| [`format-parse-kda`](./format-parse-kda/)                         | 4 — arbitrary-precision KDA conversion         |
-| [`encoding-utilities`](./encoding-utilities/)                     | 5 — hex / base58 / base64 / bech32 / blake2b   |
-| [`key-pair-generate-and-import`](./key-pair-generate-and-import/) | 6 — Ed25519 generate, import, derive pubkey    |
-| [`hd-wallet-from-mnemonic`](./hd-wallet-from-mnemonic/)           | 7 — BIP39 mnemonic, multi-account derivation   |
-| [`sign-and-verify-message`](./sign-and-verify-message/)           | 8 — sign + verify with tamper test             |
-| [`balance-read`](./balance-read/)                                 | 11 — KLV / KDA balance read                    |
-| [`account-info`](./account-info/)                                 | 12 — full account info (nonce, assets)         |
-| [`tx-fetch-by-hash`](./tx-fetch-by-hash/)                         | 13 — look up a transaction by hash             |
-| [`block-fetch`](./block-fetch/)                                   | 14 — fetch a block, walk its txs               |
-| [`tx-build-modes`](./tx-build-modes/)                             | 15 — three transaction-build modes             |
-| [`tx-serialize-deserialize`](./tx-serialize-deserialize/)         | 16 — `Transaction.toHex` / `fromHex`           |
-| [`bucket-list-and-status`](./bucket-list-and-status/)             | 26 — read frozen / delegated buckets           |
-| [`tx-receipt-parse`](./tx-receipt-parse/)                         | 56 — decode tagged receipts                    |
-| [`sc-query-readonly`](./sc-query-readonly/)                       | 57 — read-only smart-contract call             |
-| [`sc-events-parse`](./sc-events-parse/)                           | 61 — parse contract events from logs           |
-| [`sc-abi-load-and-validate`](./sc-abi-load-and-validate/)         | 62 — load + validate ABI JSON                  |
+> Phase 1 scaffolds this folder and the shared conventions only. The
+> per-flow subfolders below land in phase 2.
+
+- `provider-network-setup` — 1 — provider for testnet/mainnet/devnet/custom
+- `address-validation` — 2 — validate user-input addresses
+- `format-parse-klv` — 3 — KLV unit conversion (6 decimals)
+- `format-parse-kda` — 4 — arbitrary-precision KDA conversion
+- `encoding-utilities` — 5 — hex / base58 / base64 / bech32 / blake2b
+- `key-pair-generate-and-import` — 6 — Ed25519 generate, import, derive pubkey
+- `hd-wallet-from-mnemonic` — 7 — BIP39 mnemonic, multi-account derivation
+- `sign-and-verify-message` — 8 — sign + verify with tamper test
+- `balance-read` — 11 — KLV / KDA balance read
+- `account-info` — 12 — full account info (nonce, assets)
+- `tx-fetch-by-hash` — 13 — look up a transaction by hash
+- `block-fetch` — 14 — fetch a block, walk its txs
+- `tx-build-modes` — 15 — three transaction-build modes
+- `tx-serialize-deserialize` — 16 — `Transaction.toHex` / `fromHex`
+- `bucket-list-and-status` — 26 — read frozen / delegated buckets
+- `tx-receipt-parse` — 56 — decode tagged receipts
+- `sc-query-readonly` — 57 — read-only smart-contract call
+- `sc-events-parse` — 61 — parse contract events from logs
+- `sc-abi-load-and-validate` — 62 — load + validate ABI JSON
 
 ## Conventions
 

@@ -111,5 +111,5 @@ After building, your `output/counter.abi.json` should resemble:
 }
 ```
 
-If the field shapes drift (klever-sc rev change), update `_legacy/_NOTES.md` and
-adjust the example test assertions accordingly.
+If the field shapes drift (klever-sc rev change), adjust the example test
+assertions accordingly.

@@ -4,9 +4,8 @@ Node.js examples covering CLIs, REST APIs, batch jobs, monitoring services, KDA
 admin flows, smart-contract deployment, governance, marketplace and ITO admin —
 plus the Node side of every signing flow that also has a React variant.
 
-> This README is a **placeholder**. The per-example folders and the full table
-> are populated by the dedicated `nodejs/` agent in this multi-agent build.
-> See `FLOW-INVENTORY.md §4` for the master list.
+> Phase 1 ships this README and conventions only. The per-example folders below
+> arrive in phases 3-6.
 
 ## Conventions
 
