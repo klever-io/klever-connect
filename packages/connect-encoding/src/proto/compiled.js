@@ -37,7 +37,7 @@ export const proto = $root.proto = (() => {
         function TXContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -112,9 +112,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        TXContract.decode = function decode(reader, length, error) {
+        TXContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.TXContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -126,11 +130,11 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 case 2: {
-                        message.Parameter = $root.google.protobuf.Any.decode(reader, reader.uint32());
+                        message.Parameter = $root.google.protobuf.Any.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -161,9 +165,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        TXContract.verify = function verify(message) {
+        TXContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -197,7 +205,7 @@ export const proto = $root.proto = (() => {
                     break;
                 }
             if (message.Parameter != null && message.hasOwnProperty("Parameter")) {
-                let error = $root.google.protobuf.Any.verify(message.Parameter);
+                let error = $root.google.protobuf.Any.verify(message.Parameter, long + 1);
                 if (error)
                     return "Parameter." + error;
             }
@@ -212,9 +220,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.TXContract} TXContract
          */
-        TXContract.fromObject = function fromObject(object) {
+        TXContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.TXContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.TXContract();
             switch (object.Type) {
             default:
@@ -331,7 +343,7 @@ export const proto = $root.proto = (() => {
             if (object.Parameter != null) {
                 if (typeof object.Parameter !== "object")
                     throw TypeError(".proto.TXContract.Parameter: object expected");
-                message.Parameter = $root.google.protobuf.Any.fromObject(object.Parameter);
+                message.Parameter = $root.google.protobuf.Any.fromObject(object.Parameter, long + 1);
             }
             return message;
         };
@@ -480,7 +492,7 @@ export const proto = $root.proto = (() => {
             this.Receipts = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -617,9 +629,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        Transaction.decode = function decode(reader, length, error) {
+        Transaction.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -627,7 +643,7 @@ export const proto = $root.proto = (() => {
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.RawData = $root.proto.Transaction.Raw.decode(reader, reader.uint32());
+                        message.RawData = $root.proto.Transaction.Raw.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 case 2: {
@@ -647,7 +663,7 @@ export const proto = $root.proto = (() => {
                 case 5: {
                         if (!(message.Receipts && message.Receipts.length))
                             message.Receipts = [];
-                        message.Receipts.push($root.proto.Transaction.Receipt.decode(reader, reader.uint32()));
+                        message.Receipts.push($root.proto.Transaction.Receipt.decode(reader, reader.uint32(), undefined, long + 1));
                         break;
                     }
                 case 6: {
@@ -663,7 +679,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -694,11 +710,15 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        Transaction.verify = function verify(message) {
+        Transaction.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.RawData != null && message.hasOwnProperty("RawData")) {
-                let error = $root.proto.Transaction.Raw.verify(message.RawData);
+                let error = $root.proto.Transaction.Raw.verify(message.RawData, long + 1);
                 if (error)
                     return "RawData." + error;
             }
@@ -794,7 +814,7 @@ export const proto = $root.proto = (() => {
                 if (!Array.isArray(message.Receipts))
                     return "Receipts: array expected";
                 for (let i = 0; i < message.Receipts.length; ++i) {
-                    let error = $root.proto.Transaction.Receipt.verify(message.Receipts[i]);
+                    let error = $root.proto.Transaction.Receipt.verify(message.Receipts[i], long + 1);
                     if (error)
                         return "Receipts." + error;
                 }
@@ -819,14 +839,18 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.Transaction} Transaction
          */
-        Transaction.fromObject = function fromObject(object) {
+        Transaction.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.Transaction)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.Transaction();
             if (object.RawData != null) {
                 if (typeof object.RawData !== "object")
                     throw TypeError(".proto.Transaction.RawData: object expected");
-                message.RawData = $root.proto.Transaction.Raw.fromObject(object.RawData);
+                message.RawData = $root.proto.Transaction.Raw.fromObject(object.RawData, long + 1);
             }
             if (object.Signature) {
                 if (!Array.isArray(object.Signature))
@@ -1137,7 +1161,7 @@ export const proto = $root.proto = (() => {
                 for (let i = 0; i < object.Receipts.length; ++i) {
                     if (typeof object.Receipts[i] !== "object")
                         throw TypeError(".proto.Transaction.Receipts: object expected");
-                    message.Receipts[i] = $root.proto.Transaction.Receipt.fromObject(object.Receipts[i]);
+                    message.Receipts[i] = $root.proto.Transaction.Receipt.fromObject(object.Receipts[i], long + 1);
                 }
             }
             if (object.Block != null)
@@ -1446,7 +1470,7 @@ export const proto = $root.proto = (() => {
             function KDAFee(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -1521,9 +1545,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            KDAFee.decode = function decode(reader, length, error) {
+            KDAFee.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction.KDAFee();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -1539,7 +1567,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -1570,9 +1598,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            KDAFee.verify = function verify(message) {
+            KDAFee.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.KDA != null && message.hasOwnProperty("KDA"))
                     if (!(message.KDA && typeof message.KDA.length === "number" || $util.isString(message.KDA)))
                         return "KDA: buffer expected";
@@ -1590,9 +1622,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.Transaction.KDAFee} KDAFee
              */
-            KDAFee.fromObject = function fromObject(object) {
+            KDAFee.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.KDAFee)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.Transaction.KDAFee();
                 if (object.KDA != null)
                     if (typeof object.KDA === "string")
@@ -1708,7 +1744,7 @@ export const proto = $root.proto = (() => {
                 this.Data = [];
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -1865,9 +1901,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Raw.decode = function decode(reader, length, error) {
+            Raw.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction.Raw();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -1885,7 +1925,7 @@ export const proto = $root.proto = (() => {
                     case 6: {
                             if (!(message.Contract && message.Contract.length))
                                 message.Contract = [];
-                            message.Contract.push($root.proto.TXContract.decode(reader, reader.uint32()));
+                            message.Contract.push($root.proto.TXContract.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     case 7: {
@@ -1915,11 +1955,11 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     case 17: {
-                            message.KDAFee = $root.proto.Transaction.KDAFee.decode(reader, reader.uint32());
+                            message.KDAFee = $root.proto.Transaction.KDAFee.decode(reader, reader.uint32(), undefined, long + 1);
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -1950,9 +1990,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Raw.verify = function verify(message) {
+            Raw.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.Nonce != null && message.hasOwnProperty("Nonce"))
                     if (!$util.isInteger(message.Nonce) && !(message.Nonce && $util.isInteger(message.Nonce.low) && $util.isInteger(message.Nonce.high)))
                         return "Nonce: integer|Long expected";
@@ -1963,7 +2007,7 @@ export const proto = $root.proto = (() => {
                     if (!Array.isArray(message.Contract))
                         return "Contract: array expected";
                     for (let i = 0; i < message.Contract.length; ++i) {
-                        let error = $root.proto.TXContract.verify(message.Contract[i]);
+                        let error = $root.proto.TXContract.verify(message.Contract[i], long + 1);
                         if (error)
                             return "Contract." + error;
                     }
@@ -1991,7 +2035,7 @@ export const proto = $root.proto = (() => {
                     if (!(message.ChainID && typeof message.ChainID.length === "number" || $util.isString(message.ChainID)))
                         return "ChainID: buffer expected";
                 if (message.KDAFee != null && message.hasOwnProperty("KDAFee")) {
-                    let error = $root.proto.Transaction.KDAFee.verify(message.KDAFee);
+                    let error = $root.proto.Transaction.KDAFee.verify(message.KDAFee, long + 1);
                     if (error)
                         return "KDAFee." + error;
                 }
@@ -2006,9 +2050,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.Transaction.Raw} Raw
              */
-            Raw.fromObject = function fromObject(object) {
+            Raw.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.Raw)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.Transaction.Raw();
                 if (object.Nonce != null)
                     if ($util.Long)
@@ -2031,7 +2079,7 @@ export const proto = $root.proto = (() => {
                     for (let i = 0; i < object.Contract.length; ++i) {
                         if (typeof object.Contract[i] !== "object")
                             throw TypeError(".proto.Transaction.Raw.Contract: object expected");
-                        message.Contract[i] = $root.proto.TXContract.fromObject(object.Contract[i]);
+                        message.Contract[i] = $root.proto.TXContract.fromObject(object.Contract[i], long + 1);
                     }
                 }
                 if (object.PermissionID != null)
@@ -2074,7 +2122,7 @@ export const proto = $root.proto = (() => {
                 if (object.KDAFee != null) {
                     if (typeof object.KDAFee !== "object")
                         throw TypeError(".proto.Transaction.Raw.KDAFee: object expected");
-                    message.KDAFee = $root.proto.Transaction.KDAFee.fromObject(object.KDAFee);
+                    message.KDAFee = $root.proto.Transaction.KDAFee.fromObject(object.KDAFee, long + 1);
                 }
                 return message;
             };
@@ -2218,7 +2266,7 @@ export const proto = $root.proto = (() => {
                 this.Data = [];
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -2284,9 +2332,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Receipt.decode = function decode(reader, length, error) {
+            Receipt.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction.Receipt();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -2300,7 +2352,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -2331,9 +2383,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Receipt.verify = function verify(message) {
+            Receipt.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.Data != null && message.hasOwnProperty("Data")) {
                     if (!Array.isArray(message.Data))
                         return "Data: array expected";
@@ -2352,9 +2408,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.Transaction.Receipt} Receipt
              */
-            Receipt.fromObject = function fromObject(object) {
+            Receipt.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.Receipt)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.Transaction.Receipt();
                 if (object.Data) {
                     if (!Array.isArray(object.Data))
@@ -2446,7 +2506,7 @@ export const proto = $root.proto = (() => {
         function TransferContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -2531,9 +2591,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        TransferContract.decode = function decode(reader, length, error) {
+        TransferContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.TransferContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -2553,7 +2617,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -2584,9 +2648,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        TransferContract.verify = function verify(message) {
+        TransferContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
                 if (!(message.ToAddress && typeof message.ToAddress.length === "number" || $util.isString(message.ToAddress)))
                     return "ToAddress: buffer expected";
@@ -2607,9 +2675,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.TransferContract} TransferContract
          */
-        TransferContract.fromObject = function fromObject(object) {
+        TransferContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.TransferContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.TransferContract();
             if (object.ToAddress != null)
                 if (typeof object.ToAddress === "string")
@@ -2729,7 +2801,7 @@ export const proto = $root.proto = (() => {
         function FreezeContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -2804,9 +2876,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        FreezeContract.decode = function decode(reader, length, error) {
+        FreezeContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.FreezeContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -2822,7 +2898,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -2853,9 +2929,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        FreezeContract.verify = function verify(message) {
+        FreezeContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Amount != null && message.hasOwnProperty("Amount"))
                 if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                     return "Amount: integer|Long expected";
@@ -2873,9 +2953,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.FreezeContract} FreezeContract
          */
-        FreezeContract.fromObject = function fromObject(object) {
+        FreezeContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.FreezeContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.FreezeContract();
             if (object.Amount != null)
                 if ($util.Long)
@@ -2981,7 +3065,7 @@ export const proto = $root.proto = (() => {
         function UnfreezeContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3056,9 +3140,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        UnfreezeContract.decode = function decode(reader, length, error) {
+        UnfreezeContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.UnfreezeContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3074,7 +3162,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3105,9 +3193,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        UnfreezeContract.verify = function verify(message) {
+        UnfreezeContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.AssetID != null && message.hasOwnProperty("AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
@@ -3125,9 +3217,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.UnfreezeContract} UnfreezeContract
          */
-        UnfreezeContract.fromObject = function fromObject(object) {
+        UnfreezeContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.UnfreezeContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.UnfreezeContract();
             if (object.AssetID != null)
                 if (typeof object.AssetID === "string")
@@ -3228,7 +3324,7 @@ export const proto = $root.proto = (() => {
         function DelegateContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3303,9 +3399,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        DelegateContract.decode = function decode(reader, length, error) {
+        DelegateContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.DelegateContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3321,7 +3421,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3352,9 +3452,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        DelegateContract.verify = function verify(message) {
+        DelegateContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
                 if (!(message.ToAddress && typeof message.ToAddress.length === "number" || $util.isString(message.ToAddress)))
                     return "ToAddress: buffer expected";
@@ -3372,9 +3476,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.DelegateContract} DelegateContract
          */
-        DelegateContract.fromObject = function fromObject(object) {
+        DelegateContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.DelegateContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.DelegateContract();
             if (object.ToAddress != null)
                 if (typeof object.ToAddress === "string")
@@ -3474,7 +3582,7 @@ export const proto = $root.proto = (() => {
         function UndelegateContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3539,9 +3647,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        UndelegateContract.decode = function decode(reader, length, error) {
+        UndelegateContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.UndelegateContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3553,7 +3665,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3584,9 +3696,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        UndelegateContract.verify = function verify(message) {
+        UndelegateContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.BucketID != null && message.hasOwnProperty("BucketID"))
                 if (!(message.BucketID && typeof message.BucketID.length === "number" || $util.isString(message.BucketID)))
                     return "BucketID: buffer expected";
@@ -3601,9 +3717,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.UndelegateContract} UndelegateContract
          */
-        UndelegateContract.fromObject = function fromObject(object) {
+        UndelegateContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.UndelegateContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.UndelegateContract();
             if (object.BucketID != null)
                 if (typeof object.BucketID === "string")
@@ -3691,7 +3811,7 @@ export const proto = $root.proto = (() => {
         function WithdrawContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3786,9 +3906,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        WithdrawContract.decode = function decode(reader, length, error) {
+        WithdrawContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.WithdrawContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3812,7 +3936,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3843,9 +3967,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        WithdrawContract.verify = function verify(message) {
+        WithdrawContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -3877,9 +4005,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.WithdrawContract} WithdrawContract
          */
-        WithdrawContract.fromObject = function fromObject(object) {
+        WithdrawContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.WithdrawContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.WithdrawContract();
             switch (object.Type) {
             default:
@@ -4050,7 +4182,7 @@ export const proto = $root.proto = (() => {
         function ClaimContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -4125,9 +4257,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        ClaimContract.decode = function decode(reader, length, error) {
+        ClaimContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.ClaimContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -4143,7 +4279,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -4174,9 +4310,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        ClaimContract.verify = function verify(message) {
+        ClaimContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -4200,9 +4340,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.ClaimContract} ClaimContract
          */
-        ClaimContract.fromObject = function fromObject(object) {
+        ClaimContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.ClaimContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.ClaimContract();
             switch (object.Type) {
             default:
@@ -4329,7 +4473,7 @@ export const proto = $root.proto = (() => {
         function VoteContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -4414,9 +4558,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        VoteContract.decode = function decode(reader, length, error) {
+        VoteContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.VoteContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -4436,7 +4584,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -4467,9 +4615,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        VoteContract.verify = function verify(message) {
+        VoteContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.ProposalID != null && message.hasOwnProperty("ProposalID"))
                 if (!$util.isInteger(message.ProposalID) && !(message.ProposalID && $util.isInteger(message.ProposalID.low) && $util.isInteger(message.ProposalID.high)))
                     return "ProposalID: integer|Long expected";
@@ -4496,9 +4648,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.VoteContract} VoteContract
          */
-        VoteContract.fromObject = function fromObject(object) {
+        VoteContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.VoteContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.VoteContract();
             if (object.ProposalID != null)
                 if ($util.Long)
@@ -4658,7 +4814,7 @@ export const proto = $root.proto = (() => {
             this.URIs = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -4824,9 +4980,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        CreateAssetContract.decode = function decode(reader, length, error) {
+        CreateAssetContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -4872,15 +5032,15 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 case 10: {
-                        message.Properties = $root.proto.CreateAssetContract.AssetProperties.decode(reader, reader.uint32());
+                        message.Properties = $root.proto.CreateAssetContract.AssetProperties.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 case 11: {
-                        message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.decode(reader, reader.uint32());
+                        message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -4911,9 +5071,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        CreateAssetContract.verify = function verify(message) {
+        CreateAssetContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -4952,12 +5116,12 @@ export const proto = $root.proto = (() => {
                 if (!$util.isInteger(message.MaxSupply) && !(message.MaxSupply && $util.isInteger(message.MaxSupply.low) && $util.isInteger(message.MaxSupply.high)))
                     return "MaxSupply: integer|Long expected";
             if (message.Properties != null && message.hasOwnProperty("Properties")) {
-                let error = $root.proto.CreateAssetContract.AssetProperties.verify(message.Properties);
+                let error = $root.proto.CreateAssetContract.AssetProperties.verify(message.Properties, long + 1);
                 if (error)
                     return "Properties." + error;
             }
             if (message.Attributes != null && message.hasOwnProperty("Attributes")) {
-                let error = $root.proto.CreateAssetContract.AssetAttributes.verify(message.Attributes);
+                let error = $root.proto.CreateAssetContract.AssetAttributes.verify(message.Attributes, long + 1);
                 if (error)
                     return "Attributes." + error;
             }
@@ -4972,9 +5136,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.CreateAssetContract} CreateAssetContract
          */
-        CreateAssetContract.fromObject = function fromObject(object) {
+        CreateAssetContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.CreateAssetContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.CreateAssetContract();
             switch (object.Type) {
             default:
@@ -5037,12 +5205,12 @@ export const proto = $root.proto = (() => {
             if (object.Properties != null) {
                 if (typeof object.Properties !== "object")
                     throw TypeError(".proto.CreateAssetContract.Properties: object expected");
-                message.Properties = $root.proto.CreateAssetContract.AssetProperties.fromObject(object.Properties);
+                message.Properties = $root.proto.CreateAssetContract.AssetProperties.fromObject(object.Properties, long + 1);
             }
             if (object.Attributes != null) {
                 if (typeof object.Attributes !== "object")
                     throw TypeError(".proto.CreateAssetContract.Attributes: object expected");
-                message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.fromObject(object.Attributes);
+                message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.fromObject(object.Attributes, long + 1);
             }
             return message;
         };
@@ -5190,7 +5358,7 @@ export const proto = $root.proto = (() => {
             function AssetProperties(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -5315,9 +5483,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            AssetProperties.decode = function decode(reader, length, error) {
+            AssetProperties.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract.AssetProperties();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -5353,7 +5525,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -5384,9 +5556,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            AssetProperties.verify = function verify(message) {
+            AssetProperties.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.CanFreeze != null && message.hasOwnProperty("CanFreeze"))
                     if (typeof message.CanFreeze !== "boolean")
                         return "CanFreeze: boolean expected";
@@ -5419,9 +5595,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.CreateAssetContract.AssetProperties} AssetProperties
              */
-            AssetProperties.fromObject = function fromObject(object) {
+            AssetProperties.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.CreateAssetContract.AssetProperties)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.CreateAssetContract.AssetProperties();
                 if (object.CanFreeze != null)
                     message.CanFreeze = Boolean(object.CanFreeze);
@@ -5529,7 +5709,7 @@ export const proto = $root.proto = (() => {
             function AssetAttributes(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -5604,9 +5784,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            AssetAttributes.decode = function decode(reader, length, error) {
+            AssetAttributes.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract.AssetAttributes();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -5622,7 +5806,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -5653,9 +5837,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            AssetAttributes.verify = function verify(message) {
+            AssetAttributes.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.IsPaused != null && message.hasOwnProperty("IsPaused"))
                     if (typeof message.IsPaused !== "boolean")
                         return "IsPaused: boolean expected";
@@ -5673,9 +5861,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.CreateAssetContract.AssetAttributes} AssetAttributes
              */
-            AssetAttributes.fromObject = function fromObject(object) {
+            AssetAttributes.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.CreateAssetContract.AssetAttributes)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.CreateAssetContract.AssetAttributes();
                 if (object.IsPaused != null)
                     message.IsPaused = Boolean(object.IsPaused);
@@ -5765,7 +5957,7 @@ export const proto = $root.proto = (() => {
             this.CallValue = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -5871,9 +6063,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        SmartContract.decode = function decode(reader, length, error) {
+        SmartContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.SmartContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -5891,7 +6087,7 @@ export const proto = $root.proto = (() => {
                 case 3: {
                         if (!(message.CallValue && message.CallValue.length))
                             message.CallValue = [];
-                        message.CallValue.push($root.proto.SmartContract.CallValueData.decode(reader, reader.uint32()));
+                        message.CallValue.push($root.proto.SmartContract.CallValueData.decode(reader, reader.uint32(), undefined, long + 1));
                         break;
                     }
                 case 4: {
@@ -5903,7 +6099,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -5934,9 +6130,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        SmartContract.verify = function verify(message) {
+        SmartContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -5953,7 +6153,7 @@ export const proto = $root.proto = (() => {
                 if (!Array.isArray(message.CallValue))
                     return "CallValue: array expected";
                 for (let i = 0; i < message.CallValue.length; ++i) {
-                    let error = $root.proto.SmartContract.CallValueData.verify(message.CallValue[i]);
+                    let error = $root.proto.SmartContract.CallValueData.verify(message.CallValue[i], long + 1);
                     if (error)
                         return "CallValue." + error;
                 }
@@ -5975,9 +6175,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.SmartContract} SmartContract
          */
-        SmartContract.fromObject = function fromObject(object) {
+        SmartContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.SmartContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.SmartContract();
             switch (object.Type) {
             default:
@@ -6011,7 +6215,7 @@ export const proto = $root.proto = (() => {
                 for (let i = 0; i < object.CallValue.length; ++i) {
                     if (typeof object.CallValue[i] !== "object")
                         throw TypeError(".proto.SmartContract.CallValue: object expected");
-                    message.CallValue[i] = $root.proto.SmartContract.CallValueData.fromObject(object.CallValue[i]);
+                    message.CallValue[i] = $root.proto.SmartContract.CallValueData.fromObject(object.CallValue[i], long + 1);
                 }
             }
             if (object.Input != null)
@@ -6136,7 +6340,7 @@ export const proto = $root.proto = (() => {
             function CallValueData(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -6211,9 +6415,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            CallValueData.decode = function decode(reader, length, error) {
+            CallValueData.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.SmartContract.CallValueData();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -6229,7 +6437,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -6260,9 +6468,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            CallValueData.verify = function verify(message) {
+            CallValueData.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.AssetID != null && message.hasOwnProperty("AssetID"))
                     if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                         return "AssetID: buffer expected";
@@ -6280,9 +6492,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.SmartContract.CallValueData} CallValueData
              */
-            CallValueData.fromObject = function fromObject(object) {
+            CallValueData.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.SmartContract.CallValueData)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.SmartContract.CallValueData();
                 if (object.AssetID != null)
                     if (typeof object.AssetID === "string")
@@ -6412,7 +6628,7 @@ export const google = $root.google = (() => {
             function Any(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -6487,9 +6703,13 @@ export const google = $root.google = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Any.decode = function decode(reader, length, error) {
+            Any.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.google.protobuf.Any();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -6505,7 +6725,7 @@ export const google = $root.google = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -6536,9 +6756,13 @@ export const google = $root.google = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Any.verify = function verify(message) {
+            Any.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.type_url != null && message.hasOwnProperty("type_url"))
                     if (!$util.isString(message.type_url))
                         return "type_url: string expected";
@@ -6556,9 +6780,13 @@ export const google = $root.google = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {google.protobuf.Any} Any
              */
-            Any.fromObject = function fromObject(object) {
+            Any.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.google.protobuf.Any)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.google.protobuf.Any();
                 if (object.type_url != null)
                     message.type_url = String(object.type_url);
