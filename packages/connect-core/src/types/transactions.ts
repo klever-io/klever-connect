@@ -26,157 +26,157 @@ export const TXType = {
    * Transfer assets between accounts
    * Used for sending KLV, KFI, or any other fungible tokens
    */
-  Transfer: CT.TransferContractType as number,
+  Transfer: Number(CT.TransferContractType),
 
   /**
    * Create a new asset (token) on the blockchain
    * Allows creation of fungible tokens, NFTs, and other asset types
    */
-  CreateAsset: CT.CreateAssetContractType as number,
+  CreateAsset: Number(CT.CreateAssetContractType),
 
   /**
    * Create a new validator node
    * Requires minimum self-delegation and validator configuration
    */
-  CreateValidator: CT.CreateValidatorContractType as number,
+  CreateValidator: Number(CT.CreateValidatorContractType),
 
   /**
    * Update validator configuration
    * Modify validator settings like commission rate, rewards destination, etc.
    */
-  ValidatorConfig: CT.ValidatorConfigContractType as number,
+  ValidatorConfig: Number(CT.ValidatorConfigContractType),
 
   /**
    * Freeze assets for staking or other purposes
    * Locks tokens to participate in bucket-based staking
    */
-  Freeze: CT.FreezeContractType as number,
+  Freeze: Number(CT.FreezeContractType),
 
   /**
    * Unfreeze previously frozen assets
    * Initiates the unbonding period for frozen tokens
    */
-  Unfreeze: CT.UnfreezeContractType as number,
+  Unfreeze: Number(CT.UnfreezeContractType),
 
   /**
    * Delegate tokens to a validator
    * Stake tokens with a validator to earn rewards
    */
-  Delegate: CT.DelegateContractType as number,
+  Delegate: Number(CT.DelegateContractType),
 
   /**
    * Undelegate tokens from a validator
    * Remove delegation and start the unbonding period (21 days)
    */
-  Undelegate: CT.UndelegateContractType as number,
+  Undelegate: Number(CT.UndelegateContractType),
 
   /**
    * Withdraw unbonded tokens
    * Claim tokens after the unbonding period has completed
    */
-  Withdraw: CT.WithdrawContractType as number,
+  Withdraw: Number(CT.WithdrawContractType),
 
   /**
    * Claim staking rewards
    * Collect accumulated rewards from delegation or validation
    */
-  Claim: CT.ClaimContractType as number,
+  Claim: Number(CT.ClaimContractType),
 
   /**
    * Unjail a validator
    * Restore a jailed validator to active status
    */
-  Unjail: CT.UnjailContractType as number,
+  Unjail: Number(CT.UnjailContractType),
 
   /**
    * Trigger asset-related operations
    * Perform actions like minting, burning, pausing, or wiping assets
    */
-  AssetTrigger: CT.AssetTriggerContractType as number,
+  AssetTrigger: Number(CT.AssetTriggerContractType),
 
   /**
    * Set or update account name
    * Assign a human-readable name to an account address
    */
-  SetAccountName: CT.SetAccountNameContractType as number,
+  SetAccountName: Number(CT.SetAccountNameContractType),
 
   /**
    * Create a governance proposal
    * Submit a proposal for community voting
    */
-  Proposal: CT.ProposalContractType as number,
+  Proposal: Number(CT.ProposalContractType),
 
   /**
    * Vote on a governance proposal
    * Cast a vote in favor or against a proposal
    */
-  Vote: CT.VoteContractType as number,
+  Vote: Number(CT.VoteContractType),
 
   /**
    * Configure an Initial Token Offering (ITO)
    * Set up parameters for a token sale
    */
-  ConfigITO: CT.ConfigITOContractType as number,
+  ConfigITO: Number(CT.ConfigITOContractType),
 
   /**
    * Set ITO pricing information
    * Define price tiers and sale conditions for an ITO
    */
-  SetITOPrices: CT.SetITOPricesContractType as number,
+  SetITOPrices: Number(CT.SetITOPricesContractType),
 
   /**
    * Buy assets from an ITO or marketplace
    * Purchase tokens or NFTs from available offers
    */
-  Buy: CT.BuyContractType as number,
+  Buy: Number(CT.BuyContractType),
 
   /**
    * Sell assets on marketplace
    * Create a sell order for assets
    */
-  Sell: CT.SellContractType as number,
+  Sell: Number(CT.SellContractType),
 
   /**
    * Cancel a marketplace order
    * Remove an active buy or sell order
    */
-  CancelMarketOrder: CT.CancelMarketOrderContractType as number,
+  CancelMarketOrder: Number(CT.CancelMarketOrderContractType),
 
   /**
    * Create a new marketplace
    * Initialize a marketplace for trading assets
    */
-  CreateMarketplace: CT.CreateMarketplaceContractType as number,
+  CreateMarketplace: Number(CT.CreateMarketplaceContractType),
 
   /**
    * Configure marketplace settings
    * Update marketplace parameters and rules
    */
-  ConfigMarketplace: CT.ConfigMarketplaceContractType as number,
+  ConfigMarketplace: Number(CT.ConfigMarketplaceContractType),
 
   /**
    * Update account permissions
    * Modify account access control and multi-signature settings
    */
-  UpdateAccountPermission: CT.UpdateAccountPermissionContractType as number,
+  UpdateAccountPermission: Number(CT.UpdateAccountPermissionContractType),
 
   /**
    * Deposit assets
    * Deposit tokens into a contract or liquidity pool
    */
-  Deposit: CT.DepositContractType as number,
+  Deposit: Number(CT.DepositContractType),
 
   /**
    * Trigger ITO-related operations
    * Perform actions like starting, pausing, or finalizing an ITO
    */
-  ITOTrigger: CT.ITOTriggerContractType as number,
+  ITOTrigger: Number(CT.ITOTriggerContractType),
 
   /**
    * Smart contract interaction
    * Deploy or invoke smart contract functions
    */
-  SmartContract: CT.SmartContractType as number,
+  SmartContract: Number(CT.SmartContractType),
 } as const
 
 /**
