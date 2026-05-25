@@ -1,4 +1,3 @@
-import type { TransactionHash } from '@klever/connect-core'
 import type { IProvider, ITransactionResponse } from '@klever/connect-provider'
 import { TransactionStatus } from '@klever/connect-provider'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -388,7 +387,7 @@ export function useTransactionMonitor(
 
           try {
             // Check transaction status
-            const tx = await provider.getTransaction(hash as TransactionHash)
+            const tx = await provider.getTransaction(hash)
 
             if (tx && tx.status !== TransactionStatus.Pending) {
               // Transaction is confirmed or failed
@@ -400,7 +399,7 @@ export function useTransactionMonitor(
               // Fetch full details if requested
               if (options.fetchResults && status === 'confirmed') {
                 try {
-                  const fullTx = await provider.getTransaction(hash as TransactionHash)
+                  const fullTx = await provider.getTransaction(hash)
                   transaction = fullTx ? fullTx : tx
                 } catch (error) {
                   console.warn('Failed to fetch transaction results:', error)

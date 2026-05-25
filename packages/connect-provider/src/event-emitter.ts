@@ -150,7 +150,7 @@ export class TypedEventEmitter<TEventMap extends Record<string, any>> {
   private _getEntries<K extends keyof TEventMap>(
     event: K,
   ): Array<ListenerEntry<TEventMap[K]>> | undefined {
-    return this._listeners.get(event) as Array<ListenerEntry<TEventMap[K]>> | undefined
+    return this._listeners.get(event)
   }
 
   private _addListener<K extends keyof TEventMap>(

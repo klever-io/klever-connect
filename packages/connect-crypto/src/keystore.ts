@@ -138,7 +138,7 @@ async function aes256GcmDecrypt(
       tagLength: 128, // Must match the tagLength used during encryption
     },
     cryptoKey,
-    combined as BufferSource,
+    combined,
   )
 
   return new Uint8Array(decrypted)
