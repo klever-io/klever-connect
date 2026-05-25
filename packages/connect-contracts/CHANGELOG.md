@@ -1,5 +1,12 @@
 # @klever/connect-contracts
 
+## 0.2.3
+
+### Patch Changes
+
+- @klever/connect-provider@0.2.2
+- @klever/connect-transactions@0.1.7
+
 ## 0.2.2
 
 ### Patch Changes

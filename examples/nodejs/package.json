@@ -1,6 +1,6 @@
 {
   "name": "@klever/connect-examples-nodejs",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Node.js examples for the Klever Connect SDK",
   "type": "module",
   "private": true,

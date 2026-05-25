@@ -1,5 +1,13 @@
 # @klever/connect-transactions
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [57108a5]
+  - @klever/connect-crypto@0.2.0
+  - @klever/connect-provider@0.2.2
+
 ## 0.1.6
 
 ### Patch Changes

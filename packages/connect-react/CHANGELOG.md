@@ -1,5 +1,15 @@
 # @klever/connect-react
 
+## 0.1.9
+
+### Patch Changes
+
+- @klever/connect@0.1.8
+- @klever/connect-provider@0.2.2
+- @klever/connect-transactions@0.1.7
+- @klever/connect-wallet@0.2.3
+- @klever/connect-contracts@0.2.3
+
 ## 0.1.8
 
 ### Patch Changes
