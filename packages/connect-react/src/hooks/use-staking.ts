@@ -7,7 +7,6 @@ import type {
   WithdrawRequest,
   AmountLike,
   TransactionSubmitResult,
-  ContractRequestData,
 } from '@klever/connect-provider'
 import { TXType } from '@klever/connect-core'
 import { useCallback } from 'react'
@@ -164,7 +163,7 @@ export function useStaking(options?: TransactionCallbacks): UseStakingReturn {
       return await sendTransaction({
         contractType: TXType.Freeze as 4,
         ...freezeRequest,
-      } as ContractRequestData)
+      })
     },
     [sendTransaction],
   )
@@ -180,7 +179,7 @@ export function useStaking(options?: TransactionCallbacks): UseStakingReturn {
       return await sendTransaction({
         contractType: TXType.Unfreeze as 5,
         ...unfreezeRequest,
-      } as ContractRequestData)
+      })
     },
     [sendTransaction],
   )
@@ -196,7 +195,7 @@ export function useStaking(options?: TransactionCallbacks): UseStakingReturn {
       return await sendTransaction({
         contractType: TXType.Delegate as 6,
         ...delegateRequest,
-      } as ContractRequestData)
+      })
     },
     [sendTransaction],
   )
@@ -211,7 +210,7 @@ export function useStaking(options?: TransactionCallbacks): UseStakingReturn {
       return await sendTransaction({
         contractType: TXType.Undelegate as 7,
         ...undelegateRequest,
-      } as ContractRequestData)
+      })
     },
     [sendTransaction],
   )
@@ -227,7 +226,7 @@ export function useStaking(options?: TransactionCallbacks): UseStakingReturn {
       return await sendTransaction({
         contractType: TXType.Claim as 9,
         ...claimRequest,
-      } as ContractRequestData)
+      })
     },
     [sendTransaction],
   )
@@ -246,7 +245,7 @@ export function useStaking(options?: TransactionCallbacks): UseStakingReturn {
       return await sendTransaction({
         contractType: TXType.Withdraw as 8,
         ...withdrawRequest,
-      } as ContractRequestData)
+      })
     },
     [sendTransaction],
   )

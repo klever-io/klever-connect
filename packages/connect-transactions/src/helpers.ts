@@ -129,7 +129,7 @@ export function createTransferWithRoyalties(params: {
  * ```
  */
 export function createFreeze(params: { amount: AmountLike; kda?: string }): FreezeRequest {
-  return params as FreezeRequest
+  return params
 }
 
 /**
@@ -171,7 +171,7 @@ export function createUnfreeze(params: { bucketId: string; kda?: string }): Unfr
  * ```
  */
 export function createDelegate(params: { receiver: string; bucketId?: string }): DelegateRequest {
-  return params as DelegateRequest
+  return params
 }
 
 /**
@@ -190,7 +190,7 @@ export function createDelegate(params: { receiver: string; bucketId?: string }):
  * ```
  */
 export function createUndelegate(params: { bucketId: string }): UndelegateRequest {
-  return params as UndelegateRequest
+  return params
 }
 
 /**
@@ -218,7 +218,7 @@ export function createWithdraw(params: {
   amount?: AmountLike
   currencyID?: string
 }): WithdrawRequest {
-  return params as WithdrawRequest
+  return params
 }
 
 /**
@@ -239,7 +239,7 @@ export function createWithdraw(params: {
  * ```
  */
 export function createClaim(params: { claimType: number; id?: string }): ClaimRequest {
-  return params as ClaimRequest
+  return params
 }
 
 // ============================================================================
@@ -370,7 +370,7 @@ export function createMintNFT(params: {
   return {
     triggerType: 0, // Mint
     ...params,
-  } as AssetTriggerRequest
+  }
 }
 
 /**
@@ -394,7 +394,7 @@ export function createBurn(params: { assetId: string; amount: AmountLike }): Ass
   return {
     triggerType: 1, // Burn
     ...params,
-  } as AssetTriggerRequest
+  }
 }
 
 /**
@@ -424,7 +424,7 @@ export function createWipe(params: {
   return {
     triggerType: 2, // Wipe
     ...params,
-  } as AssetTriggerRequest
+  }
 }
 
 /**
@@ -446,7 +446,7 @@ export function createPause(params: { assetId: string }): AssetTriggerRequest {
   return {
     triggerType: 3, // Pause
     ...params,
-  } as AssetTriggerRequest
+  }
 }
 
 /**
@@ -468,7 +468,7 @@ export function createResume(params: { assetId: string }): AssetTriggerRequest {
   return {
     triggerType: 4, // Resume
     ...params,
-  } as AssetTriggerRequest
+  }
 }
 
 // ============================================================================
@@ -529,7 +529,7 @@ export function createValidator(params: {
   logo?: string
   uris?: Record<string, string>
 }): CreateValidatorRequest {
-  return params as CreateValidatorRequest
+  return params
 }
 
 // ============================================================================
@@ -569,7 +569,7 @@ export function createProposal(params: {
   description?: string
   epochsDuration?: number
 }): ProposalRequest {
-  return params as ProposalRequest
+  return params
 }
 
 /**
@@ -607,7 +607,7 @@ export function createVote(params: {
   type: number
   amount?: AmountLike
 }): VoteRequest {
-  return params as VoteRequest
+  return params
 }
 
 // ============================================================================
@@ -638,7 +638,7 @@ export function createVote(params: {
  * ```
  */
 export function createSetAccountName(params: { name: string }): SetAccountNameRequest {
-  return params as SetAccountNameRequest
+  return params
 }
 
 // ============================================================================

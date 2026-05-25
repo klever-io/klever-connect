@@ -343,7 +343,7 @@ export class Transaction extends ProtoTransaction {
    * ```
    */
   static fromTransaction(tx: Transaction): Transaction {
-    const decoded = ProtoTransaction.fromObject(tx as unknown as { [k: string]: unknown })
+    const decoded = ProtoTransaction.fromObject(tx)
     return new Transaction(decoded)
   }
 }

@@ -1,4 +1,5 @@
 import * as ed from '@noble/ed25519'
+import { keccak_256 } from '@noble/hashes/sha3'
 
 import { hexEncode, hexDecode, base64Encode, base64Decode } from '@klever/connect-encoding'
 import type { Signature } from './types'
@@ -223,4 +224,74 @@ export function verifySignatureSync(
   } catch {
     return false
   }
+}
+
+// KLV message prefix — mirrors the constant in kos-rs `KLV::prepare_message`.
+const KLV_MESSAGE_PREFIX = '\x17Klever Signed Message:\n'
+
+/**
+ * Prepares a plaintext message for KLV chain signature verification.
+ *
+ * @remarks
+ * The Klever browser extension (kos-rs `KLV::prepare_message`) applies this
+ * protocol before Ed25519-signing any message:
+ *
+ * 1. Prepend the 23-byte prefix `"\x17Klever Signed Message:\n"`
+ * 2. Append the UTF-8 byte length of the message as an ASCII decimal string
+ * 3. Append the UTF-8-encoded message bytes
+ * 4. Return the keccak256 digest of the concatenated data
+ *
+ * Use the returned 32-byte hash as the `message` argument to `verifySignature`
+ * whenever the signature was produced by `window.kleverWeb.signMessage` or
+ * `BrowserWallet.signMessage` (extension mode).
+ *
+ * @param message - The original plaintext message string
+ * @returns A 32-byte keccak256 digest ready for Ed25519 signature verification
+ *
+ * @example
+ * ```typescript
+ * const messageHash = prepareKlvMessage('Submit validation for contract klv1...')
+ * const isValid = await verifySignature(messageHash, signatureBytes, publicKeyBytes)
+ * ```
+ */
+export function prepareKlvMessage(message: string): Uint8Array {
+  const msgBytes = new TextEncoder().encode(message)
+  const prefix = new TextEncoder().encode(KLV_MESSAGE_PREFIX)
+  const length = new TextEncoder().encode(String(msgBytes.length))
+  const prepared = new Uint8Array(prefix.length + length.length + msgBytes.length)
+  prepared.set(prefix, 0)
+  prepared.set(length, prefix.length)
+  prepared.set(msgBytes, prefix.length + length.length)
+  return keccak_256(prepared)
+}
+
+/**
+ * Verifies a message signature produced by the Klever browser extension.
+ *
+ * @remarks
+ * Combines `prepareKlvMessage` and `verifySignature` into a single call.
+ * Accepts the raw base64 or hex signature string returned by
+ * `BrowserWallet.signMessage` / `window.kleverWeb.signMessage` and verifies it
+ * against the signer's KLV address.
+ *
+ * @param message - The original plaintext message that was signed
+ * @param signature - The 64-byte signature as a `Uint8Array`
+ * @param publicKey - The signer's 32-byte Ed25519 public key
+ * @returns A promise resolving to `true` if the signature is valid
+ *
+ * @example
+ * ```typescript
+ * import { cryptoProvider, verifyWalletSignedMessage } from '@klever/connect-crypto'
+ *
+ * const publicKey = await cryptoProvider.addressToBytes(walletAddress)
+ * const sigBytes = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0))
+ * const isValid = await verifyWalletSignedMessage(message, sigBytes, publicKey)
+ * ```
+ */
+export async function verifyWalletSignedMessage(
+  message: string,
+  signature: Uint8Array,
+  publicKey: Uint8Array,
+): Promise<boolean> {
+  return verifySignature(prepareKlvMessage(message), signature, publicKey)
 }

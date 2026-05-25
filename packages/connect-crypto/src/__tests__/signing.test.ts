@@ -5,8 +5,13 @@ import {
   signMessageSync,
   verifySignature,
   verifySignatureSync,
+  prepareKlvMessage,
+  verifyWalletSignedMessage,
 } from '../signing'
 import { generateKeyPair, generateKeyPairSync, PrivateKeyImpl, PublicKeyImpl } from '../keys'
+import { cryptoProvider } from '../crypto-provider'
+import { hexDecode } from '@klever/connect-encoding'
+import { keccak_256 } from '@noble/hashes/sha3'
 
 describe('SignatureImpl', () => {
   const validBytes = new Uint8Array(64).fill(0xab)
@@ -246,5 +251,81 @@ describe('generateKeyPairSync', () => {
   it('should generate address from sync key pair', () => {
     const { publicKey } = generateKeyPairSync()
     expect(publicKey.toAddress()).toMatch(/^klv1/)
+  })
+})
+
+describe('prepareKlvMessage', () => {
+  it('returns a 32-byte Uint8Array', () => {
+    const result = prepareKlvMessage('Hello, Klever!')
+    expect(result).toBeInstanceOf(Uint8Array)
+    expect(result.byteLength).toBe(32)
+  })
+
+  it('applies the KLV prefix and keccak256 digest correctly', () => {
+    const message = 'Hello, Klever!'
+    const enc = new TextEncoder()
+    const msgBytes = enc.encode(message)
+    const prefix = enc.encode('\x17Klever Signed Message:\n')
+    const length = enc.encode(String(msgBytes.length))
+    const prepared = new Uint8Array(prefix.length + length.length + msgBytes.length)
+    prepared.set(prefix, 0)
+    prepared.set(length, prefix.length)
+    prepared.set(msgBytes, prefix.length + length.length)
+    expect(prepareKlvMessage(message)).toEqual(keccak_256(prepared))
+  })
+
+  it('produces different digests for different messages', () => {
+    const h1 = prepareKlvMessage('message one')
+    const h2 = prepareKlvMessage('message two')
+    expect(h1).not.toEqual(h2)
+  })
+
+  it('verifies against a real Klever browser wallet signature', async () => {
+    // Real test vector: signature produced by the Klever extension for the given address and message.
+    const CONTRACT_ADDRESS = 'klv1qqqqqqqqqqqqqpgq0mkvrke3yjeyzafm0mwz6zqjsvppsel0veys5m7dwn'
+    const WALLET_ADDRESS = 'klv1fr724pjdjp3l8unuvgda0k6vt06d875hj7t5ggrxymzcg3jcveysejzljc'
+    const SIG_HEX =
+      '16136cd31025eec41c1fd0d5938a09cb29e098aa2c6449ccdf92d0f8b3f3bce98ff7e45d272931802c68e54187adb33acf50ee14a48242ac2116b8cceae47b04'
+
+    const messageHash = prepareKlvMessage(`Submit validation for contract ${CONTRACT_ADDRESS}`)
+    const signatureBytes = hexDecode(SIG_HEX)
+    const publicKeyBytes = await cryptoProvider.addressToBytes(WALLET_ADDRESS)
+
+    expect(await verifySignature(messageHash, signatureBytes, publicKeyBytes)).toBe(true)
+  })
+})
+
+describe('verifyWalletSignedMessage', () => {
+  const CONTRACT_ADDRESS = 'klv1qqqqqqqqqqqqqpgq0mkvrke3yjeyzafm0mwz6zqjsvppsel0veys5m7dwn'
+  const WALLET_ADDRESS = 'klv1fr724pjdjp3l8unuvgda0k6vt06d875hj7t5ggrxymzcg3jcveysejzljc'
+  const SIG_HEX =
+    '16136cd31025eec41c1fd0d5938a09cb29e098aa2c6449ccdf92d0f8b3f3bce98ff7e45d272931802c68e54187adb33acf50ee14a48242ac2116b8cceae47b04'
+  const MESSAGE = `Submit validation for contract ${CONTRACT_ADDRESS}`
+
+  it('returns true for a valid real wallet signature', async () => {
+    const signatureBytes = hexDecode(SIG_HEX)
+    const publicKeyBytes = await cryptoProvider.addressToBytes(WALLET_ADDRESS)
+    expect(await verifyWalletSignedMessage(MESSAGE, signatureBytes, publicKeyBytes)).toBe(true)
+  })
+
+  it('returns false for a tampered signature', async () => {
+    const tampered = SIG_HEX.slice(0, -2) + (SIG_HEX.endsWith('04') ? '05' : '04')
+    const signatureBytes = hexDecode(tampered)
+    const publicKeyBytes = await cryptoProvider.addressToBytes(WALLET_ADDRESS)
+    expect(await verifyWalletSignedMessage(MESSAGE, signatureBytes, publicKeyBytes)).toBe(false)
+  })
+
+  it('returns false for the wrong message', async () => {
+    const signatureBytes = hexDecode(SIG_HEX)
+    const publicKeyBytes = await cryptoProvider.addressToBytes(WALLET_ADDRESS)
+    expect(await verifyWalletSignedMessage('wrong message', signatureBytes, publicKeyBytes)).toBe(
+      false,
+    )
+  })
+
+  it('returns false for the wrong public key', async () => {
+    const signatureBytes = hexDecode(SIG_HEX)
+    const publicKeyBytes = await cryptoProvider.addressToBytes(CONTRACT_ADDRESS)
+    expect(await verifyWalletSignedMessage(MESSAGE, signatureBytes, publicKeyBytes)).toBe(false)
   })
 })

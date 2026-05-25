@@ -37,7 +37,7 @@ export const proto = $root.proto = (() => {
         function TXContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -78,13 +78,17 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TXContract.encode = function encode(message, writer) {
+        TXContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
             if (message.Parameter != null && Object.hasOwnProperty.call(message, "Parameter"))
-                $root.google.protobuf.Any.encode(message.Parameter, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                $root.google.protobuf.Any.encode(message.Parameter, writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
             return writer;
         };
 
@@ -112,9 +116,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        TXContract.decode = function decode(reader, length, error) {
+        TXContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.TXContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -126,11 +134,11 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 case 2: {
-                        message.Parameter = $root.google.protobuf.Any.decode(reader, reader.uint32());
+                        message.Parameter = $root.google.protobuf.Any.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -161,9 +169,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        TXContract.verify = function verify(message) {
+        TXContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -197,7 +209,7 @@ export const proto = $root.proto = (() => {
                     break;
                 }
             if (message.Parameter != null && message.hasOwnProperty("Parameter")) {
-                let error = $root.google.protobuf.Any.verify(message.Parameter);
+                let error = $root.google.protobuf.Any.verify(message.Parameter, long + 1);
                 if (error)
                     return "Parameter." + error;
             }
@@ -212,9 +224,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.TXContract} TXContract
          */
-        TXContract.fromObject = function fromObject(object) {
+        TXContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.TXContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.TXContract();
             switch (object.Type) {
             default:
@@ -331,7 +347,7 @@ export const proto = $root.proto = (() => {
             if (object.Parameter != null) {
                 if (typeof object.Parameter !== "object")
                     throw TypeError(".proto.TXContract.Parameter: object expected");
-                message.Parameter = $root.google.protobuf.Any.fromObject(object.Parameter);
+                message.Parameter = $root.google.protobuf.Any.fromObject(object.Parameter, long + 1);
             }
             return message;
         };
@@ -345,9 +361,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        TXContract.toObject = function toObject(message, options) {
+        TXContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 object.Type = options.enums === String ? "TransferContractType" : 0;
@@ -356,7 +376,7 @@ export const proto = $root.proto = (() => {
             if (message.Type != null && message.hasOwnProperty("Type"))
                 object.Type = options.enums === String ? $root.proto.TXContract.ContractType[message.Type] === undefined ? message.Type : $root.proto.TXContract.ContractType[message.Type] : message.Type;
             if (message.Parameter != null && message.hasOwnProperty("Parameter"))
-                object.Parameter = $root.google.protobuf.Any.toObject(message.Parameter, options);
+                object.Parameter = $root.google.protobuf.Any.toObject(message.Parameter, options, q + 1);
             return object;
         };
 
@@ -480,7 +500,7 @@ export const proto = $root.proto = (() => {
             this.Receipts = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -569,11 +589,15 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        Transaction.encode = function encode(message, writer) {
+        Transaction.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.RawData != null && Object.hasOwnProperty.call(message, "RawData"))
-                $root.proto.Transaction.Raw.encode(message.RawData, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                $root.proto.Transaction.Raw.encode(message.RawData, writer.uint32(/* id 1, wireType 2 =*/10).fork(), q + 1).ldelim();
             if (message.Signature != null && message.Signature.length)
                 for (let i = 0; i < message.Signature.length; ++i)
                     writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.Signature[i]);
@@ -583,7 +607,7 @@ export const proto = $root.proto = (() => {
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.ResultCode);
             if (message.Receipts != null && message.Receipts.length)
                 for (let i = 0; i < message.Receipts.length; ++i)
-                    $root.proto.Transaction.Receipt.encode(message.Receipts[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.proto.Transaction.Receipt.encode(message.Receipts[i], writer.uint32(/* id 5, wireType 2 =*/42).fork(), q + 1).ldelim();
             if (message.Block != null && Object.hasOwnProperty.call(message, "Block"))
                 writer.uint32(/* id 6, wireType 0 =*/48).uint64(message.Block);
             if (message.GasLimit != null && Object.hasOwnProperty.call(message, "GasLimit"))
@@ -617,9 +641,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        Transaction.decode = function decode(reader, length, error) {
+        Transaction.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -627,7 +655,7 @@ export const proto = $root.proto = (() => {
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.RawData = $root.proto.Transaction.Raw.decode(reader, reader.uint32());
+                        message.RawData = $root.proto.Transaction.Raw.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 case 2: {
@@ -647,7 +675,7 @@ export const proto = $root.proto = (() => {
                 case 5: {
                         if (!(message.Receipts && message.Receipts.length))
                             message.Receipts = [];
-                        message.Receipts.push($root.proto.Transaction.Receipt.decode(reader, reader.uint32()));
+                        message.Receipts.push($root.proto.Transaction.Receipt.decode(reader, reader.uint32(), undefined, long + 1));
                         break;
                     }
                 case 6: {
@@ -663,7 +691,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -694,11 +722,15 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        Transaction.verify = function verify(message) {
+        Transaction.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.RawData != null && message.hasOwnProperty("RawData")) {
-                let error = $root.proto.Transaction.Raw.verify(message.RawData);
+                let error = $root.proto.Transaction.Raw.verify(message.RawData, long + 1);
                 if (error)
                     return "RawData." + error;
             }
@@ -794,7 +826,7 @@ export const proto = $root.proto = (() => {
                 if (!Array.isArray(message.Receipts))
                     return "Receipts: array expected";
                 for (let i = 0; i < message.Receipts.length; ++i) {
-                    let error = $root.proto.Transaction.Receipt.verify(message.Receipts[i]);
+                    let error = $root.proto.Transaction.Receipt.verify(message.Receipts[i], long + 1);
                     if (error)
                         return "Receipts." + error;
                 }
@@ -819,14 +851,18 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.Transaction} Transaction
          */
-        Transaction.fromObject = function fromObject(object) {
+        Transaction.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.Transaction)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.Transaction();
             if (object.RawData != null) {
                 if (typeof object.RawData !== "object")
                     throw TypeError(".proto.Transaction.RawData: object expected");
-                message.RawData = $root.proto.Transaction.Raw.fromObject(object.RawData);
+                message.RawData = $root.proto.Transaction.Raw.fromObject(object.RawData, long + 1);
             }
             if (object.Signature) {
                 if (!Array.isArray(object.Signature))
@@ -1137,12 +1173,12 @@ export const proto = $root.proto = (() => {
                 for (let i = 0; i < object.Receipts.length; ++i) {
                     if (typeof object.Receipts[i] !== "object")
                         throw TypeError(".proto.Transaction.Receipts: object expected");
-                    message.Receipts[i] = $root.proto.Transaction.Receipt.fromObject(object.Receipts[i]);
+                    message.Receipts[i] = $root.proto.Transaction.Receipt.fromObject(object.Receipts[i], long + 1);
                 }
             }
             if (object.Block != null)
                 if ($util.Long)
-                    (message.Block = $util.Long.fromValue(object.Block)).unsigned = true;
+                    message.Block = $util.Long.fromValue(object.Block, true);
                 else if (typeof object.Block === "string")
                     message.Block = parseInt(object.Block, 10);
                 else if (typeof object.Block === "number")
@@ -1151,7 +1187,7 @@ export const proto = $root.proto = (() => {
                     message.Block = new $util.LongBits(object.Block.low >>> 0, object.Block.high >>> 0).toNumber(true);
             if (object.GasLimit != null)
                 if ($util.Long)
-                    (message.GasLimit = $util.Long.fromValue(object.GasLimit)).unsigned = true;
+                    message.GasLimit = $util.Long.fromValue(object.GasLimit, true);
                 else if (typeof object.GasLimit === "string")
                     message.GasLimit = parseInt(object.GasLimit, 10);
                 else if (typeof object.GasLimit === "number")
@@ -1160,7 +1196,7 @@ export const proto = $root.proto = (() => {
                     message.GasLimit = new $util.LongBits(object.GasLimit.low >>> 0, object.GasLimit.high >>> 0).toNumber(true);
             if (object.GasMultiplier != null)
                 if ($util.Long)
-                    (message.GasMultiplier = $util.Long.fromValue(object.GasMultiplier)).unsigned = true;
+                    message.GasMultiplier = $util.Long.fromValue(object.GasMultiplier, true);
                 else if (typeof object.GasMultiplier === "string")
                     message.GasMultiplier = parseInt(object.GasMultiplier, 10);
                 else if (typeof object.GasMultiplier === "number")
@@ -1179,9 +1215,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        Transaction.toObject = function toObject(message, options) {
+        Transaction.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.arrays || options.defaults) {
                 object.Signature = [];
@@ -1193,22 +1233,22 @@ export const proto = $root.proto = (() => {
                 object.ResultCode = options.enums === String ? "Ok" : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, true);
-                    object.Block = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.Block = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.Block = options.longs === String ? "0" : 0;
+                    object.Block = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, true);
-                    object.GasLimit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.GasLimit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.GasLimit = options.longs === String ? "0" : 0;
+                    object.GasLimit = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, true);
-                    object.GasMultiplier = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.GasMultiplier = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.GasMultiplier = options.longs === String ? "0" : 0;
+                    object.GasMultiplier = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
             }
             if (message.RawData != null && message.hasOwnProperty("RawData"))
-                object.RawData = $root.proto.Transaction.Raw.toObject(message.RawData, options);
+                object.RawData = $root.proto.Transaction.Raw.toObject(message.RawData, options, q + 1);
             if (message.Signature && message.Signature.length) {
                 object.Signature = [];
                 for (let j = 0; j < message.Signature.length; ++j)
@@ -1221,20 +1261,26 @@ export const proto = $root.proto = (() => {
             if (message.Receipts && message.Receipts.length) {
                 object.Receipts = [];
                 for (let j = 0; j < message.Receipts.length; ++j)
-                    object.Receipts[j] = $root.proto.Transaction.Receipt.toObject(message.Receipts[j], options);
+                    object.Receipts[j] = $root.proto.Transaction.Receipt.toObject(message.Receipts[j], options, q + 1);
             }
             if (message.Block != null && message.hasOwnProperty("Block"))
-                if (typeof message.Block === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.Block = typeof message.Block === "number" ? BigInt(message.Block) : $util.Long.fromBits(message.Block.low >>> 0, message.Block.high >>> 0, true).toBigInt();
+                else if (typeof message.Block === "number")
                     object.Block = options.longs === String ? String(message.Block) : message.Block;
                 else
                     object.Block = options.longs === String ? $util.Long.prototype.toString.call(message.Block) : options.longs === Number ? new $util.LongBits(message.Block.low >>> 0, message.Block.high >>> 0).toNumber(true) : message.Block;
             if (message.GasLimit != null && message.hasOwnProperty("GasLimit"))
-                if (typeof message.GasLimit === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.GasLimit = typeof message.GasLimit === "number" ? BigInt(message.GasLimit) : $util.Long.fromBits(message.GasLimit.low >>> 0, message.GasLimit.high >>> 0, true).toBigInt();
+                else if (typeof message.GasLimit === "number")
                     object.GasLimit = options.longs === String ? String(message.GasLimit) : message.GasLimit;
                 else
                     object.GasLimit = options.longs === String ? $util.Long.prototype.toString.call(message.GasLimit) : options.longs === Number ? new $util.LongBits(message.GasLimit.low >>> 0, message.GasLimit.high >>> 0).toNumber(true) : message.GasLimit;
             if (message.GasMultiplier != null && message.hasOwnProperty("GasMultiplier"))
-                if (typeof message.GasMultiplier === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.GasMultiplier = typeof message.GasMultiplier === "number" ? BigInt(message.GasMultiplier) : $util.Long.fromBits(message.GasMultiplier.low >>> 0, message.GasMultiplier.high >>> 0, true).toBigInt();
+                else if (typeof message.GasMultiplier === "number")
                     object.GasMultiplier = options.longs === String ? String(message.GasMultiplier) : message.GasMultiplier;
                 else
                     object.GasMultiplier = options.longs === String ? $util.Long.prototype.toString.call(message.GasMultiplier) : options.longs === Number ? new $util.LongBits(message.GasMultiplier.low >>> 0, message.GasMultiplier.high >>> 0).toNumber(true) : message.GasMultiplier;
@@ -1446,7 +1492,7 @@ export const proto = $root.proto = (() => {
             function KDAFee(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -1487,9 +1533,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            KDAFee.encode = function encode(message, writer) {
+            KDAFee.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.KDA != null && Object.hasOwnProperty.call(message, "KDA"))
                     writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.KDA);
                 if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
@@ -1521,9 +1571,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            KDAFee.decode = function decode(reader, length, error) {
+            KDAFee.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction.KDAFee();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -1539,7 +1593,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -1570,9 +1624,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            KDAFee.verify = function verify(message) {
+            KDAFee.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.KDA != null && message.hasOwnProperty("KDA"))
                     if (!(message.KDA && typeof message.KDA.length === "number" || $util.isString(message.KDA)))
                         return "KDA: buffer expected";
@@ -1590,9 +1648,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.Transaction.KDAFee} KDAFee
              */
-            KDAFee.fromObject = function fromObject(object) {
+            KDAFee.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.KDAFee)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.Transaction.KDAFee();
                 if (object.KDA != null)
                     if (typeof object.KDA === "string")
@@ -1601,7 +1663,7 @@ export const proto = $root.proto = (() => {
                         message.KDA = object.KDA;
                 if (object.Amount != null)
                     if ($util.Long)
-                        (message.Amount = $util.Long.fromValue(object.Amount)).unsigned = false;
+                        message.Amount = $util.Long.fromValue(object.Amount, false);
                     else if (typeof object.Amount === "string")
                         message.Amount = parseInt(object.Amount, 10);
                     else if (typeof object.Amount === "number")
@@ -1620,9 +1682,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            KDAFee.toObject = function toObject(message, options) {
+            KDAFee.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     if (options.bytes === String)
@@ -1634,14 +1700,16 @@ export const proto = $root.proto = (() => {
                     }
                     if ($util.Long) {
                         let long = new $util.Long(0, 0, false);
-                        object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.Amount = options.longs === String ? "0" : 0;
+                        object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
                 if (message.KDA != null && message.hasOwnProperty("KDA"))
                     object.KDA = options.bytes === String ? $util.base64.encode(message.KDA, 0, message.KDA.length) : options.bytes === Array ? Array.prototype.slice.call(message.KDA) : message.KDA;
                 if (message.Amount != null && message.hasOwnProperty("Amount"))
-                    if (typeof message.Amount === "number")
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                    else if (typeof message.Amount === "number")
                         object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                     else
                         object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
@@ -1708,7 +1776,7 @@ export const proto = $root.proto = (() => {
                 this.Data = [];
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -1813,16 +1881,20 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Raw.encode = function encode(message, writer) {
+            Raw.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.Nonce != null && Object.hasOwnProperty.call(message, "Nonce"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.Nonce);
                 if (message.Sender != null && Object.hasOwnProperty.call(message, "Sender"))
                     writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.Sender);
                 if (message.Contract != null && message.Contract.length)
                     for (let i = 0; i < message.Contract.length; ++i)
-                        $root.proto.TXContract.encode(message.Contract[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                        $root.proto.TXContract.encode(message.Contract[i], writer.uint32(/* id 6, wireType 2 =*/50).fork(), q + 1).ldelim();
                 if (message.PermissionID != null && Object.hasOwnProperty.call(message, "PermissionID"))
                     writer.uint32(/* id 7, wireType 0 =*/56).int32(message.PermissionID);
                 if (message.Data != null && message.Data.length)
@@ -1837,7 +1909,7 @@ export const proto = $root.proto = (() => {
                 if (message.ChainID != null && Object.hasOwnProperty.call(message, "ChainID"))
                     writer.uint32(/* id 16, wireType 2 =*/130).bytes(message.ChainID);
                 if (message.KDAFee != null && Object.hasOwnProperty.call(message, "KDAFee"))
-                    $root.proto.Transaction.KDAFee.encode(message.KDAFee, writer.uint32(/* id 17, wireType 2 =*/138).fork()).ldelim();
+                    $root.proto.Transaction.KDAFee.encode(message.KDAFee, writer.uint32(/* id 17, wireType 2 =*/138).fork(), q + 1).ldelim();
                 return writer;
             };
 
@@ -1865,9 +1937,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Raw.decode = function decode(reader, length, error) {
+            Raw.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction.Raw();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -1885,7 +1961,7 @@ export const proto = $root.proto = (() => {
                     case 6: {
                             if (!(message.Contract && message.Contract.length))
                                 message.Contract = [];
-                            message.Contract.push($root.proto.TXContract.decode(reader, reader.uint32()));
+                            message.Contract.push($root.proto.TXContract.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     case 7: {
@@ -1915,11 +1991,11 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     case 17: {
-                            message.KDAFee = $root.proto.Transaction.KDAFee.decode(reader, reader.uint32());
+                            message.KDAFee = $root.proto.Transaction.KDAFee.decode(reader, reader.uint32(), undefined, long + 1);
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -1950,9 +2026,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Raw.verify = function verify(message) {
+            Raw.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.Nonce != null && message.hasOwnProperty("Nonce"))
                     if (!$util.isInteger(message.Nonce) && !(message.Nonce && $util.isInteger(message.Nonce.low) && $util.isInteger(message.Nonce.high)))
                         return "Nonce: integer|Long expected";
@@ -1963,7 +2043,7 @@ export const proto = $root.proto = (() => {
                     if (!Array.isArray(message.Contract))
                         return "Contract: array expected";
                     for (let i = 0; i < message.Contract.length; ++i) {
-                        let error = $root.proto.TXContract.verify(message.Contract[i]);
+                        let error = $root.proto.TXContract.verify(message.Contract[i], long + 1);
                         if (error)
                             return "Contract." + error;
                     }
@@ -1991,7 +2071,7 @@ export const proto = $root.proto = (() => {
                     if (!(message.ChainID && typeof message.ChainID.length === "number" || $util.isString(message.ChainID)))
                         return "ChainID: buffer expected";
                 if (message.KDAFee != null && message.hasOwnProperty("KDAFee")) {
-                    let error = $root.proto.Transaction.KDAFee.verify(message.KDAFee);
+                    let error = $root.proto.Transaction.KDAFee.verify(message.KDAFee, long + 1);
                     if (error)
                         return "KDAFee." + error;
                 }
@@ -2006,13 +2086,17 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.Transaction.Raw} Raw
              */
-            Raw.fromObject = function fromObject(object) {
+            Raw.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.Raw)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.Transaction.Raw();
                 if (object.Nonce != null)
                     if ($util.Long)
-                        (message.Nonce = $util.Long.fromValue(object.Nonce)).unsigned = true;
+                        message.Nonce = $util.Long.fromValue(object.Nonce, true);
                     else if (typeof object.Nonce === "string")
                         message.Nonce = parseInt(object.Nonce, 10);
                     else if (typeof object.Nonce === "number")
@@ -2031,7 +2115,7 @@ export const proto = $root.proto = (() => {
                     for (let i = 0; i < object.Contract.length; ++i) {
                         if (typeof object.Contract[i] !== "object")
                             throw TypeError(".proto.Transaction.Raw.Contract: object expected");
-                        message.Contract[i] = $root.proto.TXContract.fromObject(object.Contract[i]);
+                        message.Contract[i] = $root.proto.TXContract.fromObject(object.Contract[i], long + 1);
                     }
                 }
                 if (object.PermissionID != null)
@@ -2048,7 +2132,7 @@ export const proto = $root.proto = (() => {
                 }
                 if (object.KAppFee != null)
                     if ($util.Long)
-                        (message.KAppFee = $util.Long.fromValue(object.KAppFee)).unsigned = false;
+                        message.KAppFee = $util.Long.fromValue(object.KAppFee, false);
                     else if (typeof object.KAppFee === "string")
                         message.KAppFee = parseInt(object.KAppFee, 10);
                     else if (typeof object.KAppFee === "number")
@@ -2057,7 +2141,7 @@ export const proto = $root.proto = (() => {
                         message.KAppFee = new $util.LongBits(object.KAppFee.low >>> 0, object.KAppFee.high >>> 0).toNumber();
                 if (object.BandwidthFee != null)
                     if ($util.Long)
-                        (message.BandwidthFee = $util.Long.fromValue(object.BandwidthFee)).unsigned = false;
+                        message.BandwidthFee = $util.Long.fromValue(object.BandwidthFee, false);
                     else if (typeof object.BandwidthFee === "string")
                         message.BandwidthFee = parseInt(object.BandwidthFee, 10);
                     else if (typeof object.BandwidthFee === "number")
@@ -2074,7 +2158,7 @@ export const proto = $root.proto = (() => {
                 if (object.KDAFee != null) {
                     if (typeof object.KDAFee !== "object")
                         throw TypeError(".proto.Transaction.Raw.KDAFee: object expected");
-                    message.KDAFee = $root.proto.Transaction.KDAFee.fromObject(object.KDAFee);
+                    message.KDAFee = $root.proto.Transaction.KDAFee.fromObject(object.KDAFee, long + 1);
                 }
                 return message;
             };
@@ -2088,9 +2172,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Raw.toObject = function toObject(message, options) {
+            Raw.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 let object = {};
                 if (options.arrays || options.defaults) {
                     object.Contract = [];
@@ -2099,9 +2187,9 @@ export const proto = $root.proto = (() => {
                 if (options.defaults) {
                     if ($util.Long) {
                         let long = new $util.Long(0, 0, true);
-                        object.Nonce = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.Nonce = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.Nonce = options.longs === String ? "0" : 0;
+                        object.Nonce = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if (options.bytes === String)
                         object.Sender = "";
                     else {
@@ -2112,14 +2200,14 @@ export const proto = $root.proto = (() => {
                     object.PermissionID = 0;
                     if ($util.Long) {
                         let long = new $util.Long(0, 0, false);
-                        object.KAppFee = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.KAppFee = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.KAppFee = options.longs === String ? "0" : 0;
+                        object.KAppFee = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         let long = new $util.Long(0, 0, false);
-                        object.BandwidthFee = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.BandwidthFee = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.BandwidthFee = options.longs === String ? "0" : 0;
+                        object.BandwidthFee = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     object.Version = 0;
                     if (options.bytes === String)
                         object.ChainID = "";
@@ -2131,7 +2219,9 @@ export const proto = $root.proto = (() => {
                     object.KDAFee = null;
                 }
                 if (message.Nonce != null && message.hasOwnProperty("Nonce"))
-                    if (typeof message.Nonce === "number")
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.Nonce = typeof message.Nonce === "number" ? BigInt(message.Nonce) : $util.Long.fromBits(message.Nonce.low >>> 0, message.Nonce.high >>> 0, true).toBigInt();
+                    else if (typeof message.Nonce === "number")
                         object.Nonce = options.longs === String ? String(message.Nonce) : message.Nonce;
                     else
                         object.Nonce = options.longs === String ? $util.Long.prototype.toString.call(message.Nonce) : options.longs === Number ? new $util.LongBits(message.Nonce.low >>> 0, message.Nonce.high >>> 0).toNumber(true) : message.Nonce;
@@ -2140,7 +2230,7 @@ export const proto = $root.proto = (() => {
                 if (message.Contract && message.Contract.length) {
                     object.Contract = [];
                     for (let j = 0; j < message.Contract.length; ++j)
-                        object.Contract[j] = $root.proto.TXContract.toObject(message.Contract[j], options);
+                        object.Contract[j] = $root.proto.TXContract.toObject(message.Contract[j], options, q + 1);
                 }
                 if (message.PermissionID != null && message.hasOwnProperty("PermissionID"))
                     object.PermissionID = message.PermissionID;
@@ -2150,12 +2240,16 @@ export const proto = $root.proto = (() => {
                         object.Data[j] = options.bytes === String ? $util.base64.encode(message.Data[j], 0, message.Data[j].length) : options.bytes === Array ? Array.prototype.slice.call(message.Data[j]) : message.Data[j];
                 }
                 if (message.KAppFee != null && message.hasOwnProperty("KAppFee"))
-                    if (typeof message.KAppFee === "number")
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.KAppFee = typeof message.KAppFee === "number" ? BigInt(message.KAppFee) : $util.Long.fromBits(message.KAppFee.low >>> 0, message.KAppFee.high >>> 0, false).toBigInt();
+                    else if (typeof message.KAppFee === "number")
                         object.KAppFee = options.longs === String ? String(message.KAppFee) : message.KAppFee;
                     else
                         object.KAppFee = options.longs === String ? $util.Long.prototype.toString.call(message.KAppFee) : options.longs === Number ? new $util.LongBits(message.KAppFee.low >>> 0, message.KAppFee.high >>> 0).toNumber() : message.KAppFee;
                 if (message.BandwidthFee != null && message.hasOwnProperty("BandwidthFee"))
-                    if (typeof message.BandwidthFee === "number")
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.BandwidthFee = typeof message.BandwidthFee === "number" ? BigInt(message.BandwidthFee) : $util.Long.fromBits(message.BandwidthFee.low >>> 0, message.BandwidthFee.high >>> 0, false).toBigInt();
+                    else if (typeof message.BandwidthFee === "number")
                         object.BandwidthFee = options.longs === String ? String(message.BandwidthFee) : message.BandwidthFee;
                     else
                         object.BandwidthFee = options.longs === String ? $util.Long.prototype.toString.call(message.BandwidthFee) : options.longs === Number ? new $util.LongBits(message.BandwidthFee.low >>> 0, message.BandwidthFee.high >>> 0).toNumber() : message.BandwidthFee;
@@ -2164,7 +2258,7 @@ export const proto = $root.proto = (() => {
                 if (message.ChainID != null && message.hasOwnProperty("ChainID"))
                     object.ChainID = options.bytes === String ? $util.base64.encode(message.ChainID, 0, message.ChainID.length) : options.bytes === Array ? Array.prototype.slice.call(message.ChainID) : message.ChainID;
                 if (message.KDAFee != null && message.hasOwnProperty("KDAFee"))
-                    object.KDAFee = $root.proto.Transaction.KDAFee.toObject(message.KDAFee, options);
+                    object.KDAFee = $root.proto.Transaction.KDAFee.toObject(message.KDAFee, options, q + 1);
                 return object;
             };
 
@@ -2218,7 +2312,7 @@ export const proto = $root.proto = (() => {
                 this.Data = [];
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -2251,9 +2345,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Receipt.encode = function encode(message, writer) {
+            Receipt.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.Data != null && message.Data.length)
                     for (let i = 0; i < message.Data.length; ++i)
                         writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.Data[i]);
@@ -2284,9 +2382,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Receipt.decode = function decode(reader, length, error) {
+            Receipt.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.Transaction.Receipt();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -2300,7 +2402,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -2331,9 +2433,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Receipt.verify = function verify(message) {
+            Receipt.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.Data != null && message.hasOwnProperty("Data")) {
                     if (!Array.isArray(message.Data))
                         return "Data: array expected";
@@ -2352,9 +2458,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.Transaction.Receipt} Receipt
              */
-            Receipt.fromObject = function fromObject(object) {
+            Receipt.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.Receipt)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.Transaction.Receipt();
                 if (object.Data) {
                     if (!Array.isArray(object.Data))
@@ -2378,9 +2488,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Receipt.toObject = function toObject(message, options) {
+            Receipt.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 let object = {};
                 if (options.arrays || options.defaults)
                     object.Data = [];
@@ -2446,7 +2560,7 @@ export const proto = $root.proto = (() => {
         function TransferContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -2495,9 +2609,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TransferContract.encode = function encode(message, writer) {
+        TransferContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.ToAddress);
             if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
@@ -2531,9 +2649,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        TransferContract.decode = function decode(reader, length, error) {
+        TransferContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.TransferContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -2553,7 +2675,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -2584,9 +2706,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        TransferContract.verify = function verify(message) {
+        TransferContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
                 if (!(message.ToAddress && typeof message.ToAddress.length === "number" || $util.isString(message.ToAddress)))
                     return "ToAddress: buffer expected";
@@ -2607,9 +2733,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.TransferContract} TransferContract
          */
-        TransferContract.fromObject = function fromObject(object) {
+        TransferContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.TransferContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.TransferContract();
             if (object.ToAddress != null)
                 if (typeof object.ToAddress === "string")
@@ -2618,7 +2748,7 @@ export const proto = $root.proto = (() => {
                     message.ToAddress = object.ToAddress;
             if (object.Amount != null)
                 if ($util.Long)
-                    (message.Amount = $util.Long.fromValue(object.Amount)).unsigned = false;
+                    message.Amount = $util.Long.fromValue(object.Amount, false);
                 else if (typeof object.Amount === "string")
                     message.Amount = parseInt(object.Amount, 10);
                 else if (typeof object.Amount === "number")
@@ -2642,9 +2772,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        TransferContract.toObject = function toObject(message, options) {
+        TransferContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 if (options.bytes === String)
@@ -2656,9 +2790,9 @@ export const proto = $root.proto = (() => {
                 }
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.Amount = options.longs === String ? "0" : 0;
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if (options.bytes === String)
                     object.AssetID = "";
                 else {
@@ -2670,7 +2804,9 @@ export const proto = $root.proto = (() => {
             if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
                 object.ToAddress = options.bytes === String ? $util.base64.encode(message.ToAddress, 0, message.ToAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.ToAddress) : message.ToAddress;
             if (message.Amount != null && message.hasOwnProperty("Amount"))
-                if (typeof message.Amount === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                else if (typeof message.Amount === "number")
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
@@ -2729,7 +2865,7 @@ export const proto = $root.proto = (() => {
         function FreezeContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -2770,9 +2906,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        FreezeContract.encode = function encode(message, writer) {
+        FreezeContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int64(message.Amount);
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
@@ -2804,9 +2944,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        FreezeContract.decode = function decode(reader, length, error) {
+        FreezeContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.FreezeContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -2822,7 +2966,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -2853,9 +2997,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        FreezeContract.verify = function verify(message) {
+        FreezeContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Amount != null && message.hasOwnProperty("Amount"))
                 if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                     return "Amount: integer|Long expected";
@@ -2873,13 +3021,17 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.FreezeContract} FreezeContract
          */
-        FreezeContract.fromObject = function fromObject(object) {
+        FreezeContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.FreezeContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.FreezeContract();
             if (object.Amount != null)
                 if ($util.Long)
-                    (message.Amount = $util.Long.fromValue(object.Amount)).unsigned = false;
+                    message.Amount = $util.Long.fromValue(object.Amount, false);
                 else if (typeof object.Amount === "string")
                     message.Amount = parseInt(object.Amount, 10);
                 else if (typeof object.Amount === "number")
@@ -2903,16 +3055,20 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        FreezeContract.toObject = function toObject(message, options) {
+        FreezeContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.Amount = options.longs === String ? "0" : 0;
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if (options.bytes === String)
                     object.AssetID = "";
                 else {
@@ -2922,7 +3078,9 @@ export const proto = $root.proto = (() => {
                 }
             }
             if (message.Amount != null && message.hasOwnProperty("Amount"))
-                if (typeof message.Amount === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                else if (typeof message.Amount === "number")
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
@@ -2981,7 +3139,7 @@ export const proto = $root.proto = (() => {
         function UnfreezeContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3022,9 +3180,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        UnfreezeContract.encode = function encode(message, writer) {
+        UnfreezeContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.AssetID);
             if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
@@ -3056,9 +3218,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        UnfreezeContract.decode = function decode(reader, length, error) {
+        UnfreezeContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.UnfreezeContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3074,7 +3240,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3105,9 +3271,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        UnfreezeContract.verify = function verify(message) {
+        UnfreezeContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.AssetID != null && message.hasOwnProperty("AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
@@ -3125,9 +3295,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.UnfreezeContract} UnfreezeContract
          */
-        UnfreezeContract.fromObject = function fromObject(object) {
+        UnfreezeContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.UnfreezeContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.UnfreezeContract();
             if (object.AssetID != null)
                 if (typeof object.AssetID === "string")
@@ -3151,9 +3325,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        UnfreezeContract.toObject = function toObject(message, options) {
+        UnfreezeContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 if (options.bytes === String)
@@ -3228,7 +3406,7 @@ export const proto = $root.proto = (() => {
         function DelegateContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3269,9 +3447,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        DelegateContract.encode = function encode(message, writer) {
+        DelegateContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.ToAddress);
             if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
@@ -3303,9 +3485,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        DelegateContract.decode = function decode(reader, length, error) {
+        DelegateContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.DelegateContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3321,7 +3507,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3352,9 +3538,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        DelegateContract.verify = function verify(message) {
+        DelegateContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
                 if (!(message.ToAddress && typeof message.ToAddress.length === "number" || $util.isString(message.ToAddress)))
                     return "ToAddress: buffer expected";
@@ -3372,9 +3562,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.DelegateContract} DelegateContract
          */
-        DelegateContract.fromObject = function fromObject(object) {
+        DelegateContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.DelegateContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.DelegateContract();
             if (object.ToAddress != null)
                 if (typeof object.ToAddress === "string")
@@ -3398,9 +3592,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        DelegateContract.toObject = function toObject(message, options) {
+        DelegateContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 if (options.bytes === String)
@@ -3474,7 +3672,7 @@ export const proto = $root.proto = (() => {
         function UndelegateContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3507,9 +3705,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        UndelegateContract.encode = function encode(message, writer) {
+        UndelegateContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
                 writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.BucketID);
             return writer;
@@ -3539,9 +3741,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        UndelegateContract.decode = function decode(reader, length, error) {
+        UndelegateContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.UndelegateContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3553,7 +3759,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3584,9 +3790,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        UndelegateContract.verify = function verify(message) {
+        UndelegateContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.BucketID != null && message.hasOwnProperty("BucketID"))
                 if (!(message.BucketID && typeof message.BucketID.length === "number" || $util.isString(message.BucketID)))
                     return "BucketID: buffer expected";
@@ -3601,9 +3811,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.UndelegateContract} UndelegateContract
          */
-        UndelegateContract.fromObject = function fromObject(object) {
+        UndelegateContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.UndelegateContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.UndelegateContract();
             if (object.BucketID != null)
                 if (typeof object.BucketID === "string")
@@ -3622,9 +3836,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        UndelegateContract.toObject = function toObject(message, options) {
+        UndelegateContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults)
                 if (options.bytes === String)
@@ -3691,7 +3909,7 @@ export const proto = $root.proto = (() => {
         function WithdrawContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -3748,9 +3966,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        WithdrawContract.encode = function encode(message, writer) {
+        WithdrawContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
@@ -3786,9 +4008,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        WithdrawContract.decode = function decode(reader, length, error) {
+        WithdrawContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.WithdrawContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -3812,7 +4038,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -3843,9 +4069,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        WithdrawContract.verify = function verify(message) {
+        WithdrawContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -3877,9 +4107,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.WithdrawContract} WithdrawContract
          */
-        WithdrawContract.fromObject = function fromObject(object) {
+        WithdrawContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.WithdrawContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.WithdrawContract();
             switch (object.Type) {
             default:
@@ -3916,7 +4150,7 @@ export const proto = $root.proto = (() => {
                     message.AssetID = object.AssetID;
             if (object.Amount != null)
                 if ($util.Long)
-                    (message.Amount = $util.Long.fromValue(object.Amount)).unsigned = false;
+                    message.Amount = $util.Long.fromValue(object.Amount, false);
                 else if (typeof object.Amount === "string")
                     message.Amount = parseInt(object.Amount, 10);
                 else if (typeof object.Amount === "number")
@@ -3940,9 +4174,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        WithdrawContract.toObject = function toObject(message, options) {
+        WithdrawContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 object.Type = options.enums === String ? "StakingReward" : 0;
@@ -3955,9 +4193,9 @@ export const proto = $root.proto = (() => {
                 }
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.Amount = options.longs === String ? "0" : 0;
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if (options.bytes === String)
                     object.CurrencyID = "";
                 else {
@@ -3971,7 +4209,9 @@ export const proto = $root.proto = (() => {
             if (message.AssetID != null && message.hasOwnProperty("AssetID"))
                 object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
             if (message.Amount != null && message.hasOwnProperty("Amount"))
-                if (typeof message.Amount === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                else if (typeof message.Amount === "number")
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
@@ -4050,7 +4290,7 @@ export const proto = $root.proto = (() => {
         function ClaimContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -4091,9 +4331,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        ClaimContract.encode = function encode(message, writer) {
+        ClaimContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
             if (message.ID != null && Object.hasOwnProperty.call(message, "ID"))
@@ -4125,9 +4369,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        ClaimContract.decode = function decode(reader, length, error) {
+        ClaimContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.ClaimContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -4143,7 +4391,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -4174,9 +4422,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        ClaimContract.verify = function verify(message) {
+        ClaimContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -4200,9 +4452,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.ClaimContract} ClaimContract
          */
-        ClaimContract.fromObject = function fromObject(object) {
+        ClaimContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.ClaimContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.ClaimContract();
             switch (object.Type) {
             default:
@@ -4241,9 +4497,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        ClaimContract.toObject = function toObject(message, options) {
+        ClaimContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 object.Type = options.enums === String ? "StakingClaim" : 0;
@@ -4329,7 +4589,7 @@ export const proto = $root.proto = (() => {
         function VoteContract(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -4378,9 +4638,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        VoteContract.encode = function encode(message, writer) {
+        VoteContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.ProposalID != null && Object.hasOwnProperty.call(message, "ProposalID"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.ProposalID);
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
@@ -4414,9 +4678,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        VoteContract.decode = function decode(reader, length, error) {
+        VoteContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.VoteContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -4436,7 +4704,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -4467,9 +4735,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        VoteContract.verify = function verify(message) {
+        VoteContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.ProposalID != null && message.hasOwnProperty("ProposalID"))
                 if (!$util.isInteger(message.ProposalID) && !(message.ProposalID && $util.isInteger(message.ProposalID.low) && $util.isInteger(message.ProposalID.high)))
                     return "ProposalID: integer|Long expected";
@@ -4496,13 +4768,17 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.VoteContract} VoteContract
          */
-        VoteContract.fromObject = function fromObject(object) {
+        VoteContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.VoteContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.VoteContract();
             if (object.ProposalID != null)
                 if ($util.Long)
-                    (message.ProposalID = $util.Long.fromValue(object.ProposalID)).unsigned = true;
+                    message.ProposalID = $util.Long.fromValue(object.ProposalID, true);
                 else if (typeof object.ProposalID === "string")
                     message.ProposalID = parseInt(object.ProposalID, 10);
                 else if (typeof object.ProposalID === "number")
@@ -4531,7 +4807,7 @@ export const proto = $root.proto = (() => {
             }
             if (object.Amount != null)
                 if ($util.Long)
-                    (message.Amount = $util.Long.fromValue(object.Amount)).unsigned = false;
+                    message.Amount = $util.Long.fromValue(object.Amount, false);
                 else if (typeof object.Amount === "string")
                     message.Amount = parseInt(object.Amount, 10);
                 else if (typeof object.Amount === "number")
@@ -4550,32 +4826,40 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        VoteContract.toObject = function toObject(message, options) {
+        VoteContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, true);
-                    object.ProposalID = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.ProposalID = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.ProposalID = options.longs === String ? "0" : 0;
+                    object.ProposalID = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 object.Type = options.enums === String ? "Yes" : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.Amount = options.longs === String ? "0" : 0;
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
             }
             if (message.ProposalID != null && message.hasOwnProperty("ProposalID"))
-                if (typeof message.ProposalID === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.ProposalID = typeof message.ProposalID === "number" ? BigInt(message.ProposalID) : $util.Long.fromBits(message.ProposalID.low >>> 0, message.ProposalID.high >>> 0, true).toBigInt();
+                else if (typeof message.ProposalID === "number")
                     object.ProposalID = options.longs === String ? String(message.ProposalID) : message.ProposalID;
                 else
                     object.ProposalID = options.longs === String ? $util.Long.prototype.toString.call(message.ProposalID) : options.longs === Number ? new $util.LongBits(message.ProposalID.low >>> 0, message.ProposalID.high >>> 0).toNumber(true) : message.ProposalID;
             if (message.Type != null && message.hasOwnProperty("Type"))
                 object.Type = options.enums === String ? $root.proto.VoteContract.VoteType[message.Type] === undefined ? message.Type : $root.proto.VoteContract.VoteType[message.Type] : message.Type;
             if (message.Amount != null && message.hasOwnProperty("Amount"))
-                if (typeof message.Amount === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                else if (typeof message.Amount === "number")
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
@@ -4658,7 +4942,7 @@ export const proto = $root.proto = (() => {
             this.URIs = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -4771,9 +5055,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        CreateAssetContract.encode = function encode(message, writer) {
+        CreateAssetContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
             if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
@@ -4794,9 +5082,9 @@ export const proto = $root.proto = (() => {
             if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
                 writer.uint32(/* id 9, wireType 0 =*/72).int64(message.MaxSupply);
             if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties"))
-                $root.proto.CreateAssetContract.AssetProperties.encode(message.Properties, writer.uint32(/* id 10, wireType 2 =*/82).fork()).ldelim();
+                $root.proto.CreateAssetContract.AssetProperties.encode(message.Properties, writer.uint32(/* id 10, wireType 2 =*/82).fork(), q + 1).ldelim();
             if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes"))
-                $root.proto.CreateAssetContract.AssetAttributes.encode(message.Attributes, writer.uint32(/* id 11, wireType 2 =*/90).fork()).ldelim();
+                $root.proto.CreateAssetContract.AssetAttributes.encode(message.Attributes, writer.uint32(/* id 11, wireType 2 =*/90).fork(), q + 1).ldelim();
             return writer;
         };
 
@@ -4824,9 +5112,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        CreateAssetContract.decode = function decode(reader, length, error) {
+        CreateAssetContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -4872,15 +5164,15 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 case 10: {
-                        message.Properties = $root.proto.CreateAssetContract.AssetProperties.decode(reader, reader.uint32());
+                        message.Properties = $root.proto.CreateAssetContract.AssetProperties.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 case 11: {
-                        message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.decode(reader, reader.uint32());
+                        message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.decode(reader, reader.uint32(), undefined, long + 1);
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -4911,9 +5203,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        CreateAssetContract.verify = function verify(message) {
+        CreateAssetContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -4952,12 +5248,12 @@ export const proto = $root.proto = (() => {
                 if (!$util.isInteger(message.MaxSupply) && !(message.MaxSupply && $util.isInteger(message.MaxSupply.low) && $util.isInteger(message.MaxSupply.high)))
                     return "MaxSupply: integer|Long expected";
             if (message.Properties != null && message.hasOwnProperty("Properties")) {
-                let error = $root.proto.CreateAssetContract.AssetProperties.verify(message.Properties);
+                let error = $root.proto.CreateAssetContract.AssetProperties.verify(message.Properties, long + 1);
                 if (error)
                     return "Properties." + error;
             }
             if (message.Attributes != null && message.hasOwnProperty("Attributes")) {
-                let error = $root.proto.CreateAssetContract.AssetAttributes.verify(message.Attributes);
+                let error = $root.proto.CreateAssetContract.AssetAttributes.verify(message.Attributes, long + 1);
                 if (error)
                     return "Attributes." + error;
             }
@@ -4972,9 +5268,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.CreateAssetContract} CreateAssetContract
          */
-        CreateAssetContract.fromObject = function fromObject(object) {
+        CreateAssetContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.CreateAssetContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.CreateAssetContract();
             switch (object.Type) {
             default:
@@ -5018,7 +5318,7 @@ export const proto = $root.proto = (() => {
                 message.Precision = object.Precision >>> 0;
             if (object.InitialSupply != null)
                 if ($util.Long)
-                    (message.InitialSupply = $util.Long.fromValue(object.InitialSupply)).unsigned = false;
+                    message.InitialSupply = $util.Long.fromValue(object.InitialSupply, false);
                 else if (typeof object.InitialSupply === "string")
                     message.InitialSupply = parseInt(object.InitialSupply, 10);
                 else if (typeof object.InitialSupply === "number")
@@ -5027,7 +5327,7 @@ export const proto = $root.proto = (() => {
                     message.InitialSupply = new $util.LongBits(object.InitialSupply.low >>> 0, object.InitialSupply.high >>> 0).toNumber();
             if (object.MaxSupply != null)
                 if ($util.Long)
-                    (message.MaxSupply = $util.Long.fromValue(object.MaxSupply)).unsigned = false;
+                    message.MaxSupply = $util.Long.fromValue(object.MaxSupply, false);
                 else if (typeof object.MaxSupply === "string")
                     message.MaxSupply = parseInt(object.MaxSupply, 10);
                 else if (typeof object.MaxSupply === "number")
@@ -5037,12 +5337,12 @@ export const proto = $root.proto = (() => {
             if (object.Properties != null) {
                 if (typeof object.Properties !== "object")
                     throw TypeError(".proto.CreateAssetContract.Properties: object expected");
-                message.Properties = $root.proto.CreateAssetContract.AssetProperties.fromObject(object.Properties);
+                message.Properties = $root.proto.CreateAssetContract.AssetProperties.fromObject(object.Properties, long + 1);
             }
             if (object.Attributes != null) {
                 if (typeof object.Attributes !== "object")
                     throw TypeError(".proto.CreateAssetContract.Attributes: object expected");
-                message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.fromObject(object.Attributes);
+                message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.fromObject(object.Attributes, long + 1);
             }
             return message;
         };
@@ -5056,9 +5356,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        CreateAssetContract.toObject = function toObject(message, options) {
+        CreateAssetContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.arrays || options.defaults)
                 object.URIs = [];
@@ -5077,14 +5381,14 @@ export const proto = $root.proto = (() => {
                 object.Precision = 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.InitialSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.InitialSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.InitialSupply = options.longs === String ? "0" : 0;
+                    object.InitialSupply = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.MaxSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    object.MaxSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.MaxSupply = options.longs === String ? "0" : 0;
+                    object.MaxSupply = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 object.Properties = null;
                 object.Attributes = null;
             }
@@ -5106,19 +5410,23 @@ export const proto = $root.proto = (() => {
             if (message.Precision != null && message.hasOwnProperty("Precision"))
                 object.Precision = message.Precision;
             if (message.InitialSupply != null && message.hasOwnProperty("InitialSupply"))
-                if (typeof message.InitialSupply === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.InitialSupply = typeof message.InitialSupply === "number" ? BigInt(message.InitialSupply) : $util.Long.fromBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0, false).toBigInt();
+                else if (typeof message.InitialSupply === "number")
                     object.InitialSupply = options.longs === String ? String(message.InitialSupply) : message.InitialSupply;
                 else
                     object.InitialSupply = options.longs === String ? $util.Long.prototype.toString.call(message.InitialSupply) : options.longs === Number ? new $util.LongBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0).toNumber() : message.InitialSupply;
             if (message.MaxSupply != null && message.hasOwnProperty("MaxSupply"))
-                if (typeof message.MaxSupply === "number")
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.MaxSupply = typeof message.MaxSupply === "number" ? BigInt(message.MaxSupply) : $util.Long.fromBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0, false).toBigInt();
+                else if (typeof message.MaxSupply === "number")
                     object.MaxSupply = options.longs === String ? String(message.MaxSupply) : message.MaxSupply;
                 else
                     object.MaxSupply = options.longs === String ? $util.Long.prototype.toString.call(message.MaxSupply) : options.longs === Number ? new $util.LongBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0).toNumber() : message.MaxSupply;
             if (message.Properties != null && message.hasOwnProperty("Properties"))
-                object.Properties = $root.proto.CreateAssetContract.AssetProperties.toObject(message.Properties, options);
+                object.Properties = $root.proto.CreateAssetContract.AssetProperties.toObject(message.Properties, options, q + 1);
             if (message.Attributes != null && message.hasOwnProperty("Attributes"))
-                object.Attributes = $root.proto.CreateAssetContract.AssetAttributes.toObject(message.Attributes, options);
+                object.Attributes = $root.proto.CreateAssetContract.AssetAttributes.toObject(message.Attributes, options, q + 1);
             return object;
         };
 
@@ -5190,7 +5498,7 @@ export const proto = $root.proto = (() => {
             function AssetProperties(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -5271,9 +5579,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            AssetProperties.encode = function encode(message, writer) {
+            AssetProperties.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
                     writer.uint32(/* id 1, wireType 0 =*/8).bool(message.CanFreeze);
                 if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
@@ -5315,9 +5627,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            AssetProperties.decode = function decode(reader, length, error) {
+            AssetProperties.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract.AssetProperties();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -5353,7 +5669,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -5384,9 +5700,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            AssetProperties.verify = function verify(message) {
+            AssetProperties.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.CanFreeze != null && message.hasOwnProperty("CanFreeze"))
                     if (typeof message.CanFreeze !== "boolean")
                         return "CanFreeze: boolean expected";
@@ -5419,9 +5739,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.CreateAssetContract.AssetProperties} AssetProperties
              */
-            AssetProperties.fromObject = function fromObject(object) {
+            AssetProperties.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.CreateAssetContract.AssetProperties)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.CreateAssetContract.AssetProperties();
                 if (object.CanFreeze != null)
                     message.CanFreeze = Boolean(object.CanFreeze);
@@ -5449,9 +5773,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            AssetProperties.toObject = function toObject(message, options) {
+            AssetProperties.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.CanFreeze = false;
@@ -5529,7 +5857,7 @@ export const proto = $root.proto = (() => {
             function AssetAttributes(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -5570,9 +5898,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            AssetAttributes.encode = function encode(message, writer) {
+            AssetAttributes.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
                     writer.uint32(/* id 1, wireType 0 =*/8).bool(message.IsPaused);
                 if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
@@ -5604,9 +5936,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            AssetAttributes.decode = function decode(reader, length, error) {
+            AssetAttributes.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract.AssetAttributes();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -5622,7 +5958,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -5653,9 +5989,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            AssetAttributes.verify = function verify(message) {
+            AssetAttributes.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.IsPaused != null && message.hasOwnProperty("IsPaused"))
                     if (typeof message.IsPaused !== "boolean")
                         return "IsPaused: boolean expected";
@@ -5673,9 +6013,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.CreateAssetContract.AssetAttributes} AssetAttributes
              */
-            AssetAttributes.fromObject = function fromObject(object) {
+            AssetAttributes.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.CreateAssetContract.AssetAttributes)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.CreateAssetContract.AssetAttributes();
                 if (object.IsPaused != null)
                     message.IsPaused = Boolean(object.IsPaused);
@@ -5693,9 +6037,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            AssetAttributes.toObject = function toObject(message, options) {
+            AssetAttributes.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.IsPaused = false;
@@ -5765,7 +6113,7 @@ export const proto = $root.proto = (() => {
             this.CallValue = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
                         this[keys[i]] = properties[keys[i]];
         }
 
@@ -5830,16 +6178,20 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        SmartContract.encode = function encode(message, writer) {
+        SmartContract.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
             if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
                 writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.Address);
             if (message.CallValue != null && message.CallValue.length)
                 for (let i = 0; i < message.CallValue.length; ++i)
-                    $root.proto.SmartContract.CallValueData.encode(message.CallValue[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                    $root.proto.SmartContract.CallValueData.encode(message.CallValue[i], writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
             if (message.Input != null && Object.hasOwnProperty.call(message, "Input"))
                 writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.Input);
             if (message.VirtualMachine != null && Object.hasOwnProperty.call(message, "VirtualMachine"))
@@ -5871,9 +6223,13 @@ export const proto = $root.proto = (() => {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        SmartContract.decode = function decode(reader, length, error) {
+        SmartContract.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.SmartContract();
             while (reader.pos < end) {
                 let tag = reader.uint32();
@@ -5891,7 +6247,7 @@ export const proto = $root.proto = (() => {
                 case 3: {
                         if (!(message.CallValue && message.CallValue.length))
                             message.CallValue = [];
-                        message.CallValue.push($root.proto.SmartContract.CallValueData.decode(reader, reader.uint32()));
+                        message.CallValue.push($root.proto.SmartContract.CallValueData.decode(reader, reader.uint32(), undefined, long + 1));
                         break;
                     }
                 case 4: {
@@ -5903,7 +6259,7 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 default:
-                    reader.skipType(tag & 7);
+                    reader.skipType(tag & 7, long);
                     break;
                 }
             }
@@ -5934,9 +6290,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        SmartContract.verify = function verify(message) {
+        SmartContract.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
             if (message.Type != null && message.hasOwnProperty("Type"))
                 switch (message.Type) {
                 default:
@@ -5953,7 +6313,7 @@ export const proto = $root.proto = (() => {
                 if (!Array.isArray(message.CallValue))
                     return "CallValue: array expected";
                 for (let i = 0; i < message.CallValue.length; ++i) {
-                    let error = $root.proto.SmartContract.CallValueData.verify(message.CallValue[i]);
+                    let error = $root.proto.SmartContract.CallValueData.verify(message.CallValue[i], long + 1);
                     if (error)
                         return "CallValue." + error;
                 }
@@ -5975,9 +6335,13 @@ export const proto = $root.proto = (() => {
          * @param {Object.<string,*>} object Plain object
          * @returns {proto.SmartContract} SmartContract
          */
-        SmartContract.fromObject = function fromObject(object) {
+        SmartContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.SmartContract)
                 return object;
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.SmartContract();
             switch (object.Type) {
             default:
@@ -6011,7 +6375,7 @@ export const proto = $root.proto = (() => {
                 for (let i = 0; i < object.CallValue.length; ++i) {
                     if (typeof object.CallValue[i] !== "object")
                         throw TypeError(".proto.SmartContract.CallValue: object expected");
-                    message.CallValue[i] = $root.proto.SmartContract.CallValueData.fromObject(object.CallValue[i]);
+                    message.CallValue[i] = $root.proto.SmartContract.CallValueData.fromObject(object.CallValue[i], long + 1);
                 }
             }
             if (object.Input != null)
@@ -6033,9 +6397,13 @@ export const proto = $root.proto = (() => {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        SmartContract.toObject = function toObject(message, options) {
+        SmartContract.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
             let object = {};
             if (options.arrays || options.defaults)
                 object.CallValue = [];
@@ -6064,7 +6432,7 @@ export const proto = $root.proto = (() => {
             if (message.CallValue && message.CallValue.length) {
                 object.CallValue = [];
                 for (let j = 0; j < message.CallValue.length; ++j)
-                    object.CallValue[j] = $root.proto.SmartContract.CallValueData.toObject(message.CallValue[j], options);
+                    object.CallValue[j] = $root.proto.SmartContract.CallValueData.toObject(message.CallValue[j], options, q + 1);
             }
             if (message.Input != null && message.hasOwnProperty("Input"))
                 object.Input = options.bytes === String ? $util.base64.encode(message.Input, 0, message.Input.length) : options.bytes === Array ? Array.prototype.slice.call(message.Input) : message.Input;
@@ -6136,7 +6504,7 @@ export const proto = $root.proto = (() => {
             function CallValueData(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -6177,9 +6545,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            CallValueData.encode = function encode(message, writer) {
+            CallValueData.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                     writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.AssetID);
                 if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
@@ -6211,9 +6583,13 @@ export const proto = $root.proto = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            CallValueData.decode = function decode(reader, length, error) {
+            CallValueData.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.SmartContract.CallValueData();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -6229,7 +6605,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -6260,9 +6636,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            CallValueData.verify = function verify(message) {
+            CallValueData.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.AssetID != null && message.hasOwnProperty("AssetID"))
                     if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                         return "AssetID: buffer expected";
@@ -6280,9 +6660,13 @@ export const proto = $root.proto = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {proto.SmartContract.CallValueData} CallValueData
              */
-            CallValueData.fromObject = function fromObject(object) {
+            CallValueData.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.SmartContract.CallValueData)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.proto.SmartContract.CallValueData();
                 if (object.AssetID != null)
                     if (typeof object.AssetID === "string")
@@ -6291,7 +6675,7 @@ export const proto = $root.proto = (() => {
                         message.AssetID = object.AssetID;
                 if (object.Amount != null)
                     if ($util.Long)
-                        (message.Amount = $util.Long.fromValue(object.Amount)).unsigned = false;
+                        message.Amount = $util.Long.fromValue(object.Amount, false);
                     else if (typeof object.Amount === "string")
                         message.Amount = parseInt(object.Amount, 10);
                     else if (typeof object.Amount === "number")
@@ -6310,9 +6694,13 @@ export const proto = $root.proto = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            CallValueData.toObject = function toObject(message, options) {
+            CallValueData.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     if (options.bytes === String)
@@ -6324,14 +6712,16 @@ export const proto = $root.proto = (() => {
                     }
                     if ($util.Long) {
                         let long = new $util.Long(0, 0, false);
-                        object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.Amount = options.longs === String ? "0" : 0;
+                        object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
                 if (message.AssetID != null && message.hasOwnProperty("AssetID"))
                     object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
                 if (message.Amount != null && message.hasOwnProperty("Amount"))
-                    if (typeof message.Amount === "number")
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                    else if (typeof message.Amount === "number")
                         object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                     else
                         object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
@@ -6412,7 +6802,7 @@ export const google = $root.google = (() => {
             function Any(properties) {
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -6453,9 +6843,13 @@ export const google = $root.google = (() => {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Any.encode = function encode(message, writer) {
+            Any.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.type_url != null && Object.hasOwnProperty.call(message, "type_url"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.type_url);
                 if (message.value != null && Object.hasOwnProperty.call(message, "value"))
@@ -6487,9 +6881,13 @@ export const google = $root.google = (() => {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Any.decode = function decode(reader, length, error) {
+            Any.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let end = length === undefined ? reader.len : reader.pos + length, message = new $root.google.protobuf.Any();
                 while (reader.pos < end) {
                     let tag = reader.uint32();
@@ -6505,7 +6903,7 @@ export const google = $root.google = (() => {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -6536,9 +6934,13 @@ export const google = $root.google = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Any.verify = function verify(message) {
+            Any.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
                 if (message.type_url != null && message.hasOwnProperty("type_url"))
                     if (!$util.isString(message.type_url))
                         return "type_url: string expected";
@@ -6556,9 +6958,13 @@ export const google = $root.google = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {google.protobuf.Any} Any
              */
-            Any.fromObject = function fromObject(object) {
+            Any.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.google.protobuf.Any)
                     return object;
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 let message = new $root.google.protobuf.Any();
                 if (object.type_url != null)
                     message.type_url = String(object.type_url);
@@ -6579,9 +6985,13 @@ export const google = $root.google = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Any.toObject = function toObject(message, options) {
+            Any.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.type_url = "";

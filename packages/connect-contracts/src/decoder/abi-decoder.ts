@@ -106,15 +106,15 @@ export function decodeByType(
   // Handle primitive types with variable-length encoding
   if (type === 'u8') {
     const result = decodeVariableInt(bytes, offset, nested, 1)
-    return { value: result.value as number, type: 'u8', consumed: result.consumed }
+    return { value: result.value, type: 'u8', consumed: result.consumed }
   }
   if (type === 'u16') {
     const result = decodeVariableInt(bytes, offset, nested, 2)
-    return { value: result.value as number, type: 'u16', consumed: result.consumed }
+    return { value: result.value, type: 'u16', consumed: result.consumed }
   }
   if (type === 'u32' || type === 'usize') {
     const result = decodeVariableInt(bytes, offset, nested, 4)
-    return { value: result.value as number, type: 'u32', consumed: result.consumed }
+    return { value: result.value, type: 'u32', consumed: result.consumed }
   }
   if (type === 'u64') {
     const result = decodeVariableInt(bytes, offset, nested, 8)
