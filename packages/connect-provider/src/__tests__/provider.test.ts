@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { KleverProvider } from '../provider'
 import { NETWORKS } from '../networks'
 import { TransactionStatus, type IAccount, type ITransactionResponse } from '../types/api-types'
-import type { KleverAddress, TransactionHash } from '@klever/connect-core'
+import type { BlockHash, KleverAddress, TransactionHash } from '@klever/connect-core'
+import type { BuildTransactionRequest } from '../types/types'
 
 // Mock the HttpClient
 vi.mock('../http-client', () => ({
@@ -150,7 +151,7 @@ describe('KleverProvider', () => {
       assets: [
         { assetId: 'KLV', balance: 1000000n },
         { assetId: 'KDA-123', balance: 500000n },
-      ],
+      ] as unknown as IAccount['assets'],
     }
 
     beforeEach(() => {
@@ -186,6 +187,75 @@ describe('KleverProvider', () => {
       },
     }
 
+    it('should fetch transactions with filters and pagination', async () => {
+      const validAddress =
+        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
+      const mockGet = vi.fn().mockResolvedValue({
+        error: '',
+        code: 'successful',
+        data: {
+          transactions: [
+            {
+              hash: '0xaaa',
+              blockNum: 10,
+              sender: validAddress,
+              nonce: 1,
+              timestamp: 1,
+              kAppFee: 0,
+              bandwidthFee: 0,
+              totalFee: 0,
+              status: TransactionStatus.Success,
+              version: 1,
+              chainID: '109',
+              signature: [],
+              receipts: [],
+            },
+          ],
+        },
+        pagination: {
+          page: 1,
+          limit: 25,
+          total: 1,
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const result = await provider.getTransactions(validAddress, {
+        page: 1,
+        limit: 25,
+        type: 'Transfer',
+        status: 'success',
+        asset: 'KLV',
+        nonce: 1,
+        blockNum: 10,
+        role: 'sender',
+        startdate: '2026-01-01',
+        enddate: '2026-01-31',
+        orderid: '42',
+        marketplaceid: '7',
+        orderBy: 'asc',
+        withResults: true,
+        withInternal: true,
+      })
+
+      expect(mockGet).toHaveBeenCalledWith(
+        '/v1.0/address/klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5/transactions?page=1&limit=25&type=Transfer&status=success&asset=KLV&nonce=1&blockNum=10&role=sender&startdate=2026-01-01&enddate=2026-01-31&orderid=42&marketplaceid=7&orderBy=asc&withResults=true&withInternal=true',
+      )
+      expect(result.transactions).toHaveLength(1)
+      expect(result.pagination).toEqual({ page: 1, limit: 25, total: 1 })
+    })
+
+    it('should throw error for invalid transactions role', async () => {
+      const validAddress =
+        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
+
+      await expect(
+        provider.getTransactions(validAddress, {
+          role: 'invalid' as 'sender' | 'receiver',
+        }),
+      ).rejects.toThrow('Invalid role')
+    })
     it('should fetch transaction data', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockTxResponse)
       // @ts-expect-error - accessing private property for testing
@@ -658,7 +728,7 @@ describe('KleverProvider', () => {
             },
           },
         ],
-      }
+      } as unknown as BuildTransactionRequest
 
       const mockPost = vi.fn().mockResolvedValue({
         error: null,
@@ -705,7 +775,9 @@ describe('KleverProvider', () => {
         provider.buildTransaction({
           sender: 'klv1...',
           nonce: 10,
-          contracts: [{ type: 0, parameter: {} }],
+          contracts: [
+            { type: 0, parameter: {} },
+          ] as unknown as BuildTransactionRequest['contracts'],
         }),
       ).rejects.toThrow('Build failed')
     })
@@ -850,7 +922,7 @@ describe('KleverProvider', () => {
       provider.apiClient.get = mockGet
 
       const block = await provider.getBlock(
-        '0817c26971c7b66f0e8d9684ea5656fb0966337ec41c18a91ddc51fde93bef49',
+        '0817c26971c7b66f0e8d9684ea5656fb0966337ec41c18a91ddc51fde93bef49' as BlockHash,
       )
 
       expect(mockGet).toHaveBeenCalledWith(
