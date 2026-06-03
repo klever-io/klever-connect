@@ -13,22 +13,41 @@ import type {
 } from './api-types'
 import type { ContractRequestData } from './contract-requests'
 
+/**
+ * Options for filtering and paginating transaction queries.
+ */
 export interface GetTransactionsOptions {
+  /** Page number for pagination (1-based). */
   page?: number
+  /** Maximum number of transactions to return per page. */
   limit?: number
+  /** Filter by transaction type. */
   type?: string
+  /** Filter by transaction status. */
   status?: string
+  /** Filter by asset identifier. */
   asset?: string
+  /** Filter by transaction nonce. */
   nonce?: number
+  /** Filter by block number. */
   blockNum?: number
+  /** Restrict results to transactions where the address is sender or receiver. */
   role?: 'sender' | 'receiver'
-  startdate?: string
-  enddate?: string
-  orderid?: string
-  marketplaceid?: string
+  /** Filter by start date. */
+  startDate?: string
+  /** Filter by end date. */
+  endDate?: string
+  /** Filter by order identifier. */
+  orderId?: string
+  /** Filter by marketplace identifier. */
+  marketplaceId?: string
+  /** Sort order for results. */
   orderBy?: 'asc' | 'desc'
+  /** Include receipt details in the response. */
   withResults?: boolean
+  /** Include internal transactions in the response. */
   withInternal?: boolean
+  /** Bypass the local cache and force a fresh API request. */
   skipCache?: boolean
 }
 
