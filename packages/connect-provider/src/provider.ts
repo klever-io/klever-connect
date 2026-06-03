@@ -13,6 +13,8 @@ import type {
   ApiResponse,
   AddressResponse,
   ITransactionResponse,
+  ITransactionListApiResponse,
+  ITransactionListResponse,
   IBlockResponse,
   IBroadcastResult,
   IBulkBroadcastResult,
@@ -36,6 +38,7 @@ import type {
   ProviderEventMap,
   BuildTransactionRequest,
   BuildTransactionResponse,
+  GetTransactionsOptions,
 } from './types/types'
 import { TypedEventEmitter } from './event-emitter'
 import { KleverEventManager } from './provider-events'
@@ -425,6 +428,90 @@ export class KleverProvider implements IProvider {
     }
 
     return tx.receipts ?? []
+  }
+
+  /**
+   * Retrieves transactions for an address with optional filters.
+   */
+  async getTransactions(
+    address: KleverAddress,
+    options?: GetTransactionsOptions,
+  ): Promise<ITransactionListResponse> {
+    if (!isValidAddress(address)) {
+      throw new ValidationError(`Invalid address: ${address}`, { address })
+    }
+
+    const { skipCache, ...filters } = options ?? {}
+    const queryParams = new URLSearchParams()
+
+    if (filters.page !== undefined) queryParams.set('page', String(filters.page))
+    if (filters.limit !== undefined) queryParams.set('limit', String(filters.limit))
+    if (filters.type !== undefined) queryParams.set('type', filters.type)
+    if (filters.status !== undefined) queryParams.set('status', filters.status)
+    if (filters.asset !== undefined) queryParams.set('asset', filters.asset)
+    if (filters.nonce !== undefined) queryParams.set('nonce', String(filters.nonce))
+    if (filters.blockNum !== undefined) queryParams.set('blockNum', String(filters.blockNum))
+    const role = filters.role as string | undefined
+    if (role !== undefined) {
+      if (role !== 'sender' && role !== 'receiver') {
+        throw new ValidationError(`Invalid role: ${role}`, { role })
+      }
+      queryParams.set('role', role)
+    }
+    if (filters.startdate !== undefined) queryParams.set('startdate', filters.startdate)
+    if (filters.enddate !== undefined) queryParams.set('enddate', filters.enddate)
+    if (filters.orderid !== undefined) queryParams.set('orderid', filters.orderid)
+    if (filters.marketplaceid !== undefined) queryParams.set('marketplaceid', filters.marketplaceid)
+    const orderBy = filters.orderBy as string | undefined
+    if (orderBy !== undefined) {
+      if (orderBy !== 'asc' && orderBy !== 'desc') {
+        throw new ValidationError(`Invalid orderBy: ${orderBy}`, {
+          orderBy,
+        })
+      }
+      queryParams.set('orderBy', orderBy)
+    }
+    if (filters.withResults !== undefined) {
+      queryParams.set('withResults', String(filters.withResults))
+    }
+    if (filters.withInternal !== undefined) {
+      queryParams.set('withInternal', String(filters.withInternal))
+    }
+
+    const queryString = queryParams.toString()
+    const endpoint = `/v1.0/address/${address}/transactions${queryString ? `?${queryString}` : ''}`
+    const cacheKey = `txs:${address}${queryString ? `?${queryString}` : ''}`
+
+    if (!skipCache && this.cache) {
+      const cached = this.cache.get(cacheKey)
+      if (cached) {
+        return cached as ITransactionListResponse
+      }
+    }
+
+    const response = await this.apiClient.get<ITransactionListApiResponse>(endpoint)
+
+    if (response.error) {
+      throw new NetworkError(response.error, { address, endpoint: '/v1.0/address/transactions' })
+    }
+
+    if (!response.data) {
+      throw new NetworkError('Transactions not found', {
+        address,
+        endpoint: '/v1.0/address/transactions',
+      })
+    }
+
+    const result: ITransactionListResponse = {
+      transactions: response.data.transactions ?? [],
+      ...(response.pagination !== undefined && { pagination: response.pagination }),
+    }
+
+    if (this.cache) {
+      this.cache.set(cacheKey, result)
+    }
+
+    return result
   }
 
   /**

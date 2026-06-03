@@ -223,6 +223,24 @@ export interface ITransactionResponse {
   hasOperations?: boolean
 }
 
+export interface ITransactionListPagination {
+  page: number
+  limit: number
+  total: number
+}
+
+export interface ITransactionListResponse {
+  transactions: ITransactionResponse[]
+  pagination?: ITransactionListPagination
+}
+
+export interface ITransactionListApiResponse extends Omit<
+  ApiResponse<ITransactionListResponse>,
+  'pagination'
+> {
+  pagination?: ITransactionListPagination
+}
+
 /**
  * Result returned when submitting a transaction
  * Contains the transaction hash and optionally the full transaction data
@@ -310,11 +328,6 @@ export interface ApiAssetBalance {
   marketplaceId?: string
   orderId?: string
   stakingType: number
-}
-
-// Transaction Response
-export interface ITransactionListResponse {
-  transactions: ITransactionResponse[]
 }
 
 // Transaction API Response wrapper
