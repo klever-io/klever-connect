@@ -176,6 +176,8 @@ describe('KleverProvider', () => {
 
   describe('getTransaction', () => {
     const mockTxHash = '0x123abc'
+    const validAddress =
+      'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
     const mockTxResponse = {
       error: null,
       data: {
@@ -188,8 +190,6 @@ describe('KleverProvider', () => {
     }
 
     it('should fetch transactions with filters and pagination', async () => {
-      const validAddress =
-        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
       const mockGet = vi.fn().mockResolvedValue({
         error: '',
         code: 'successful',
@@ -230,10 +230,10 @@ describe('KleverProvider', () => {
         nonce: 1,
         blockNum: 10,
         role: 'sender',
-        startdate: '2026-01-01',
-        enddate: '2026-01-31',
-        orderid: '42',
-        marketplaceid: '7',
+        startDate: '2026-01-01',
+        endDate: '2026-01-31',
+        orderId: '42',
+        marketplaceId: '7',
         orderBy: 'asc',
         withResults: true,
         withInternal: true,
@@ -247,15 +247,139 @@ describe('KleverProvider', () => {
     })
 
     it('should throw error for invalid transactions role', async () => {
-      const validAddress =
-        'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
-
       await expect(
         provider.getTransactions(validAddress, {
           role: 'invalid' as 'sender' | 'receiver',
         }),
       ).rejects.toThrow('Invalid role')
     })
+
+    it('should throw error for invalid transactions orderBy', async () => {
+      await expect(
+        provider.getTransactions(validAddress, {
+          orderBy: 'invalid' as 'asc' | 'desc',
+        }),
+      ).rejects.toThrow('Invalid orderBy')
+    })
+
+    it('should return empty transactions with pagination metadata', async () => {
+      const mockGet = vi.fn().mockResolvedValue({
+        error: '',
+        code: 'successful',
+        data: {
+          transactions: [],
+        },
+        pagination: {
+          page: 2,
+          limit: 10,
+          total: 0,
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const result = await provider.getTransactions(validAddress, {
+        page: 2,
+        limit: 10,
+      })
+
+      expect(result.transactions).toEqual([])
+      expect(result.pagination).toEqual({ page: 2, limit: 10, total: 0 })
+    })
+
+    it('should handle transaction responses without pagination metadata', async () => {
+      const mockGet = vi.fn().mockResolvedValue({
+        error: '',
+        code: 'successful',
+        data: {
+          transactions: [
+            {
+              hash: '0xbbb',
+              blockNum: 12,
+              sender: validAddress,
+              nonce: 2,
+              timestamp: 2,
+              kAppFee: 0,
+              bandwidthFee: 0,
+              totalFee: 0,
+              status: TransactionStatus.Success,
+              version: 1,
+              chainID: '109',
+              signature: [],
+              receipts: [],
+            },
+          ],
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      const result = await provider.getTransactions(validAddress)
+
+      expect(result.transactions).toHaveLength(1)
+      expect(result.pagination).toBeUndefined()
+    })
+
+    it('should cache transactions by request key', async () => {
+      const mockGet = vi.fn().mockResolvedValue({
+        error: '',
+        code: 'successful',
+        data: {
+          transactions: [],
+        },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      await provider.getTransactions(validAddress, { page: 1 })
+      await provider.getTransactions(validAddress, { page: 1 })
+
+      expect(mockGet).toHaveBeenCalledTimes(1)
+    })
+
+    it('should skip cached transactions when requested', async () => {
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce({
+          error: '',
+          code: 'successful',
+          data: {
+            transactions: [],
+          },
+        })
+        .mockResolvedValueOnce({
+          error: '',
+          code: 'successful',
+          data: {
+            transactions: [
+              {
+                hash: '0xccc',
+                blockNum: 13,
+                sender: validAddress,
+                nonce: 3,
+                timestamp: 3,
+                kAppFee: 0,
+                bandwidthFee: 0,
+                totalFee: 0,
+                status: TransactionStatus.Success,
+                version: 1,
+                chainID: '109',
+                signature: [],
+                receipts: [],
+              },
+            ],
+          },
+        })
+      // @ts-expect-error - accessing private property for testing
+      provider.apiClient.get = mockGet
+
+      await provider.getTransactions(validAddress, { page: 1 })
+      const result = await provider.getTransactions(validAddress, { page: 1, skipCache: true })
+
+      expect(result.transactions).toHaveLength(1)
+      expect(mockGet).toHaveBeenCalledTimes(2)
+    })
+
     it('should fetch transaction data', async () => {
       const mockGet = vi.fn().mockResolvedValue(mockTxResponse)
       // @ts-expect-error - accessing private property for testing

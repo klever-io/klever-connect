@@ -223,21 +223,36 @@ export interface ITransactionResponse {
   hasOperations?: boolean
 }
 
+/**
+ * Pagination metadata returned by the transaction list endpoint.
+ */
 export interface ITransactionListPagination {
+  /** Current page number. */
   page: number
+  /** Maximum number of items returned for the page. */
   limit: number
+  /** Total number of matching transactions. */
   total: number
 }
 
+/**
+ * Transaction list payload returned by the provider.
+ */
 export interface ITransactionListResponse {
+  /** Transactions matching the requested filters. */
   transactions: ITransactionResponse[]
+  /** Pagination metadata when returned by the API. */
   pagination?: ITransactionListPagination
 }
 
+/**
+ * Raw API response shape for transaction list requests.
+ */
 export interface ITransactionListApiResponse extends Omit<
   ApiResponse<ITransactionListResponse>,
   'pagination'
 > {
+  /** Pagination metadata returned alongside the transaction payload. */
   pagination?: ITransactionListPagination
 }
 

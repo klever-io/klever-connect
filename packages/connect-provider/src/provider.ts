@@ -432,6 +432,28 @@ export class KleverProvider implements IProvider {
 
   /**
    * Retrieves transactions for an address with optional filters.
+   *
+   * @param address - The Klever address to query
+   * @param options - Optional pagination and filter values such as `startDate`,
+   * `endDate`, `orderId`, and `marketplaceId`
+   * @returns Transaction list for the address with optional pagination metadata
+   * @throws {ValidationError} If the address is invalid or `role`/`orderBy` are invalid
+   * @throws {NetworkError} If the API request fails or returns no data
+   *
+   * @example
+   * ```typescript
+   * const result = await provider.getTransactions('klv1...')
+   * console.log(result.transactions)
+   *
+   * const filtered = await provider.getTransactions('klv1...', {
+   *   page: 1,
+   *   limit: 25,
+   *   role: 'sender',
+   *   startDate: '2026-01-01',
+   *   endDate: '2026-01-31',
+   *   orderBy: 'asc',
+   * })
+   * ```
    */
   async getTransactions(
     address: KleverAddress,
@@ -458,10 +480,12 @@ export class KleverProvider implements IProvider {
       }
       queryParams.set('role', role)
     }
-    if (filters.startdate !== undefined) queryParams.set('startdate', filters.startdate)
-    if (filters.enddate !== undefined) queryParams.set('enddate', filters.enddate)
-    if (filters.orderid !== undefined) queryParams.set('orderid', filters.orderid)
-    if (filters.marketplaceid !== undefined) queryParams.set('marketplaceid', filters.marketplaceid)
+    if (filters.startDate !== undefined) queryParams.set('startdate', filters.startDate)
+    if (filters.endDate !== undefined) queryParams.set('enddate', filters.endDate)
+    if (filters.orderId !== undefined) queryParams.set('orderid', filters.orderId)
+    if (filters.marketplaceId !== undefined) {
+      queryParams.set('marketplaceid', filters.marketplaceId)
+    }
     const orderBy = filters.orderBy as string | undefined
     if (orderBy !== undefined) {
       if (orderBy !== 'asc' && orderBy !== 'desc') {
@@ -492,13 +516,13 @@ export class KleverProvider implements IProvider {
     const response = await this.apiClient.get<ITransactionListApiResponse>(endpoint)
 
     if (response.error) {
-      throw new NetworkError(response.error, { address, endpoint: '/v1.0/address/transactions' })
+      throw new NetworkError(response.error, { address, endpoint })
     }
 
     if (!response.data) {
       throw new NetworkError('Transactions not found', {
         address,
-        endpoint: '/v1.0/address/transactions',
+        endpoint,
       })
     }
 
