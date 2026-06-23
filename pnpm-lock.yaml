@@ -91,43 +91,6 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.10.10)(@vitest/ui@3.2.4)(jiti@2.6.0)(jsdom@25.0.1)(tsx@4.20.6)(yaml@2.8.3)
 
-  examples/_legacy:
-    dependencies:
-      '@klever/connect':
-        specifier: workspace:*
-        version: link:../../packages/connect
-      '@klever/connect-contracts':
-        specifier: workspace:*
-        version: link:../../packages/connect-contracts
-      '@klever/connect-core':
-        specifier: workspace:*
-        version: link:../../packages/connect-core
-      '@klever/connect-crypto':
-        specifier: workspace:*
-        version: link:../../packages/connect-crypto
-      '@klever/connect-encoding':
-        specifier: workspace:*
-        version: link:../../packages/connect-encoding
-      '@klever/connect-provider':
-        specifier: workspace:*
-        version: link:../../packages/connect-provider
-      '@klever/connect-react':
-        specifier: workspace:*
-        version: link:../../packages/connect-react
-      '@klever/connect-transactions':
-        specifier: workspace:*
-        version: link:../../packages/connect-transactions
-      '@klever/connect-wallet':
-        specifier: workspace:*
-        version: link:../../packages/connect-wallet
-      dotenv:
-        specifier: ^16.0.0
-        version: 16.6.1
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.18.8
-
   packages/connect:
     dependencies:
       '@klever/connect-contracts':
@@ -1589,10 +1552,6 @@ packages:
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
-    engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -4013,8 +3972,6 @@ snapshots:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
       domhandler: 5.0.3
-
-  dotenv@16.6.1: {}
 
   dunder-proto@1.0.1:
     dependencies:

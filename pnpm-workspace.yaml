@@ -1,6 +1,5 @@
 packages:
   - packages/*
-  - examples/_legacy
   - examples/common/*
   - examples/nodejs/*
   - examples/reactjs/*

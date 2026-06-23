@@ -14,10 +14,8 @@ examples/
 ├── reactjs/       # Vite + React 19 dApps (browser DOM, hooks, extension)
 ├── _fixtures/     # shared fixtures consumed by examples
 │   └── counter/   # tiny Rust SC fixture (klever-sc) used by sc-* flows
-├── _shared/       # shared test helpers (NOT shipped to npm)
-│   └── mock-wallet/ # MockWallet implementation used by reactjs/* tests
-└── _legacy/       # the previous `/examples` content, preserved for diff audit
-                  # (most flows are migrated-with-rewrite into the new layout)
+└── _shared/       # shared test helpers (NOT shipped to npm)
+    └── mock-wallet/ # MockWallet implementation used by reactjs/* tests
 ```
 
 ## Categories
@@ -107,13 +105,6 @@ The `examples/_fixtures/counter/` folder ships a minimal `klever-sc` Rust contra
 (increment / add / get) used by the `sc-*` examples. Source is provided; compiled
 artifacts (`counter.wasm` + `counter.abi.json`) are produced by running
 `./scripts/build.sh` from inside the fixture folder. See its README.
-
-## Legacy
-
-The previous `/examples` content lives untouched under [`_legacy/`](./_legacy/) so
-the diff is auditable. Most prior examples are migrated-with-rewrite into the
-new layout (heavy comments, tests, expected output); a small number of pure
-duplicates / kitchen-sink files were dropped.
 
 ## Networks reference
 
