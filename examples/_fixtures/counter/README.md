@@ -77,6 +77,7 @@ These examples consume `output/counter.wasm` and / or
 - `examples/common/sc-abi-load-and-validate` — loads the ABI JSON and lists endpoints.
 - `examples/nodejs/sc-deploy` — deploys the WASM.
 - `examples/nodejs/sc-invoke-mutable` — sends `increment` / `add(value)` txs.
+- `examples/nodejs/sc-invoke-payable-with-klv` — invokes payable smart-contract flow using fixture ABI.
 - `examples/nodejs/sc-deploy-and-interact-end-to-end` — deploy + interact in one script.
 - `examples/reactjs/react-sc-readonly-query` — view call from a component.
 - `examples/reactjs/react-sc-invoke-with-extension` — mutable invoke through the extension.
