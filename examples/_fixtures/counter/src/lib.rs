@@ -68,7 +68,7 @@ pub trait Counter {
     /// `#[view]` marks the endpoint as readonly: clients should reach it via
     /// `provider.queryContract({ scAddress, funcName: 'get_value' })` or via
     /// `Contract.call('get_value')` — no transaction needed.
-    #[view(getValue)]
+    #[view]
     fn get_value(&self) -> u64 {
         self.value().get()
     }
