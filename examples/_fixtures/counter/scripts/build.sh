@@ -53,6 +53,7 @@ else
     --target-dir target
 
   mkdir -p output
+  rm -f output/counter.abi.json
   cp target/wasm32-unknown-unknown/release/counter.wasm output/counter.wasm
 fi
 
