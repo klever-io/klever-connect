@@ -66,8 +66,8 @@ const provider = createMockProvider({
   },
 })
 
-await provider.getBalance('klv1abc...' as KleverAddress) // 1_000_000_000n
-await provider.getAccount('klv1abc...' as KleverAddress) // { ...assets }
+await provider.getBalance('klv1abc...') // 1_000_000_000n
+await provider.getAccount('klv1abc...') // { ...assets }
 ```
 
 Methods provided:
