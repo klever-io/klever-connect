@@ -237,7 +237,7 @@ export class MockWallet implements Pick<
   }
 
   async broadcastTransactions(txs: Transaction[]): Promise<string[]> {
-    return txs.map((_, i) => `mock-broadcast-${i + 1}`)
+    return txs.map(() => `mock-broadcast-${++this._nonce}`)
   }
 
   // ---- Account info ---------------------------------------------------------
