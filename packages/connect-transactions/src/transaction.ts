@@ -91,18 +91,16 @@ export class Transaction extends ProtoTransaction {
     if (json['RawData'] && typeof json['RawData'] === 'object') {
       const rawData = json['RawData'] as { [k: string]: unknown }
 
-      // Convert nonce from string to number
-      if (typeof rawData['Nonce'] === 'string') {
-        rawData['Nonce'] = Number(rawData['Nonce'])
-      }
-
-      // Convert other numeric fields inside RawData
-      const numericFields = ['KAppFee', 'BandwidthFee', 'PermID']
-      for (const field of numericFields) {
-        if (typeof rawData[field] === 'string') {
-          rawData[field] = Number(rawData[field])
-        }
-      }
+      // proto.js serializes 64-bit integer fields (int64/uint64) as strings;
+      // the extension unmarshals RawData expecting numbers. Nested fields use
+      // dot notation (e.g. "KDAFee.Amount").
+      numericStringFieldsToNumbers(rawData, [
+        'Nonce',
+        'KAppFee',
+        'BandwidthFee',
+        'PermID',
+        'KDAFee.Amount',
+      ])
 
       // Convert contract types from enum strings to numbers
       if (Array.isArray(rawData['Contract'])) {
@@ -345,5 +343,36 @@ export class Transaction extends ProtoTransaction {
   static fromTransaction(tx: Transaction): Transaction {
     const decoded = ProtoTransaction.fromObject(tx)
     return new Transaction(decoded)
+  }
+}
+
+/**
+ * Convert the given fields of an object from string to number, in place.
+ *
+ * Supports nested fields via dot notation (e.g. "KDAFee.Amount"). Fields that
+ * are absent, unreachable, or already numeric are left untouched.
+ *
+ * @param obj - Object to mutate
+ * @param paths - Field paths to convert (dot-separated for nested fields)
+ */
+function numericStringFieldsToNumbers(
+  obj: { [k: string]: unknown },
+  paths: readonly string[],
+): void {
+  for (const path of paths) {
+    const keys = path.split('.')
+    const leafKey = keys.pop()
+    if (leafKey === undefined) continue
+
+    let target: { [k: string]: unknown } | undefined = obj
+    for (const key of keys) {
+      if (!target) break
+      const next: unknown = target[key]
+      target = next && typeof next === 'object' ? (next as { [k: string]: unknown }) : undefined
+    }
+
+    if (target && typeof target[leafKey] === 'string') {
+      target[leafKey] = Number(target[leafKey])
+    }
   }
 }
