@@ -434,10 +434,11 @@ export class KleverProvider implements IProvider {
    * Retrieves transactions for an address with optional filters.
    *
    * @param address - The Klever address to query
-   * @param options - Optional pagination and filter values such as `startDate`,
-   * `endDate`, `orderId`, and `marketplaceId`
+   * @param options - Optional pagination and filter values including `page`, `limit`,
+   * `type`, `status`, `asset`, `nonce`, `blockNum`, `role`, `startDate`, `endDate`,
+   * `orderId`, `marketplaceId`, `orderBy`, `withResults`, `withInternal`, and `skipCache`
    * @returns Transaction list for the address with optional pagination metadata
-   * @throws {ValidationError} If the address is invalid or `role`/`orderBy` are invalid
+   * @throws {ValidationError} If the address is invalid or any filter value is invalid
    * @throws {NetworkError} If the API request fails or returns no data
    *
    * @example
@@ -466,13 +467,47 @@ export class KleverProvider implements IProvider {
     const { skipCache, ...filters } = options ?? {}
     const queryParams = new URLSearchParams()
 
-    if (filters.page !== undefined) queryParams.set('page', String(filters.page))
-    if (filters.limit !== undefined) queryParams.set('limit', String(filters.limit))
+    if (filters.page !== undefined) {
+      if (!Number.isInteger(filters.page) || filters.page < 1) {
+        throw new ValidationError(`Invalid page: ${filters.page}. Expected a positive integer.`, {
+          page: filters.page,
+        })
+      }
+      queryParams.set('page', String(filters.page))
+    }
+    if (filters.limit !== undefined) {
+      if (!Number.isInteger(filters.limit) || filters.limit < 1) {
+        throw new ValidationError(`Invalid limit: ${filters.limit}. Expected a positive integer.`, {
+          limit: filters.limit,
+        })
+      }
+      queryParams.set('limit', String(filters.limit))
+    }
     if (filters.type !== undefined) queryParams.set('type', filters.type)
     if (filters.status !== undefined) queryParams.set('status', filters.status)
     if (filters.asset !== undefined) queryParams.set('asset', filters.asset)
-    if (filters.nonce !== undefined) queryParams.set('nonce', String(filters.nonce))
-    if (filters.blockNum !== undefined) queryParams.set('blockNum', String(filters.blockNum))
+    if (filters.nonce !== undefined) {
+      if (!Number.isInteger(filters.nonce) || filters.nonce < 0) {
+        throw new ValidationError(
+          `Invalid nonce: ${filters.nonce}. Expected a non-negative integer.`,
+          {
+            nonce: filters.nonce,
+          },
+        )
+      }
+      queryParams.set('nonce', String(filters.nonce))
+    }
+    if (filters.blockNum !== undefined) {
+      if (!Number.isInteger(filters.blockNum) || filters.blockNum < 0) {
+        throw new ValidationError(
+          `Invalid blockNum: ${filters.blockNum}. Expected a non-negative integer.`,
+          {
+            blockNum: filters.blockNum,
+          },
+        )
+      }
+      queryParams.set('blockNum', String(filters.blockNum))
+    }
     const role = filters.role as string | undefined
     if (role !== undefined) {
       if (role !== 'sender' && role !== 'receiver') {
@@ -513,7 +548,15 @@ export class KleverProvider implements IProvider {
       }
     }
 
-    const response = await this.apiClient.get<ITransactionListApiResponse>(endpoint)
+    let response: ITransactionListApiResponse
+    try {
+      response = await this.apiClient.get<ITransactionListApiResponse>(endpoint)
+    } catch (error) {
+      throw new NetworkError(
+        `Failed to fetch transactions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { address, endpoint, originalError: error },
+      )
+    }
 
     if (response.error) {
       throw new NetworkError(response.error, { address, endpoint })
@@ -526,9 +569,18 @@ export class KleverProvider implements IProvider {
       })
     }
 
+    const pagination =
+      response.pagination === undefined
+        ? undefined
+        : {
+            page: response.pagination.self,
+            limit: response.pagination.perPage,
+            total: response.pagination.totalRecords,
+          }
+
     const result: ITransactionListResponse = {
       transactions: response.data.transactions ?? [],
-      ...(response.pagination !== undefined && { pagination: response.pagination }),
+      ...(pagination !== undefined && { pagination }),
     }
 
     if (this.cache) {

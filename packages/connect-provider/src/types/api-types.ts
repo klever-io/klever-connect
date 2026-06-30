@@ -241,20 +241,22 @@ export interface ITransactionListPagination {
 export interface ITransactionListResponse {
   /** Transactions matching the requested filters. */
   transactions: ITransactionResponse[]
-  /** Pagination metadata when returned by the API. */
+  /** Pagination metadata normalized from the API response when available. */
   pagination?: ITransactionListPagination
+}
+
+/**
+ * Raw API transaction list payload.
+ */
+export interface ITransactionListApiData {
+  /** Transactions returned by the node API. */
+  transactions: ITransactionResponse[]
 }
 
 /**
  * Raw API response shape for transaction list requests.
  */
-export interface ITransactionListApiResponse extends Omit<
-  ApiResponse<ITransactionListResponse>,
-  'pagination'
-> {
-  /** Pagination metadata returned alongside the transaction payload. */
-  pagination?: ITransactionListPagination
-}
+export type ITransactionListApiResponse = ApiResponse<ITransactionListApiData>
 
 /**
  * Result returned when submitting a transaction
