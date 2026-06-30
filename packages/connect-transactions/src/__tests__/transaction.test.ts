@@ -63,6 +63,38 @@ describe('Transaction', () => {
     })
   })
 
+  describe('toJSON', () => {
+    it('should convert int64 fields (including nested KDAFee.Amount) to numbers', () => {
+      const tx = new Transaction({
+        RawData: {
+          Nonce: 123,
+          Sender: new Uint8Array([1, 2, 3]),
+          Contract: [],
+          ChainID: new Uint8Array([1, 0, 4, 2, 0]),
+          KAppFee: 500000,
+          BandwidthFee: 100000,
+          KDAFee: {
+            KDA: new Uint8Array([4, 5, 6]),
+            Amount: 1000000,
+          },
+        },
+      })
+
+      const json = tx.toJSON()
+      const rawData = json['RawData'] as { [k: string]: unknown }
+
+      // top-level int64 fields must be numbers, not Long strings
+      expect(typeof rawData['KAppFee']).toBe('number')
+      expect(typeof rawData['BandwidthFee']).toBe('number')
+
+      // nested KDAFee.Amount (int64) must also be a number so the
+      // extension can unmarshal it (regression: was serialized as a string)
+      const kdaFee = rawData['KDAFee'] as { [k: string]: unknown }
+      expect(typeof kdaFee['Amount']).toBe('number')
+      expect(kdaFee['Amount']).toBe(1000000)
+    })
+  })
+
   describe('sign', () => {
     it('should sign transaction with private key', async () => {
       const tx = new Transaction({
