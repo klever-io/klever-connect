@@ -1,5 +1,11 @@
 # @klever/connect-examples-nodejs
 
+## 1.0.5
+
+### Patch Changes
+
+- @klever/connect@0.1.9
+
 ## 1.0.4
 
 ### Patch Changes

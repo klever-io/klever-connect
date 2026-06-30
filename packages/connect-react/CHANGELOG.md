@@ -1,5 +1,15 @@
 # @klever/connect-react
 
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies [bde148e]
+  - @klever/connect-transactions@0.1.8
+  - @klever/connect@0.1.9
+  - @klever/connect-contracts@0.2.4
+  - @klever/connect-wallet@0.2.4
+
 ## 0.1.9
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @klever/connect-transactions
 
+## 0.1.8
+
+### Patch Changes
+
+- bde148e: fix(transactions): convert nested KDAFee.Amount (int64) from string to number in transaction JSON so the extension can unmarshal it
+
 ## 0.1.7
 
 ### Patch Changes
