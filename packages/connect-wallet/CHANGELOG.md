@@ -1,5 +1,12 @@
 # @klever/connect-wallet
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [bde148e]
+  - @klever/connect-transactions@0.1.8
+
 ## 0.2.3
 
 ### Patch Changes

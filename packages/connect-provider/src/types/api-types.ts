@@ -224,6 +224,41 @@ export interface ITransactionResponse {
 }
 
 /**
+ * Pagination metadata returned by the transaction list endpoint.
+ */
+export interface ITransactionListPagination {
+  /** Current page number. */
+  page: number
+  /** Maximum number of items returned for the page. */
+  limit: number
+  /** Total number of matching transactions. */
+  total: number
+}
+
+/**
+ * Transaction list payload returned by the provider.
+ */
+export interface ITransactionListResponse {
+  /** Transactions matching the requested filters. */
+  transactions: ITransactionResponse[]
+  /** Pagination metadata normalized from the API response when available. */
+  pagination?: ITransactionListPagination
+}
+
+/**
+ * Raw API transaction list payload.
+ */
+export interface ITransactionListApiData {
+  /** Transactions returned by the node API. */
+  transactions: ITransactionResponse[]
+}
+
+/**
+ * Raw API response shape for transaction list requests.
+ */
+export type ITransactionListApiResponse = ApiResponse<ITransactionListApiData>
+
+/**
  * Result returned when submitting a transaction
  * Contains the transaction hash and optionally the full transaction data
  */
@@ -310,11 +345,6 @@ export interface ApiAssetBalance {
   marketplaceId?: string
   orderId?: string
   stakingType: number
-}
-
-// Transaction Response
-export interface ITransactionListResponse {
-  transactions: ITransactionResponse[]
 }
 
 // Transaction API Response wrapper

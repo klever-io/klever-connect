@@ -13,6 +13,8 @@ import type {
   ApiResponse,
   AddressResponse,
   ITransactionResponse,
+  ITransactionListApiResponse,
+  ITransactionListResponse,
   IBlockResponse,
   IBroadcastResult,
   IBulkBroadcastResult,
@@ -36,6 +38,7 @@ import type {
   ProviderEventMap,
   BuildTransactionRequest,
   BuildTransactionResponse,
+  GetTransactionsOptions,
 } from './types/types'
 import { TypedEventEmitter } from './event-emitter'
 import { KleverEventManager } from './provider-events'
@@ -425,6 +428,166 @@ export class KleverProvider implements IProvider {
     }
 
     return tx.receipts ?? []
+  }
+
+  /**
+   * Retrieves transactions for an address with optional filters.
+   *
+   * @param address - The Klever address to query
+   * @param options - Optional pagination and filter values including `page`, `limit`,
+   * `type`, `status`, `asset`, `nonce`, `blockNum`, `role`, `startDate`, `endDate`,
+   * `orderId`, `marketplaceId`, `orderBy`, `withResults`, `withInternal`, and `skipCache`
+   * @returns Transaction list for the address with optional pagination metadata
+   * @throws {ValidationError} If the address is invalid or any filter value is invalid
+   * @throws {NetworkError} If the API request fails or returns no data
+   *
+   * @example
+   * ```typescript
+   * const result = await provider.getTransactions('klv1...')
+   * console.log(result.transactions)
+   *
+   * const filtered = await provider.getTransactions('klv1...', {
+   *   page: 1,
+   *   limit: 25,
+   *   role: 'sender',
+   *   startDate: '2026-01-01',
+   *   endDate: '2026-01-31',
+   *   orderBy: 'asc',
+   * })
+   * ```
+   */
+  async getTransactions(
+    address: KleverAddress,
+    options?: GetTransactionsOptions,
+  ): Promise<ITransactionListResponse> {
+    if (!isValidAddress(address)) {
+      throw new ValidationError(`Invalid address: ${address}`, { address })
+    }
+
+    const { skipCache, ...filters } = options ?? {}
+    const queryParams = new URLSearchParams()
+
+    if (filters.page !== undefined) {
+      if (!Number.isInteger(filters.page) || filters.page < 1) {
+        throw new ValidationError(`Invalid page: ${filters.page}. Expected a positive integer.`, {
+          page: filters.page,
+        })
+      }
+      queryParams.set('page', String(filters.page))
+    }
+    if (filters.limit !== undefined) {
+      if (!Number.isInteger(filters.limit) || filters.limit < 1) {
+        throw new ValidationError(`Invalid limit: ${filters.limit}. Expected a positive integer.`, {
+          limit: filters.limit,
+        })
+      }
+      queryParams.set('limit', String(filters.limit))
+    }
+    if (filters.type !== undefined) queryParams.set('type', filters.type)
+    if (filters.status !== undefined) queryParams.set('status', filters.status)
+    if (filters.asset !== undefined) queryParams.set('asset', filters.asset)
+    if (filters.nonce !== undefined) {
+      if (!Number.isInteger(filters.nonce) || filters.nonce < 0) {
+        throw new ValidationError(
+          `Invalid nonce: ${filters.nonce}. Expected a non-negative integer.`,
+          {
+            nonce: filters.nonce,
+          },
+        )
+      }
+      queryParams.set('nonce', String(filters.nonce))
+    }
+    if (filters.blockNum !== undefined) {
+      if (!Number.isInteger(filters.blockNum) || filters.blockNum < 0) {
+        throw new ValidationError(
+          `Invalid blockNum: ${filters.blockNum}. Expected a non-negative integer.`,
+          {
+            blockNum: filters.blockNum,
+          },
+        )
+      }
+      queryParams.set('blockNum', String(filters.blockNum))
+    }
+    const role = filters.role as string | undefined
+    if (role !== undefined) {
+      if (role !== 'sender' && role !== 'receiver') {
+        throw new ValidationError(`Invalid role: ${role}`, { role })
+      }
+      queryParams.set('role', role)
+    }
+    if (filters.startDate !== undefined) queryParams.set('startdate', filters.startDate)
+    if (filters.endDate !== undefined) queryParams.set('enddate', filters.endDate)
+    if (filters.orderId !== undefined) queryParams.set('orderid', filters.orderId)
+    if (filters.marketplaceId !== undefined) {
+      queryParams.set('marketplaceid', filters.marketplaceId)
+    }
+    const orderBy = filters.orderBy as string | undefined
+    if (orderBy !== undefined) {
+      if (orderBy !== 'asc' && orderBy !== 'desc') {
+        throw new ValidationError(`Invalid orderBy: ${orderBy}`, {
+          orderBy,
+        })
+      }
+      queryParams.set('orderBy', orderBy)
+    }
+    if (filters.withResults !== undefined) {
+      queryParams.set('withResults', String(filters.withResults))
+    }
+    if (filters.withInternal !== undefined) {
+      queryParams.set('withInternal', String(filters.withInternal))
+    }
+
+    const queryString = queryParams.toString()
+    const endpoint = `/v1.0/address/${address}/transactions${queryString ? `?${queryString}` : ''}`
+    const cacheKey = `txs:${address}${queryString ? `?${queryString}` : ''}`
+
+    if (!skipCache && this.cache) {
+      const cached = this.cache.get(cacheKey)
+      if (cached) {
+        return cached as ITransactionListResponse
+      }
+    }
+
+    let response: ITransactionListApiResponse
+    try {
+      response = await this.apiClient.get<ITransactionListApiResponse>(endpoint)
+    } catch (error) {
+      throw new NetworkError(
+        `Failed to fetch transactions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { address, endpoint, originalError: error },
+      )
+    }
+
+    if (response.error) {
+      throw new NetworkError(response.error, { address, endpoint })
+    }
+
+    if (!response.data) {
+      throw new NetworkError('Transactions not found', {
+        address,
+        endpoint,
+      })
+    }
+
+    const pagination =
+      response.pagination === undefined
+        ? undefined
+        : {
+            page: response.pagination.self,
+            limit: response.pagination.perPage,
+            total: response.pagination.totalRecords,
+          }
+
+    const result: ITransactionListResponse = {
+      transactions: response.data.transactions ?? [],
+      ...(pagination !== undefined && { pagination }),
+    }
+
+    if (this.cache) {
+      this.cache.set(cacheKey, result)
+    }
+
+    return result
   }
 
   /**
