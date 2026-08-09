@@ -102,7 +102,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         TXContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -176,7 +176,7 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 switch (message.Type) {
                 default:
                     return "Type: enum value expected";
@@ -208,7 +208,7 @@ export const proto = $root.proto = (() => {
                 case 63:
                     break;
                 }
-            if (message.Parameter != null && message.hasOwnProperty("Parameter")) {
+            if (message.Parameter != null && Object.hasOwnProperty.call(message, "Parameter")) {
                 let error = $root.google.protobuf.Any.verify(message.Parameter, long + 1);
                 if (error)
                     return "Parameter." + error;
@@ -227,6 +227,8 @@ export const proto = $root.proto = (() => {
         TXContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.TXContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.TXContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -345,7 +347,7 @@ export const proto = $root.proto = (() => {
                 break;
             }
             if (object.Parameter != null) {
-                if (typeof object.Parameter !== "object")
+                if (!$util.isObject(object.Parameter))
                     throw TypeError(".proto.TXContract.Parameter: object expected");
                 message.Parameter = $root.google.protobuf.Any.fromObject(object.Parameter, long + 1);
             }
@@ -373,9 +375,9 @@ export const proto = $root.proto = (() => {
                 object.Type = options.enums === String ? "TransferContractType" : 0;
                 object.Parameter = null;
             }
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 object.Type = options.enums === String ? $root.proto.TXContract.ContractType[message.Type] === undefined ? message.Type : $root.proto.TXContract.ContractType[message.Type] : message.Type;
-            if (message.Parameter != null && message.hasOwnProperty("Parameter"))
+            if (message.Parameter != null && Object.hasOwnProperty.call(message, "Parameter"))
                 object.Parameter = $root.google.protobuf.Any.toObject(message.Parameter, options, q + 1);
             return object;
         };
@@ -627,7 +629,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         Transaction.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -729,19 +731,19 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.RawData != null && message.hasOwnProperty("RawData")) {
+            if (message.RawData != null && Object.hasOwnProperty.call(message, "RawData")) {
                 let error = $root.proto.Transaction.Raw.verify(message.RawData, long + 1);
                 if (error)
                     return "RawData." + error;
             }
-            if (message.Signature != null && message.hasOwnProperty("Signature")) {
+            if (message.Signature != null && Object.hasOwnProperty.call(message, "Signature")) {
                 if (!Array.isArray(message.Signature))
                     return "Signature: array expected";
                 for (let i = 0; i < message.Signature.length; ++i)
                     if (!(message.Signature[i] && typeof message.Signature[i].length === "number" || $util.isString(message.Signature[i])))
                         return "Signature: buffer[] expected";
             }
-            if (message.Result != null && message.hasOwnProperty("Result"))
+            if (message.Result != null && Object.hasOwnProperty.call(message, "Result"))
                 switch (message.Result) {
                 default:
                     return "Result: enum value expected";
@@ -749,7 +751,7 @@ export const proto = $root.proto = (() => {
                 case 1:
                     break;
                 }
-            if (message.ResultCode != null && message.hasOwnProperty("ResultCode"))
+            if (message.ResultCode != null && Object.hasOwnProperty.call(message, "ResultCode"))
                 switch (message.ResultCode) {
                 default:
                     return "ResultCode: enum value expected";
@@ -822,7 +824,7 @@ export const proto = $root.proto = (() => {
                 case 99:
                     break;
                 }
-            if (message.Receipts != null && message.hasOwnProperty("Receipts")) {
+            if (message.Receipts != null && Object.hasOwnProperty.call(message, "Receipts")) {
                 if (!Array.isArray(message.Receipts))
                     return "Receipts: array expected";
                 for (let i = 0; i < message.Receipts.length; ++i) {
@@ -831,13 +833,13 @@ export const proto = $root.proto = (() => {
                         return "Receipts." + error;
                 }
             }
-            if (message.Block != null && message.hasOwnProperty("Block"))
+            if (message.Block != null && Object.hasOwnProperty.call(message, "Block"))
                 if (!$util.isInteger(message.Block) && !(message.Block && $util.isInteger(message.Block.low) && $util.isInteger(message.Block.high)))
                     return "Block: integer|Long expected";
-            if (message.GasLimit != null && message.hasOwnProperty("GasLimit"))
+            if (message.GasLimit != null && Object.hasOwnProperty.call(message, "GasLimit"))
                 if (!$util.isInteger(message.GasLimit) && !(message.GasLimit && $util.isInteger(message.GasLimit.low) && $util.isInteger(message.GasLimit.high)))
                     return "GasLimit: integer|Long expected";
-            if (message.GasMultiplier != null && message.hasOwnProperty("GasMultiplier"))
+            if (message.GasMultiplier != null && Object.hasOwnProperty.call(message, "GasMultiplier"))
                 if (!$util.isInteger(message.GasMultiplier) && !(message.GasMultiplier && $util.isInteger(message.GasMultiplier.low) && $util.isInteger(message.GasMultiplier.high)))
                     return "GasMultiplier: integer|Long expected";
             return null;
@@ -854,13 +856,15 @@ export const proto = $root.proto = (() => {
         Transaction.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.Transaction)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.Transaction: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.Transaction();
             if (object.RawData != null) {
-                if (typeof object.RawData !== "object")
+                if (!$util.isObject(object.RawData))
                     throw TypeError(".proto.Transaction.RawData: object expected");
                 message.RawData = $root.proto.Transaction.Raw.fromObject(object.RawData, long + 1);
             }
@@ -1171,7 +1175,7 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.Transaction.Receipts: array expected");
                 message.Receipts = [];
                 for (let i = 0; i < object.Receipts.length; ++i) {
-                    if (typeof object.Receipts[i] !== "object")
+                    if (!$util.isObject(object.Receipts[i]))
                         throw TypeError(".proto.Transaction.Receipts: object expected");
                     message.Receipts[i] = $root.proto.Transaction.Receipt.fromObject(object.Receipts[i], long + 1);
                 }
@@ -1247,37 +1251,37 @@ export const proto = $root.proto = (() => {
                 } else
                     object.GasMultiplier = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
             }
-            if (message.RawData != null && message.hasOwnProperty("RawData"))
+            if (message.RawData != null && Object.hasOwnProperty.call(message, "RawData"))
                 object.RawData = $root.proto.Transaction.Raw.toObject(message.RawData, options, q + 1);
             if (message.Signature && message.Signature.length) {
                 object.Signature = [];
                 for (let j = 0; j < message.Signature.length; ++j)
                     object.Signature[j] = options.bytes === String ? $util.base64.encode(message.Signature[j], 0, message.Signature[j].length) : options.bytes === Array ? Array.prototype.slice.call(message.Signature[j]) : message.Signature[j];
             }
-            if (message.Result != null && message.hasOwnProperty("Result"))
+            if (message.Result != null && Object.hasOwnProperty.call(message, "Result"))
                 object.Result = options.enums === String ? $root.proto.Transaction.TXResult[message.Result] === undefined ? message.Result : $root.proto.Transaction.TXResult[message.Result] : message.Result;
-            if (message.ResultCode != null && message.hasOwnProperty("ResultCode"))
+            if (message.ResultCode != null && Object.hasOwnProperty.call(message, "ResultCode"))
                 object.ResultCode = options.enums === String ? $root.proto.Transaction.TXResultCode[message.ResultCode] === undefined ? message.ResultCode : $root.proto.Transaction.TXResultCode[message.ResultCode] : message.ResultCode;
             if (message.Receipts && message.Receipts.length) {
                 object.Receipts = [];
                 for (let j = 0; j < message.Receipts.length; ++j)
                     object.Receipts[j] = $root.proto.Transaction.Receipt.toObject(message.Receipts[j], options, q + 1);
             }
-            if (message.Block != null && message.hasOwnProperty("Block"))
+            if (message.Block != null && Object.hasOwnProperty.call(message, "Block"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Block = typeof message.Block === "number" ? BigInt(message.Block) : $util.Long.fromBits(message.Block.low >>> 0, message.Block.high >>> 0, true).toBigInt();
                 else if (typeof message.Block === "number")
                     object.Block = options.longs === String ? String(message.Block) : message.Block;
                 else
                     object.Block = options.longs === String ? $util.Long.prototype.toString.call(message.Block) : options.longs === Number ? new $util.LongBits(message.Block.low >>> 0, message.Block.high >>> 0).toNumber(true) : message.Block;
-            if (message.GasLimit != null && message.hasOwnProperty("GasLimit"))
+            if (message.GasLimit != null && Object.hasOwnProperty.call(message, "GasLimit"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.GasLimit = typeof message.GasLimit === "number" ? BigInt(message.GasLimit) : $util.Long.fromBits(message.GasLimit.low >>> 0, message.GasLimit.high >>> 0, true).toBigInt();
                 else if (typeof message.GasLimit === "number")
                     object.GasLimit = options.longs === String ? String(message.GasLimit) : message.GasLimit;
                 else
                     object.GasLimit = options.longs === String ? $util.Long.prototype.toString.call(message.GasLimit) : options.longs === Number ? new $util.LongBits(message.GasLimit.low >>> 0, message.GasLimit.high >>> 0).toNumber(true) : message.GasLimit;
-            if (message.GasMultiplier != null && message.hasOwnProperty("GasMultiplier"))
+            if (message.GasMultiplier != null && Object.hasOwnProperty.call(message, "GasMultiplier"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.GasMultiplier = typeof message.GasMultiplier === "number" ? BigInt(message.GasMultiplier) : $util.Long.fromBits(message.GasMultiplier.low >>> 0, message.GasMultiplier.high >>> 0, true).toBigInt();
                 else if (typeof message.GasMultiplier === "number")
@@ -1557,7 +1561,7 @@ export const proto = $root.proto = (() => {
              * @returns {$protobuf.Writer} Writer
              */
             KDAFee.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -1631,10 +1635,10 @@ export const proto = $root.proto = (() => {
                     long = 0;
                 if (long > $util.recursionLimit)
                     return "maximum nesting depth exceeded";
-                if (message.KDA != null && message.hasOwnProperty("KDA"))
+                if (message.KDA != null && Object.hasOwnProperty.call(message, "KDA"))
                     if (!(message.KDA && typeof message.KDA.length === "number" || $util.isString(message.KDA)))
                         return "KDA: buffer expected";
-                if (message.Amount != null && message.hasOwnProperty("Amount"))
+                if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                     if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                         return "Amount: integer|Long expected";
                 return null;
@@ -1651,6 +1655,8 @@ export const proto = $root.proto = (() => {
             KDAFee.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.KDAFee)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".proto.Transaction.KDAFee: object expected");
                 if (long === undefined)
                     long = 0;
                 if (long > $util.recursionLimit)
@@ -1704,9 +1710,9 @@ export const proto = $root.proto = (() => {
                     } else
                         object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
-                if (message.KDA != null && message.hasOwnProperty("KDA"))
+                if (message.KDA != null && Object.hasOwnProperty.call(message, "KDA"))
                     object.KDA = options.bytes === String ? $util.base64.encode(message.KDA, 0, message.KDA.length) : options.bytes === Array ? Array.prototype.slice.call(message.KDA) : message.KDA;
-                if (message.Amount != null && message.hasOwnProperty("Amount"))
+                if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                     if (typeof BigInt !== "undefined" && options.longs === BigInt)
                         object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
                     else if (typeof message.Amount === "number")
@@ -1923,7 +1929,7 @@ export const proto = $root.proto = (() => {
              * @returns {$protobuf.Writer} Writer
              */
             Raw.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -2033,13 +2039,13 @@ export const proto = $root.proto = (() => {
                     long = 0;
                 if (long > $util.recursionLimit)
                     return "maximum nesting depth exceeded";
-                if (message.Nonce != null && message.hasOwnProperty("Nonce"))
+                if (message.Nonce != null && Object.hasOwnProperty.call(message, "Nonce"))
                     if (!$util.isInteger(message.Nonce) && !(message.Nonce && $util.isInteger(message.Nonce.low) && $util.isInteger(message.Nonce.high)))
                         return "Nonce: integer|Long expected";
-                if (message.Sender != null && message.hasOwnProperty("Sender"))
+                if (message.Sender != null && Object.hasOwnProperty.call(message, "Sender"))
                     if (!(message.Sender && typeof message.Sender.length === "number" || $util.isString(message.Sender)))
                         return "Sender: buffer expected";
-                if (message.Contract != null && message.hasOwnProperty("Contract")) {
+                if (message.Contract != null && Object.hasOwnProperty.call(message, "Contract")) {
                     if (!Array.isArray(message.Contract))
                         return "Contract: array expected";
                     for (let i = 0; i < message.Contract.length; ++i) {
@@ -2048,29 +2054,29 @@ export const proto = $root.proto = (() => {
                             return "Contract." + error;
                     }
                 }
-                if (message.PermissionID != null && message.hasOwnProperty("PermissionID"))
+                if (message.PermissionID != null && Object.hasOwnProperty.call(message, "PermissionID"))
                     if (!$util.isInteger(message.PermissionID))
                         return "PermissionID: integer expected";
-                if (message.Data != null && message.hasOwnProperty("Data")) {
+                if (message.Data != null && Object.hasOwnProperty.call(message, "Data")) {
                     if (!Array.isArray(message.Data))
                         return "Data: array expected";
                     for (let i = 0; i < message.Data.length; ++i)
                         if (!(message.Data[i] && typeof message.Data[i].length === "number" || $util.isString(message.Data[i])))
                             return "Data: buffer[] expected";
                 }
-                if (message.KAppFee != null && message.hasOwnProperty("KAppFee"))
+                if (message.KAppFee != null && Object.hasOwnProperty.call(message, "KAppFee"))
                     if (!$util.isInteger(message.KAppFee) && !(message.KAppFee && $util.isInteger(message.KAppFee.low) && $util.isInteger(message.KAppFee.high)))
                         return "KAppFee: integer|Long expected";
-                if (message.BandwidthFee != null && message.hasOwnProperty("BandwidthFee"))
+                if (message.BandwidthFee != null && Object.hasOwnProperty.call(message, "BandwidthFee"))
                     if (!$util.isInteger(message.BandwidthFee) && !(message.BandwidthFee && $util.isInteger(message.BandwidthFee.low) && $util.isInteger(message.BandwidthFee.high)))
                         return "BandwidthFee: integer|Long expected";
-                if (message.Version != null && message.hasOwnProperty("Version"))
+                if (message.Version != null && Object.hasOwnProperty.call(message, "Version"))
                     if (!$util.isInteger(message.Version))
                         return "Version: integer expected";
-                if (message.ChainID != null && message.hasOwnProperty("ChainID"))
+                if (message.ChainID != null && Object.hasOwnProperty.call(message, "ChainID"))
                     if (!(message.ChainID && typeof message.ChainID.length === "number" || $util.isString(message.ChainID)))
                         return "ChainID: buffer expected";
-                if (message.KDAFee != null && message.hasOwnProperty("KDAFee")) {
+                if (message.KDAFee != null && Object.hasOwnProperty.call(message, "KDAFee")) {
                     let error = $root.proto.Transaction.KDAFee.verify(message.KDAFee, long + 1);
                     if (error)
                         return "KDAFee." + error;
@@ -2089,6 +2095,8 @@ export const proto = $root.proto = (() => {
             Raw.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.Raw)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".proto.Transaction.Raw: object expected");
                 if (long === undefined)
                     long = 0;
                 if (long > $util.recursionLimit)
@@ -2113,7 +2121,7 @@ export const proto = $root.proto = (() => {
                         throw TypeError(".proto.Transaction.Raw.Contract: array expected");
                     message.Contract = [];
                     for (let i = 0; i < object.Contract.length; ++i) {
-                        if (typeof object.Contract[i] !== "object")
+                        if (!$util.isObject(object.Contract[i]))
                             throw TypeError(".proto.Transaction.Raw.Contract: object expected");
                         message.Contract[i] = $root.proto.TXContract.fromObject(object.Contract[i], long + 1);
                     }
@@ -2156,7 +2164,7 @@ export const proto = $root.proto = (() => {
                     else if (object.ChainID.length >= 0)
                         message.ChainID = object.ChainID;
                 if (object.KDAFee != null) {
-                    if (typeof object.KDAFee !== "object")
+                    if (!$util.isObject(object.KDAFee))
                         throw TypeError(".proto.Transaction.Raw.KDAFee: object expected");
                     message.KDAFee = $root.proto.Transaction.KDAFee.fromObject(object.KDAFee, long + 1);
                 }
@@ -2218,46 +2226,46 @@ export const proto = $root.proto = (() => {
                     }
                     object.KDAFee = null;
                 }
-                if (message.Nonce != null && message.hasOwnProperty("Nonce"))
+                if (message.Nonce != null && Object.hasOwnProperty.call(message, "Nonce"))
                     if (typeof BigInt !== "undefined" && options.longs === BigInt)
                         object.Nonce = typeof message.Nonce === "number" ? BigInt(message.Nonce) : $util.Long.fromBits(message.Nonce.low >>> 0, message.Nonce.high >>> 0, true).toBigInt();
                     else if (typeof message.Nonce === "number")
                         object.Nonce = options.longs === String ? String(message.Nonce) : message.Nonce;
                     else
                         object.Nonce = options.longs === String ? $util.Long.prototype.toString.call(message.Nonce) : options.longs === Number ? new $util.LongBits(message.Nonce.low >>> 0, message.Nonce.high >>> 0).toNumber(true) : message.Nonce;
-                if (message.Sender != null && message.hasOwnProperty("Sender"))
+                if (message.Sender != null && Object.hasOwnProperty.call(message, "Sender"))
                     object.Sender = options.bytes === String ? $util.base64.encode(message.Sender, 0, message.Sender.length) : options.bytes === Array ? Array.prototype.slice.call(message.Sender) : message.Sender;
                 if (message.Contract && message.Contract.length) {
                     object.Contract = [];
                     for (let j = 0; j < message.Contract.length; ++j)
                         object.Contract[j] = $root.proto.TXContract.toObject(message.Contract[j], options, q + 1);
                 }
-                if (message.PermissionID != null && message.hasOwnProperty("PermissionID"))
+                if (message.PermissionID != null && Object.hasOwnProperty.call(message, "PermissionID"))
                     object.PermissionID = message.PermissionID;
                 if (message.Data && message.Data.length) {
                     object.Data = [];
                     for (let j = 0; j < message.Data.length; ++j)
                         object.Data[j] = options.bytes === String ? $util.base64.encode(message.Data[j], 0, message.Data[j].length) : options.bytes === Array ? Array.prototype.slice.call(message.Data[j]) : message.Data[j];
                 }
-                if (message.KAppFee != null && message.hasOwnProperty("KAppFee"))
+                if (message.KAppFee != null && Object.hasOwnProperty.call(message, "KAppFee"))
                     if (typeof BigInt !== "undefined" && options.longs === BigInt)
                         object.KAppFee = typeof message.KAppFee === "number" ? BigInt(message.KAppFee) : $util.Long.fromBits(message.KAppFee.low >>> 0, message.KAppFee.high >>> 0, false).toBigInt();
                     else if (typeof message.KAppFee === "number")
                         object.KAppFee = options.longs === String ? String(message.KAppFee) : message.KAppFee;
                     else
                         object.KAppFee = options.longs === String ? $util.Long.prototype.toString.call(message.KAppFee) : options.longs === Number ? new $util.LongBits(message.KAppFee.low >>> 0, message.KAppFee.high >>> 0).toNumber() : message.KAppFee;
-                if (message.BandwidthFee != null && message.hasOwnProperty("BandwidthFee"))
+                if (message.BandwidthFee != null && Object.hasOwnProperty.call(message, "BandwidthFee"))
                     if (typeof BigInt !== "undefined" && options.longs === BigInt)
                         object.BandwidthFee = typeof message.BandwidthFee === "number" ? BigInt(message.BandwidthFee) : $util.Long.fromBits(message.BandwidthFee.low >>> 0, message.BandwidthFee.high >>> 0, false).toBigInt();
                     else if (typeof message.BandwidthFee === "number")
                         object.BandwidthFee = options.longs === String ? String(message.BandwidthFee) : message.BandwidthFee;
                     else
                         object.BandwidthFee = options.longs === String ? $util.Long.prototype.toString.call(message.BandwidthFee) : options.longs === Number ? new $util.LongBits(message.BandwidthFee.low >>> 0, message.BandwidthFee.high >>> 0).toNumber() : message.BandwidthFee;
-                if (message.Version != null && message.hasOwnProperty("Version"))
+                if (message.Version != null && Object.hasOwnProperty.call(message, "Version"))
                     object.Version = message.Version;
-                if (message.ChainID != null && message.hasOwnProperty("ChainID"))
+                if (message.ChainID != null && Object.hasOwnProperty.call(message, "ChainID"))
                     object.ChainID = options.bytes === String ? $util.base64.encode(message.ChainID, 0, message.ChainID.length) : options.bytes === Array ? Array.prototype.slice.call(message.ChainID) : message.ChainID;
-                if (message.KDAFee != null && message.hasOwnProperty("KDAFee"))
+                if (message.KDAFee != null && Object.hasOwnProperty.call(message, "KDAFee"))
                     object.KDAFee = $root.proto.Transaction.KDAFee.toObject(message.KDAFee, options, q + 1);
                 return object;
             };
@@ -2368,7 +2376,7 @@ export const proto = $root.proto = (() => {
              * @returns {$protobuf.Writer} Writer
              */
             Receipt.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -2440,7 +2448,7 @@ export const proto = $root.proto = (() => {
                     long = 0;
                 if (long > $util.recursionLimit)
                     return "maximum nesting depth exceeded";
-                if (message.Data != null && message.hasOwnProperty("Data")) {
+                if (message.Data != null && Object.hasOwnProperty.call(message, "Data")) {
                     if (!Array.isArray(message.Data))
                         return "Data: array expected";
                     for (let i = 0; i < message.Data.length; ++i)
@@ -2461,6 +2469,8 @@ export const proto = $root.proto = (() => {
             Receipt.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.Transaction.Receipt)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".proto.Transaction.Receipt: object expected");
                 if (long === undefined)
                     long = 0;
                 if (long > $util.recursionLimit)
@@ -2635,7 +2645,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         TransferContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -2713,13 +2723,13 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
+            if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 if (!(message.ToAddress && typeof message.ToAddress.length === "number" || $util.isString(message.ToAddress)))
                     return "ToAddress: buffer expected";
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                     return "Amount: integer|Long expected";
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
             return null;
@@ -2736,6 +2746,8 @@ export const proto = $root.proto = (() => {
         TransferContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.TransferContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.TransferContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -2801,16 +2813,16 @@ export const proto = $root.proto = (() => {
                         object.AssetID = $util.newBuffer(object.AssetID);
                 }
             }
-            if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
+            if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 object.ToAddress = options.bytes === String ? $util.base64.encode(message.ToAddress, 0, message.ToAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.ToAddress) : message.ToAddress;
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
                 else if (typeof message.Amount === "number")
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
             return object;
         };
@@ -2930,7 +2942,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         FreezeContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -3004,10 +3016,10 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                     return "Amount: integer|Long expected";
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
             return null;
@@ -3024,6 +3036,8 @@ export const proto = $root.proto = (() => {
         FreezeContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.FreezeContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.FreezeContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -3077,14 +3091,14 @@ export const proto = $root.proto = (() => {
                         object.AssetID = $util.newBuffer(object.AssetID);
                 }
             }
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
                 else if (typeof message.Amount === "number")
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
             return object;
         };
@@ -3204,7 +3218,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         UnfreezeContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -3278,10 +3292,10 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
-            if (message.BucketID != null && message.hasOwnProperty("BucketID"))
+            if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
                 if (!(message.BucketID && typeof message.BucketID.length === "number" || $util.isString(message.BucketID)))
                     return "BucketID: buffer expected";
             return null;
@@ -3298,6 +3312,8 @@ export const proto = $root.proto = (() => {
         UnfreezeContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.UnfreezeContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.UnfreezeContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -3349,9 +3365,9 @@ export const proto = $root.proto = (() => {
                         object.BucketID = $util.newBuffer(object.BucketID);
                 }
             }
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
-            if (message.BucketID != null && message.hasOwnProperty("BucketID"))
+            if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
                 object.BucketID = options.bytes === String ? $util.base64.encode(message.BucketID, 0, message.BucketID.length) : options.bytes === Array ? Array.prototype.slice.call(message.BucketID) : message.BucketID;
             return object;
         };
@@ -3471,7 +3487,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         DelegateContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -3545,10 +3561,10 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
+            if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 if (!(message.ToAddress && typeof message.ToAddress.length === "number" || $util.isString(message.ToAddress)))
                     return "ToAddress: buffer expected";
-            if (message.BucketID != null && message.hasOwnProperty("BucketID"))
+            if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
                 if (!(message.BucketID && typeof message.BucketID.length === "number" || $util.isString(message.BucketID)))
                     return "BucketID: buffer expected";
             return null;
@@ -3565,6 +3581,8 @@ export const proto = $root.proto = (() => {
         DelegateContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.DelegateContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.DelegateContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -3616,9 +3634,9 @@ export const proto = $root.proto = (() => {
                         object.BucketID = $util.newBuffer(object.BucketID);
                 }
             }
-            if (message.ToAddress != null && message.hasOwnProperty("ToAddress"))
+            if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 object.ToAddress = options.bytes === String ? $util.base64.encode(message.ToAddress, 0, message.ToAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.ToAddress) : message.ToAddress;
-            if (message.BucketID != null && message.hasOwnProperty("BucketID"))
+            if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
                 object.BucketID = options.bytes === String ? $util.base64.encode(message.BucketID, 0, message.BucketID.length) : options.bytes === Array ? Array.prototype.slice.call(message.BucketID) : message.BucketID;
             return object;
         };
@@ -3727,7 +3745,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         UndelegateContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -3797,7 +3815,7 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.BucketID != null && message.hasOwnProperty("BucketID"))
+            if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
                 if (!(message.BucketID && typeof message.BucketID.length === "number" || $util.isString(message.BucketID)))
                     return "BucketID: buffer expected";
             return null;
@@ -3814,6 +3832,8 @@ export const proto = $root.proto = (() => {
         UndelegateContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.UndelegateContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.UndelegateContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -3852,7 +3872,7 @@ export const proto = $root.proto = (() => {
                     if (options.bytes !== Array)
                         object.BucketID = $util.newBuffer(object.BucketID);
                 }
-            if (message.BucketID != null && message.hasOwnProperty("BucketID"))
+            if (message.BucketID != null && Object.hasOwnProperty.call(message, "BucketID"))
                 object.BucketID = options.bytes === String ? $util.base64.encode(message.BucketID, 0, message.BucketID.length) : options.bytes === Array ? Array.prototype.slice.call(message.BucketID) : message.BucketID;
             return object;
         };
@@ -3994,7 +4014,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         WithdrawContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -4076,7 +4096,7 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 switch (message.Type) {
                 default:
                     return "Type: enum value expected";
@@ -4087,13 +4107,13 @@ export const proto = $root.proto = (() => {
                 case 4:
                     break;
                 }
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                     return "Amount: integer|Long expected";
-            if (message.CurrencyID != null && message.hasOwnProperty("CurrencyID"))
+            if (message.CurrencyID != null && Object.hasOwnProperty.call(message, "CurrencyID"))
                 if (!(message.CurrencyID && typeof message.CurrencyID.length === "number" || $util.isString(message.CurrencyID)))
                     return "CurrencyID: buffer expected";
             return null;
@@ -4110,6 +4130,8 @@ export const proto = $root.proto = (() => {
         WithdrawContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.WithdrawContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.WithdrawContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -4204,18 +4226,18 @@ export const proto = $root.proto = (() => {
                         object.CurrencyID = $util.newBuffer(object.CurrencyID);
                 }
             }
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 object.Type = options.enums === String ? $root.proto.WithdrawContract.WithdrawType[message.Type] === undefined ? message.Type : $root.proto.WithdrawContract.WithdrawType[message.Type] : message.Type;
-            if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
                 else if (typeof message.Amount === "number")
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
-            if (message.CurrencyID != null && message.hasOwnProperty("CurrencyID"))
+            if (message.CurrencyID != null && Object.hasOwnProperty.call(message, "CurrencyID"))
                 object.CurrencyID = options.bytes === String ? $util.base64.encode(message.CurrencyID, 0, message.CurrencyID.length) : options.bytes === Array ? Array.prototype.slice.call(message.CurrencyID) : message.CurrencyID;
             return object;
         };
@@ -4355,7 +4377,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         ClaimContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -4429,7 +4451,7 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 switch (message.Type) {
                 default:
                     return "Type: enum value expected";
@@ -4438,7 +4460,7 @@ export const proto = $root.proto = (() => {
                 case 2:
                     break;
                 }
-            if (message.ID != null && message.hasOwnProperty("ID"))
+            if (message.ID != null && Object.hasOwnProperty.call(message, "ID"))
                 if (!(message.ID && typeof message.ID.length === "number" || $util.isString(message.ID)))
                     return "ID: buffer expected";
             return null;
@@ -4455,6 +4477,8 @@ export const proto = $root.proto = (() => {
         ClaimContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.ClaimContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.ClaimContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -4515,9 +4539,9 @@ export const proto = $root.proto = (() => {
                         object.ID = $util.newBuffer(object.ID);
                 }
             }
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 object.Type = options.enums === String ? $root.proto.ClaimContract.ClaimType[message.Type] === undefined ? message.Type : $root.proto.ClaimContract.ClaimType[message.Type] : message.Type;
-            if (message.ID != null && message.hasOwnProperty("ID"))
+            if (message.ID != null && Object.hasOwnProperty.call(message, "ID"))
                 object.ID = options.bytes === String ? $util.base64.encode(message.ID, 0, message.ID.length) : options.bytes === Array ? Array.prototype.slice.call(message.ID) : message.ID;
             return object;
         };
@@ -4664,7 +4688,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         VoteContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -4742,10 +4766,10 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.ProposalID != null && message.hasOwnProperty("ProposalID"))
+            if (message.ProposalID != null && Object.hasOwnProperty.call(message, "ProposalID"))
                 if (!$util.isInteger(message.ProposalID) && !(message.ProposalID && $util.isInteger(message.ProposalID.low) && $util.isInteger(message.ProposalID.high)))
                     return "ProposalID: integer|Long expected";
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 switch (message.Type) {
                 default:
                     return "Type: enum value expected";
@@ -4754,7 +4778,7 @@ export const proto = $root.proto = (() => {
                 case 2:
                     break;
                 }
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                     return "Amount: integer|Long expected";
             return null;
@@ -4771,6 +4795,8 @@ export const proto = $root.proto = (() => {
         VoteContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.VoteContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.VoteContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -4847,16 +4873,16 @@ export const proto = $root.proto = (() => {
                 } else
                     object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
             }
-            if (message.ProposalID != null && message.hasOwnProperty("ProposalID"))
+            if (message.ProposalID != null && Object.hasOwnProperty.call(message, "ProposalID"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.ProposalID = typeof message.ProposalID === "number" ? BigInt(message.ProposalID) : $util.Long.fromBits(message.ProposalID.low >>> 0, message.ProposalID.high >>> 0, true).toBigInt();
                 else if (typeof message.ProposalID === "number")
                     object.ProposalID = options.longs === String ? String(message.ProposalID) : message.ProposalID;
                 else
                     object.ProposalID = options.longs === String ? $util.Long.prototype.toString.call(message.ProposalID) : options.longs === Number ? new $util.LongBits(message.ProposalID.low >>> 0, message.ProposalID.high >>> 0).toNumber(true) : message.ProposalID;
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 object.Type = options.enums === String ? $root.proto.VoteContract.VoteType[message.Type] === undefined ? message.Type : $root.proto.VoteContract.VoteType[message.Type] : message.Type;
-            if (message.Amount != null && message.hasOwnProperty("Amount"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
                 else if (typeof message.Amount === "number")
@@ -5098,7 +5124,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         CreateAssetContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -5210,7 +5236,7 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 switch (message.Type) {
                 default:
                     return "Type: enum value expected";
@@ -5219,40 +5245,40 @@ export const proto = $root.proto = (() => {
                 case 2:
                     break;
                 }
-            if (message.Name != null && message.hasOwnProperty("Name"))
+            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
                 if (!$util.isString(message.Name))
                     return "Name: string expected";
-            if (message.Ticker != null && message.hasOwnProperty("Ticker"))
+            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
                 if (!$util.isString(message.Ticker))
                     return "Ticker: string expected";
-            if (message.OwnerAddress != null && message.hasOwnProperty("OwnerAddress"))
+            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
                 if (!(message.OwnerAddress && typeof message.OwnerAddress.length === "number" || $util.isString(message.OwnerAddress)))
                     return "OwnerAddress: buffer expected";
-            if (message.Logo != null && message.hasOwnProperty("Logo"))
+            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
                 if (!$util.isString(message.Logo))
                     return "Logo: string expected";
-            if (message.URIs != null && message.hasOwnProperty("URIs")) {
+            if (message.URIs != null && Object.hasOwnProperty.call(message, "URIs")) {
                 if (!Array.isArray(message.URIs))
                     return "URIs: array expected";
                 for (let i = 0; i < message.URIs.length; ++i)
                     if (!$util.isString(message.URIs[i]))
                         return "URIs: string[] expected";
             }
-            if (message.Precision != null && message.hasOwnProperty("Precision"))
+            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
                 if (!$util.isInteger(message.Precision))
                     return "Precision: integer expected";
-            if (message.InitialSupply != null && message.hasOwnProperty("InitialSupply"))
+            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
                 if (!$util.isInteger(message.InitialSupply) && !(message.InitialSupply && $util.isInteger(message.InitialSupply.low) && $util.isInteger(message.InitialSupply.high)))
                     return "InitialSupply: integer|Long expected";
-            if (message.MaxSupply != null && message.hasOwnProperty("MaxSupply"))
+            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
                 if (!$util.isInteger(message.MaxSupply) && !(message.MaxSupply && $util.isInteger(message.MaxSupply.low) && $util.isInteger(message.MaxSupply.high)))
                     return "MaxSupply: integer|Long expected";
-            if (message.Properties != null && message.hasOwnProperty("Properties")) {
+            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties")) {
                 let error = $root.proto.CreateAssetContract.AssetProperties.verify(message.Properties, long + 1);
                 if (error)
                     return "Properties." + error;
             }
-            if (message.Attributes != null && message.hasOwnProperty("Attributes")) {
+            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes")) {
                 let error = $root.proto.CreateAssetContract.AssetAttributes.verify(message.Attributes, long + 1);
                 if (error)
                     return "Attributes." + error;
@@ -5271,6 +5297,8 @@ export const proto = $root.proto = (() => {
         CreateAssetContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.CreateAssetContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.CreateAssetContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -5335,12 +5363,12 @@ export const proto = $root.proto = (() => {
                 else if (typeof object.MaxSupply === "object")
                     message.MaxSupply = new $util.LongBits(object.MaxSupply.low >>> 0, object.MaxSupply.high >>> 0).toNumber();
             if (object.Properties != null) {
-                if (typeof object.Properties !== "object")
+                if (!$util.isObject(object.Properties))
                     throw TypeError(".proto.CreateAssetContract.Properties: object expected");
                 message.Properties = $root.proto.CreateAssetContract.AssetProperties.fromObject(object.Properties, long + 1);
             }
             if (object.Attributes != null) {
-                if (typeof object.Attributes !== "object")
+                if (!$util.isObject(object.Attributes))
                     throw TypeError(".proto.CreateAssetContract.Attributes: object expected");
                 message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.fromObject(object.Attributes, long + 1);
             }
@@ -5392,40 +5420,40 @@ export const proto = $root.proto = (() => {
                 object.Properties = null;
                 object.Attributes = null;
             }
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 object.Type = options.enums === String ? $root.proto.CreateAssetContract.AssetType[message.Type] === undefined ? message.Type : $root.proto.CreateAssetContract.AssetType[message.Type] : message.Type;
-            if (message.Name != null && message.hasOwnProperty("Name"))
+            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
                 object.Name = message.Name;
-            if (message.Ticker != null && message.hasOwnProperty("Ticker"))
+            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
                 object.Ticker = message.Ticker;
-            if (message.OwnerAddress != null && message.hasOwnProperty("OwnerAddress"))
+            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
                 object.OwnerAddress = options.bytes === String ? $util.base64.encode(message.OwnerAddress, 0, message.OwnerAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.OwnerAddress) : message.OwnerAddress;
-            if (message.Logo != null && message.hasOwnProperty("Logo"))
+            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
                 object.Logo = message.Logo;
             if (message.URIs && message.URIs.length) {
                 object.URIs = [];
                 for (let j = 0; j < message.URIs.length; ++j)
                     object.URIs[j] = message.URIs[j];
             }
-            if (message.Precision != null && message.hasOwnProperty("Precision"))
+            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
                 object.Precision = message.Precision;
-            if (message.InitialSupply != null && message.hasOwnProperty("InitialSupply"))
+            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.InitialSupply = typeof message.InitialSupply === "number" ? BigInt(message.InitialSupply) : $util.Long.fromBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0, false).toBigInt();
                 else if (typeof message.InitialSupply === "number")
                     object.InitialSupply = options.longs === String ? String(message.InitialSupply) : message.InitialSupply;
                 else
                     object.InitialSupply = options.longs === String ? $util.Long.prototype.toString.call(message.InitialSupply) : options.longs === Number ? new $util.LongBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0).toNumber() : message.InitialSupply;
-            if (message.MaxSupply != null && message.hasOwnProperty("MaxSupply"))
+            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.MaxSupply = typeof message.MaxSupply === "number" ? BigInt(message.MaxSupply) : $util.Long.fromBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0, false).toBigInt();
                 else if (typeof message.MaxSupply === "number")
                     object.MaxSupply = options.longs === String ? String(message.MaxSupply) : message.MaxSupply;
                 else
                     object.MaxSupply = options.longs === String ? $util.Long.prototype.toString.call(message.MaxSupply) : options.longs === Number ? new $util.LongBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0).toNumber() : message.MaxSupply;
-            if (message.Properties != null && message.hasOwnProperty("Properties"))
+            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties"))
                 object.Properties = $root.proto.CreateAssetContract.AssetProperties.toObject(message.Properties, options, q + 1);
-            if (message.Attributes != null && message.hasOwnProperty("Attributes"))
+            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes"))
                 object.Attributes = $root.proto.CreateAssetContract.AssetAttributes.toObject(message.Attributes, options, q + 1);
             return object;
         };
@@ -5613,7 +5641,7 @@ export const proto = $root.proto = (() => {
              * @returns {$protobuf.Writer} Writer
              */
             AssetProperties.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -5707,25 +5735,25 @@ export const proto = $root.proto = (() => {
                     long = 0;
                 if (long > $util.recursionLimit)
                     return "maximum nesting depth exceeded";
-                if (message.CanFreeze != null && message.hasOwnProperty("CanFreeze"))
+                if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
                     if (typeof message.CanFreeze !== "boolean")
                         return "CanFreeze: boolean expected";
-                if (message.CanWipe != null && message.hasOwnProperty("CanWipe"))
+                if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
                     if (typeof message.CanWipe !== "boolean")
                         return "CanWipe: boolean expected";
-                if (message.CanPause != null && message.hasOwnProperty("CanPause"))
+                if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
                     if (typeof message.CanPause !== "boolean")
                         return "CanPause: boolean expected";
-                if (message.CanMint != null && message.hasOwnProperty("CanMint"))
+                if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
                     if (typeof message.CanMint !== "boolean")
                         return "CanMint: boolean expected";
-                if (message.CanBurn != null && message.hasOwnProperty("CanBurn"))
+                if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
                     if (typeof message.CanBurn !== "boolean")
                         return "CanBurn: boolean expected";
-                if (message.CanChangeOwner != null && message.hasOwnProperty("CanChangeOwner"))
+                if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
                     if (typeof message.CanChangeOwner !== "boolean")
                         return "CanChangeOwner: boolean expected";
-                if (message.CanAddRoles != null && message.hasOwnProperty("CanAddRoles"))
+                if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
                     if (typeof message.CanAddRoles !== "boolean")
                         return "CanAddRoles: boolean expected";
                 return null;
@@ -5742,6 +5770,8 @@ export const proto = $root.proto = (() => {
             AssetProperties.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.CreateAssetContract.AssetProperties)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".proto.CreateAssetContract.AssetProperties: object expected");
                 if (long === undefined)
                     long = 0;
                 if (long > $util.recursionLimit)
@@ -5790,19 +5820,19 @@ export const proto = $root.proto = (() => {
                     object.CanChangeOwner = false;
                     object.CanAddRoles = false;
                 }
-                if (message.CanFreeze != null && message.hasOwnProperty("CanFreeze"))
+                if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
                     object.CanFreeze = message.CanFreeze;
-                if (message.CanWipe != null && message.hasOwnProperty("CanWipe"))
+                if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
                     object.CanWipe = message.CanWipe;
-                if (message.CanPause != null && message.hasOwnProperty("CanPause"))
+                if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
                     object.CanPause = message.CanPause;
-                if (message.CanMint != null && message.hasOwnProperty("CanMint"))
+                if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
                     object.CanMint = message.CanMint;
-                if (message.CanBurn != null && message.hasOwnProperty("CanBurn"))
+                if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
                     object.CanBurn = message.CanBurn;
-                if (message.CanChangeOwner != null && message.hasOwnProperty("CanChangeOwner"))
+                if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
                     object.CanChangeOwner = message.CanChangeOwner;
-                if (message.CanAddRoles != null && message.hasOwnProperty("CanAddRoles"))
+                if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
                     object.CanAddRoles = message.CanAddRoles;
                 return object;
             };
@@ -5922,7 +5952,7 @@ export const proto = $root.proto = (() => {
              * @returns {$protobuf.Writer} Writer
              */
             AssetAttributes.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -5996,10 +6026,10 @@ export const proto = $root.proto = (() => {
                     long = 0;
                 if (long > $util.recursionLimit)
                     return "maximum nesting depth exceeded";
-                if (message.IsPaused != null && message.hasOwnProperty("IsPaused"))
+                if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
                     if (typeof message.IsPaused !== "boolean")
                         return "IsPaused: boolean expected";
-                if (message.IsNFTMintStopped != null && message.hasOwnProperty("IsNFTMintStopped"))
+                if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
                     if (typeof message.IsNFTMintStopped !== "boolean")
                         return "IsNFTMintStopped: boolean expected";
                 return null;
@@ -6016,6 +6046,8 @@ export const proto = $root.proto = (() => {
             AssetAttributes.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.CreateAssetContract.AssetAttributes)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".proto.CreateAssetContract.AssetAttributes: object expected");
                 if (long === undefined)
                     long = 0;
                 if (long > $util.recursionLimit)
@@ -6049,9 +6081,9 @@ export const proto = $root.proto = (() => {
                     object.IsPaused = false;
                     object.IsNFTMintStopped = false;
                 }
-                if (message.IsPaused != null && message.hasOwnProperty("IsPaused"))
+                if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
                     object.IsPaused = message.IsPaused;
-                if (message.IsNFTMintStopped != null && message.hasOwnProperty("IsNFTMintStopped"))
+                if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
                     object.IsNFTMintStopped = message.IsNFTMintStopped;
                 return object;
             };
@@ -6209,7 +6241,7 @@ export const proto = $root.proto = (() => {
          * @returns {$protobuf.Writer} Writer
          */
         SmartContract.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
@@ -6297,7 +6329,7 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 switch (message.Type) {
                 default:
                     return "Type: enum value expected";
@@ -6306,10 +6338,10 @@ export const proto = $root.proto = (() => {
                 case 2:
                     break;
                 }
-            if (message.Address != null && message.hasOwnProperty("Address"))
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
                 if (!(message.Address && typeof message.Address.length === "number" || $util.isString(message.Address)))
                     return "Address: buffer expected";
-            if (message.CallValue != null && message.hasOwnProperty("CallValue")) {
+            if (message.CallValue != null && Object.hasOwnProperty.call(message, "CallValue")) {
                 if (!Array.isArray(message.CallValue))
                     return "CallValue: array expected";
                 for (let i = 0; i < message.CallValue.length; ++i) {
@@ -6318,10 +6350,10 @@ export const proto = $root.proto = (() => {
                         return "CallValue." + error;
                 }
             }
-            if (message.Input != null && message.hasOwnProperty("Input"))
+            if (message.Input != null && Object.hasOwnProperty.call(message, "Input"))
                 if (!(message.Input && typeof message.Input.length === "number" || $util.isString(message.Input)))
                     return "Input: buffer expected";
-            if (message.VirtualMachine != null && message.hasOwnProperty("VirtualMachine"))
+            if (message.VirtualMachine != null && Object.hasOwnProperty.call(message, "VirtualMachine"))
                 if (!$util.isString(message.VirtualMachine))
                     return "VirtualMachine: string expected";
             return null;
@@ -6338,6 +6370,8 @@ export const proto = $root.proto = (() => {
         SmartContract.fromObject = function fromObject(object, long) {
             if (object instanceof $root.proto.SmartContract)
                 return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.SmartContract: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
@@ -6373,7 +6407,7 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.SmartContract.CallValue: array expected");
                 message.CallValue = [];
                 for (let i = 0; i < object.CallValue.length; ++i) {
-                    if (typeof object.CallValue[i] !== "object")
+                    if (!$util.isObject(object.CallValue[i]))
                         throw TypeError(".proto.SmartContract.CallValue: object expected");
                     message.CallValue[i] = $root.proto.SmartContract.CallValueData.fromObject(object.CallValue[i], long + 1);
                 }
@@ -6425,18 +6459,18 @@ export const proto = $root.proto = (() => {
                 }
                 object.VirtualMachine = "";
             }
-            if (message.Type != null && message.hasOwnProperty("Type"))
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 object.Type = options.enums === String ? $root.proto.SmartContract.SCType[message.Type] === undefined ? message.Type : $root.proto.SmartContract.SCType[message.Type] : message.Type;
-            if (message.Address != null && message.hasOwnProperty("Address"))
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
                 object.Address = options.bytes === String ? $util.base64.encode(message.Address, 0, message.Address.length) : options.bytes === Array ? Array.prototype.slice.call(message.Address) : message.Address;
             if (message.CallValue && message.CallValue.length) {
                 object.CallValue = [];
                 for (let j = 0; j < message.CallValue.length; ++j)
                     object.CallValue[j] = $root.proto.SmartContract.CallValueData.toObject(message.CallValue[j], options, q + 1);
             }
-            if (message.Input != null && message.hasOwnProperty("Input"))
+            if (message.Input != null && Object.hasOwnProperty.call(message, "Input"))
                 object.Input = options.bytes === String ? $util.base64.encode(message.Input, 0, message.Input.length) : options.bytes === Array ? Array.prototype.slice.call(message.Input) : message.Input;
-            if (message.VirtualMachine != null && message.hasOwnProperty("VirtualMachine"))
+            if (message.VirtualMachine != null && Object.hasOwnProperty.call(message, "VirtualMachine"))
                 object.VirtualMachine = message.VirtualMachine;
             return object;
         };
@@ -6569,7 +6603,7 @@ export const proto = $root.proto = (() => {
              * @returns {$protobuf.Writer} Writer
              */
             CallValueData.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -6643,10 +6677,10 @@ export const proto = $root.proto = (() => {
                     long = 0;
                 if (long > $util.recursionLimit)
                     return "maximum nesting depth exceeded";
-                if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+                if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                     if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                         return "AssetID: buffer expected";
-                if (message.Amount != null && message.hasOwnProperty("Amount"))
+                if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                     if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
                         return "Amount: integer|Long expected";
                 return null;
@@ -6663,6 +6697,8 @@ export const proto = $root.proto = (() => {
             CallValueData.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.proto.SmartContract.CallValueData)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".proto.SmartContract.CallValueData: object expected");
                 if (long === undefined)
                     long = 0;
                 if (long > $util.recursionLimit)
@@ -6716,9 +6752,9 @@ export const proto = $root.proto = (() => {
                     } else
                         object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
-                if (message.AssetID != null && message.hasOwnProperty("AssetID"))
+                if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                     object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
-                if (message.Amount != null && message.hasOwnProperty("Amount"))
+                if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                     if (typeof BigInt !== "undefined" && options.longs === BigInt)
                         object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
                     else if (typeof message.Amount === "number")
@@ -6867,7 +6903,7 @@ export const google = $root.google = (() => {
              * @returns {$protobuf.Writer} Writer
              */
             Any.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -6941,10 +6977,10 @@ export const google = $root.google = (() => {
                     long = 0;
                 if (long > $util.recursionLimit)
                     return "maximum nesting depth exceeded";
-                if (message.type_url != null && message.hasOwnProperty("type_url"))
+                if (message.type_url != null && Object.hasOwnProperty.call(message, "type_url"))
                     if (!$util.isString(message.type_url))
                         return "type_url: string expected";
-                if (message.value != null && message.hasOwnProperty("value"))
+                if (message.value != null && Object.hasOwnProperty.call(message, "value"))
                     if (!(message.value && typeof message.value.length === "number" || $util.isString(message.value)))
                         return "value: buffer expected";
                 return null;
@@ -6961,6 +6997,8 @@ export const google = $root.google = (() => {
             Any.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.google.protobuf.Any)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".google.protobuf.Any: object expected");
                 if (long === undefined)
                     long = 0;
                 if (long > $util.recursionLimit)
@@ -7003,9 +7041,9 @@ export const google = $root.google = (() => {
                             object.value = $util.newBuffer(object.value);
                     }
                 }
-                if (message.type_url != null && message.hasOwnProperty("type_url"))
+                if (message.type_url != null && Object.hasOwnProperty.call(message, "type_url"))
                     object.type_url = message.type_url;
-                if (message.value != null && message.hasOwnProperty("value"))
+                if (message.value != null && Object.hasOwnProperty.call(message, "value"))
                     object.value = options.bytes === String ? $util.base64.encode(message.value, 0, message.value.length) : options.bytes === Array ? Array.prototype.slice.call(message.value) : message.value;
                 return object;
             };
