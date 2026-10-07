@@ -33,7 +33,7 @@ function isKleverAccountEvent(event: KleverHubAccountEvent): boolean {
   if (typeof event.chain === 'string') {
     return event.chain === 'KLV'
   }
-  return isValidAddress(event.address)
+  return typeof event.chain === 'number' && isValidAddress(event.address)
 }
 
 /**

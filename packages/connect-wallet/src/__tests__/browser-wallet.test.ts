@@ -273,6 +273,29 @@ describe('BrowserWallet', () => {
       expect(wallet.isConnected()).toBe(false)
       expect(wallet.address).toBe('')
     })
+
+    it.each([undefined, null])(
+      'should disconnect when the chain is %s even with a Klever address',
+      async (chain) => {
+        const wallet = new BrowserWallet(mockProvider)
+        await wallet.connect()
+        vi.useFakeTimers()
+
+        const accountChangedSpy = vi.fn()
+        const disconnectSpy = vi.fn()
+        wallet.on('accountChanged', accountChangedSpy)
+        wallet.on('disconnect', disconnectSpy)
+
+        const onAccountChangedCallback = vi.mocked(mockKleverHub.onAccountChanged).mock.calls[0][0]
+        onAccountChangedCallback({ chain: chain as unknown as number, address: KLEVER_ADDRESS })
+
+        vi.advanceTimersByTime(ACCOUNT_CHANGE_DEBOUNCE_MS)
+
+        expect(accountChangedSpy).not.toHaveBeenCalled()
+        expect(disconnectSpy).toHaveBeenCalled()
+        expect(wallet.isConnected()).toBe(false)
+      },
+    )
   })
 
   describe('Extension Mode - Signing', () => {
