@@ -7,10 +7,12 @@ import type { BuildTransactionRequest } from '../types/types'
 
 // Mock the HttpClient
 vi.mock('../http-client', () => ({
-  HttpClient: vi.fn().mockImplementation(() => ({
-    get: vi.fn(),
-    post: vi.fn(),
-  })),
+  HttpClient: vi.fn().mockImplementation(function () {
+    return {
+      get: vi.fn(),
+      post: vi.fn(),
+    }
+  }),
 }))
 
 describe('KleverProvider', () => {

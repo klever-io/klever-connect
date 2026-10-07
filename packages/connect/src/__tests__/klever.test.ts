@@ -5,9 +5,11 @@ vi.mock('@klever/connect-provider', async () => {
   const actual = await vi.importActual('@klever/connect-provider')
   return {
     ...actual,
-    KleverProvider: vi.fn().mockImplementation(() => ({
-      getBalance: vi.fn().mockResolvedValue(BigInt(5000000)),
-    })),
+    KleverProvider: vi.fn().mockImplementation(function () {
+      return {
+        getBalance: vi.fn().mockResolvedValue(BigInt(5000000)),
+      }
+    }),
   }
 })
 

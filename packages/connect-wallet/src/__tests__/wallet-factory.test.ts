@@ -21,12 +21,14 @@ vi.mock('@klever/connect-provider', async () => {
   const actual = await vi.importActual('@klever/connect-provider')
   return {
     ...actual,
-    KleverProvider: vi.fn().mockImplementation(() => ({
-      getAccount: vi.fn().mockResolvedValue({ balance: BigInt(0), nonce: 0 }),
-      sendRawTransaction: vi.fn(),
-      sendRawTransactions: vi.fn(),
-      buildTransaction: vi.fn(),
-    })),
+    KleverProvider: vi.fn().mockImplementation(function () {
+      return {
+        getAccount: vi.fn().mockResolvedValue({ balance: BigInt(0), nonce: 0 }),
+        sendRawTransaction: vi.fn(),
+        sendRawTransactions: vi.fn(),
+        buildTransaction: vi.fn(),
+      }
+    }),
   }
 })
 
