@@ -65,9 +65,14 @@ export interface KleverWeb {
   ): Promise<Transaction>
 }
 
+export interface KleverHubAccountEvent {
+  chain: string | number
+  address: string
+}
+
 export interface KleverHub {
   initialize: () => Promise<void>
-  onAccountChanged: (callback: (event: { chain: string | number; address: string }) => void) => void
+  onAccountChanged: (callback: (event: KleverHubAccountEvent) => void) => void
   disconnect: () => Promise<void>
 }
 

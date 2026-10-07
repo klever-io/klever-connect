@@ -15,6 +15,13 @@ vi.mock('@klever/connect-core', async () => {
   }
 })
 
+const KLV_CHAIN_CODE = 38
+const LEGACY_KLV_CHAIN_CODE = 1
+const TRX_CHAIN_CODE = 1
+const KLEVER_ADDRESS = 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5'
+const TRON_ADDRESS = 'TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH'
+const ACCOUNT_CHANGE_DEBOUNCE_MS = 100
+
 describe('BrowserWallet', () => {
   let mockProvider: IProvider
   let mockKleverWeb: KleverWeb
@@ -103,6 +110,7 @@ describe('BrowserWallet', () => {
   afterEach(() => {
     global.window = originalWindow
     vi.clearAllMocks()
+    vi.useRealTimers()
   })
 
   describe('Constructor', () => {
@@ -217,6 +225,77 @@ describe('BrowserWallet', () => {
       expect(wallet.isConnected()).toBe(false)
       expect(disconnectSpy).toHaveBeenCalled()
     })
+
+    it.each([
+      ['current extensions', KLV_CHAIN_CODE],
+      ['extensions released before the chain renumbering', LEGACY_KLV_CHAIN_CODE],
+    ])(
+      'should treat a Klever address with the numeric KLV code from %s as an account change',
+      async (_extensions, chain) => {
+        const wallet = new BrowserWallet(mockProvider)
+        await wallet.connect()
+        vi.useFakeTimers()
+
+        const accountChangedSpy = vi.fn()
+        const disconnectSpy = vi.fn()
+        wallet.on('accountChanged', accountChangedSpy)
+        wallet.on('disconnect', disconnectSpy)
+
+        const onAccountChangedCallback = vi.mocked(mockKleverHub.onAccountChanged).mock.calls[0][0]
+        onAccountChangedCallback({ chain, address: KLEVER_ADDRESS })
+
+        vi.advanceTimersByTime(ACCOUNT_CHANGE_DEBOUNCE_MS)
+
+        expect(disconnectSpy).not.toHaveBeenCalled()
+        expect(accountChangedSpy).toHaveBeenCalledWith({ address: KLEVER_ADDRESS, chain })
+        expect(wallet.isConnected()).toBe(true)
+        expect(wallet.address).toBe(KLEVER_ADDRESS)
+      },
+    )
+
+    it('should disconnect when the numeric TRX code comes with a Tron address', async () => {
+      const wallet = new BrowserWallet(mockProvider)
+      await wallet.connect()
+      vi.useFakeTimers()
+
+      const accountChangedSpy = vi.fn()
+      const disconnectSpy = vi.fn()
+      wallet.on('accountChanged', accountChangedSpy)
+      wallet.on('disconnect', disconnectSpy)
+
+      const onAccountChangedCallback = vi.mocked(mockKleverHub.onAccountChanged).mock.calls[0][0]
+      onAccountChangedCallback({ chain: TRX_CHAIN_CODE, address: TRON_ADDRESS })
+
+      vi.advanceTimersByTime(ACCOUNT_CHANGE_DEBOUNCE_MS)
+
+      expect(accountChangedSpy).not.toHaveBeenCalled()
+      expect(disconnectSpy).toHaveBeenCalled()
+      expect(wallet.isConnected()).toBe(false)
+      expect(wallet.address).toBe('')
+    })
+
+    it.each([undefined, null])(
+      'should disconnect when the chain is %s even with a Klever address',
+      async (chain) => {
+        const wallet = new BrowserWallet(mockProvider)
+        await wallet.connect()
+        vi.useFakeTimers()
+
+        const accountChangedSpy = vi.fn()
+        const disconnectSpy = vi.fn()
+        wallet.on('accountChanged', accountChangedSpy)
+        wallet.on('disconnect', disconnectSpy)
+
+        const onAccountChangedCallback = vi.mocked(mockKleverHub.onAccountChanged).mock.calls[0][0]
+        onAccountChangedCallback({ chain: chain as unknown as number, address: KLEVER_ADDRESS })
+
+        vi.advanceTimersByTime(ACCOUNT_CHANGE_DEBOUNCE_MS)
+
+        expect(accountChangedSpy).not.toHaveBeenCalled()
+        expect(disconnectSpy).toHaveBeenCalled()
+        expect(wallet.isConnected()).toBe(false)
+      },
+    )
   })
 
   describe('Extension Mode - Signing', () => {

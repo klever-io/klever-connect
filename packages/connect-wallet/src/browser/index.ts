@@ -1,4 +1,4 @@
-import { isBrowser, TXType, WalletError } from '@klever/connect-core'
+import { isBrowser, isValidAddress, TXType, WalletError } from '@klever/connect-core'
 import type { KleverAddress, TransactionHash } from '@klever/connect-core'
 import type {
   ContractRequestData,
@@ -17,12 +17,24 @@ import {
   type Keystore,
 } from '@klever/connect-crypto'
 import { hexEncode, base64Encode } from '@klever/connect-encoding'
-import type { KleverWeb, KleverHub, IContractRequest } from '../types/browser-types'
+import type {
+  KleverWeb,
+  KleverHub,
+  KleverHubAccountEvent,
+  IContractRequest,
+} from '../types/browser-types'
 import type { WalletConfig } from '../types/wallet'
 import { BaseWallet } from '../base'
 
 // Ensure window is typed (browser environment only - this file should only run in browser)
 declare const window: Window & typeof globalThis
+
+function isKleverAccountEvent(event: KleverHubAccountEvent): boolean {
+  if (typeof event.chain === 'string') {
+    return event.chain === 'KLV'
+  }
+  return typeof event.chain === 'number' && isValidAddress(event.address)
+}
 
 /**
  * Wallet implementation for browser environments
@@ -290,8 +302,7 @@ export class BrowserWallet extends BaseWallet {
 
           // Debounce the event to prevent rapid firing
           this._accountChangeDebounceTimer = setTimeout(() => {
-            // Check if it's a KLV chain (chain === 'KLV' or chain === 1)
-            if (event.chain === 'KLV' || event.chain === 1) {
+            if (isKleverAccountEvent(event)) {
               // Only emit if address actually changed
               if (event.address !== this._lastEmittedAddress) {
                 this._address = event.address
