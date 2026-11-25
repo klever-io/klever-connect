@@ -74,6 +74,8 @@ export function hexEncode(data: Uint8Array): string {
  * @param hex - The hexadecimal string to decode (with or without '0x' prefix)
  * @returns The decoded binary data as a Uint8Array
  * @throws {Error} If the hex string has odd length
+ * @throws {Error} If a byte pair contains non-hex characters. The message gives
+ *   the position only, never the characters, since the input may be key material.
  *
  * @example
  * ```typescript
