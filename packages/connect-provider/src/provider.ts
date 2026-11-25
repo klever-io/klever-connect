@@ -953,32 +953,40 @@ export class KleverProvider implements IProvider {
    */
   private parseRawTransaction(tx: string | Uint8Array | unknown): unknown {
     if (typeof tx === 'string') {
-      // Try to parse as JSON first
+      // Try to parse as JSON first. Only an object or array counts as a JSON
+      // transaction: a hex string of digits ('1234', '1e5') is also valid JSON
+      // (a number) and must still be decoded and checked as hex.
+      let parsed: unknown
       try {
-        return JSON.parse(tx)
+        parsed = JSON.parse(tx)
       } catch {
-        // If parsing fails, parse from hex to bytes
-        const hex = tx.startsWith('0x') ? tx.slice(2) : tx
-
-        // Validate hex string
-        if (!/^[0-9a-fA-F]*$/.test(hex)) {
-          throw new ValidationError('Invalid transaction data: not valid JSON or hex string', {
-            tx,
-          })
-        }
-
-        // Without this, the last single digit of an odd-length string became its own byte
-        if (hex.length % 2 !== 0) {
-          throw new ValidationError('Invalid transaction data: hex string must have even length')
-        }
-
-        const bytes = hex.match(/.{2}/g)?.map((byte) => parseInt(byte, 16))
-        if (!bytes || bytes.length === 0) {
-          throw new ValidationError('Invalid transaction data: empty hex string')
-        }
-
-        return new Uint8Array(bytes)
+        parsed = undefined
       }
+      if (typeof parsed === 'object' && parsed !== null) {
+        return parsed
+      }
+
+      // Otherwise parse from hex to bytes, stripping one 0x/0X prefix as hexDecode does
+      const hex = tx.replace(/^0x/i, '')
+
+      // Validate hex string
+      if (!/^[0-9a-fA-F]*$/.test(hex)) {
+        throw new ValidationError('Invalid transaction data: not valid JSON or hex string', {
+          tx,
+        })
+      }
+
+      // Without this, the last single digit of an odd-length string became its own byte
+      if (hex.length % 2 !== 0) {
+        throw new ValidationError('Invalid transaction data: hex string must have even length')
+      }
+
+      const bytes = hex.match(/.{2}/g)?.map((byte) => parseInt(byte, 16))
+      if (!bytes || bytes.length === 0) {
+        throw new ValidationError('Invalid transaction data: empty hex string')
+      }
+
+      return new Uint8Array(bytes)
     } else if (tx instanceof Uint8Array) {
       if (tx.length === 0) {
         throw new ValidationError('Invalid transaction data: empty Uint8Array')

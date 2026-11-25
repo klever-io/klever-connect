@@ -351,11 +351,12 @@ export function bytesToHex(bytes: Uint8Array): string {
  * Convert hex string to bytes
  *
  * Converts a hexadecimal string to a Uint8Array.
- * Accepts strings with or without '0x' prefix.
+ * Accepts strings with or without one '0x' or '0X' prefix.
  *
- * @param hex - Hex string (with or without '0x' prefix)
+ * @param hex - Hex string (with or without '0x'/'0X' prefix)
  * @returns Decoded bytes
  * @throws Error if hex string has odd length
+ * @throws Error if a byte pair contains non-hex characters (the message gives only the position)
  *
  * @example
  * ```typescript

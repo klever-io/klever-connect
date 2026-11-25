@@ -945,6 +945,21 @@ describe('ABI-Aware Encoder', () => {
       )
     })
 
+    it('should encode array32<u8> from hex string with 0X prefix', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const hex = '6b26e4992694fd5312b6652751c6460f7b656f7e15c8dcd3be8bd05db1cc1e22'
+      // Same prefix rule as hexDecode: 0X used to be counted as two of the 64 characters.
+      expect(bytesToHex(encoder.encodeValue('0X' + hex, 'array32<u8>'))).toBe(hex)
+    })
+
     it('should encode array16<u8> from hex string', async () => {
       const { ABIEncoder } = await import('../encoder/abi-encoder')
       const mockABI: ContractABI = {

@@ -824,7 +824,19 @@ describe('KleverProvider', () => {
       )
     })
 
-    it.each(['0xabc', 'abc12'])(
+    it.each([
+      ['an all-digit string', '1234', [0x12, 0x34]],
+      ['a 0X prefix', '0X0a0b', [0x0a, 0x0b]],
+    ])('should decode %s as hex bytes', async (_, hex, bytes) => {
+      // JSON-first parsing used to turn '1234' into the number 1234.
+      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
+        hash: 'hash',
+      })
+      await provider.sendRawTransaction(hex)
+      expect(mockBroadcast).toHaveBeenCalledWith(new Uint8Array(bytes))
+    })
+
+    it.each(['0xabc', 'abc12', '123', '1e5'])(
       'should reject odd-length hex %s instead of broadcasting a truncated byte',
       async (oddHex) => {
         // '0xabc' used to decode as [0xab, 0x0c]: the last single digit became a byte.
