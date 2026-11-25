@@ -111,9 +111,8 @@ export class DefaultCryptoProvider implements CryptoProvider {
    */
   importPrivateKey(key: string | Uint8Array): PrivateKey {
     if (typeof key === 'string') {
-      // Remove any 0x prefix if present
-      const cleanKey = key.startsWith('0x') ? key.slice(2) : key
-      return PrivateKeyImpl.fromHex(cleanKey)
+      // hexDecode strips one 0x/0X prefix; stripping here too would accept '0x0x...'
+      return PrivateKeyImpl.fromHex(key)
     }
     return PrivateKeyImpl.fromBytes(key)
   }

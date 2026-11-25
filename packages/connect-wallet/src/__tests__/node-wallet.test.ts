@@ -66,6 +66,21 @@ describe('NodeWallet', () => {
     it('should throw for invalid private key format', () => {
       expect(() => new NodeWallet(mockProvider, 'not-a-valid-hex-key')).toThrow()
     })
+
+    it('should reject a mistyped key instead of importing a different key', () => {
+      // One mistyped digit in the second nibble of a pair: lenient hex parsing
+      // used to read only the first nibble and import a different key.
+      const typo = privateKeyHex.slice(0, 1) + 'z' + privateKeyHex.slice(2)
+      let error: Error | undefined
+      try {
+        new NodeWallet(mockProvider, typo)
+      } catch (e) {
+        error = e as Error
+      }
+      expect(error?.message).toMatch(/Hex string contains non-hex characters at position 0/)
+      // The error must not carry key material.
+      expect(error?.message).not.toContain(typo.slice(2, 18))
+    })
   })
 
   describe('connect', () => {

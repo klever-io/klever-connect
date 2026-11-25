@@ -37,6 +37,17 @@ describe('DefaultCryptoProvider', () => {
       expect(key.bytes).toEqual(new Uint8Array(32).fill(1))
     })
 
+    it('should import from hex with 0X prefix', () => {
+      const key = provider.importPrivateKey('0X' + '01'.repeat(32))
+      expect(key.bytes).toEqual(new Uint8Array(32).fill(1))
+    })
+
+    it.each(['0x0x', '0x0X'])('should reject a doubled %s prefix', (prefix) => {
+      expect(() => provider.importPrivateKey(prefix + '01'.repeat(32))).toThrow(
+        'Hex string contains non-hex characters',
+      )
+    })
+
     it('should import from Uint8Array', () => {
       const bytes = new Uint8Array(32).fill(2)
       const key = provider.importPrivateKey(bytes)

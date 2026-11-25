@@ -65,17 +65,23 @@ export function hexEncode(data: Uint8Array): string {
     .join('')
 }
 
+/** Exactly two hex digits: one byte. */
+const HEX_PAIR = /^[0-9a-fA-F]{2}$/
+
 /**
  * Decodes a hexadecimal string back to its original binary data
  *
- * Accepts hex strings with or without '0x' prefix. The string must have
- * an even number of characters (each byte is represented by 2 hex digits).
+ * Accepts hex strings with or without one '0x' or '0X' prefix. After the prefix,
+ * every character must be an ASCII hex digit (either case) and the length must be
+ * even (each byte is 2 hex digits). Whitespace, signs and non-ASCII digits are
+ * rejected rather than skipped.
  *
  * @param hex - The hexadecimal string to decode (with or without '0x' prefix)
  * @returns The decoded binary data as a Uint8Array
  * @throws {Error} If the hex string has odd length
  * @throws {Error} If a byte pair contains non-hex characters. The message gives
- *   the position only, never the characters, since the input may be key material.
+ *   the position only (counted after the prefix), never the characters, since the
+ *   input may be key material.
  *
  * @example
  * ```typescript
@@ -98,12 +104,13 @@ export function hexDecode(hex: string): Uint8Array {
   const bytes = new Uint8Array(cleanHex.length / 2)
   for (let i = 0; i < bytes.length; i++) {
     const byteStr = cleanHex.substring(i * 2, i * 2 + 2)
-    const byteValue = parseInt(byteStr, 16)
-    if (Number.isNaN(byteValue)) {
+    // parseInt alone would accept a valid prefix ('7z' -> 7, '-1' -> -1),
+    // so a mistyped key would decode to a different key.
+    if (!HEX_PAIR.test(byteStr)) {
       // Omit the offending characters: the input may be key material.
       throw new Error(`Hex string contains non-hex characters at position ${i * 2}`)
     }
-    bytes[i] = byteValue
+    bytes[i] = parseInt(byteStr, 16)
   }
   return bytes
 }
