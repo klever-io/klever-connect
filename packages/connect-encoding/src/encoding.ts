@@ -98,7 +98,8 @@ export function hexDecode(hex: string): Uint8Array {
     const byteStr = cleanHex.substring(i * 2, i * 2 + 2)
     const byteValue = parseInt(byteStr, 16)
     if (Number.isNaN(byteValue)) {
-      throw new Error(`Hex string contains non-hex characters at position ${i * 2}: "${byteStr}"`)
+      // Omit the offending characters: the input may be key material.
+      throw new Error(`Hex string contains non-hex characters at position ${i * 2}`)
     }
     bytes[i] = byteValue
   }

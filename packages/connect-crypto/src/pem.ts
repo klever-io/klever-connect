@@ -12,7 +12,7 @@ export interface PemBlock {
   bytes: Uint8Array
 }
 
-import { bech32Encode, hexEncode, hexDecode } from '@klever/connect-encoding'
+import { bech32Encode, hexDecode } from '@klever/connect-encoding'
 import { getPublicKeyFromPrivate } from './keys'
 import type { LoadPemOptions } from './types'
 
@@ -315,7 +315,6 @@ export async function loadPrivateKeyFromPem(
   // Extract address from block type
   const addressFromPem = block.type.substring(PRIVATE_KEY_HEADER.length)
 
-  const hexPK = hexEncode(block.bytes)
   // if block bytes length = 64, get first 32bytes
   if (block.bytes.length === 64) {
     block.bytes = block.bytes.slice(0, 32)
@@ -327,7 +326,7 @@ export async function loadPrivateKeyFromPem(
 
   if (derivedAddress !== addressFromPem) {
     throw new Error(
-      `Address mismatch: PEM claims address ${addressFromPem} but private key derives to ${derivedAddress} ${hexPK}`,
+      `Address mismatch: PEM claims address ${addressFromPem} but private key derives to ${derivedAddress}`,
     )
   }
 
