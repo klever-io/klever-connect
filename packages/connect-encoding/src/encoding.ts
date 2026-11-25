@@ -74,6 +74,8 @@ export function hexEncode(data: Uint8Array): string {
  * @param hex - The hexadecimal string to decode (with or without '0x' prefix)
  * @returns The decoded binary data as a Uint8Array
  * @throws {Error} If the hex string has odd length
+ * @throws {Error} If a byte pair contains non-hex characters. The message gives
+ *   the position only, never the characters, since the input may be key material.
  *
  * @example
  * ```typescript
@@ -98,7 +100,8 @@ export function hexDecode(hex: string): Uint8Array {
     const byteStr = cleanHex.substring(i * 2, i * 2 + 2)
     const byteValue = parseInt(byteStr, 16)
     if (Number.isNaN(byteValue)) {
-      throw new Error(`Hex string contains non-hex characters at position ${i * 2}: "${byteStr}"`)
+      // Omit the offending characters: the input may be key material.
+      throw new Error(`Hex string contains non-hex characters at position ${i * 2}`)
     }
     bytes[i] = byteValue
   }

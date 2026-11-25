@@ -53,6 +53,12 @@ describe('encoding', () => {
       expect(() => hexDecode('zz')).toThrow('Hex string contains non-hex characters')
     })
 
+    it('should not echo the invalid input in the error', () => {
+      expect(() => hexDecode('abz7')).toThrow(
+        expect.objectContaining({ message: expect.not.stringContaining('z7') }),
+      )
+    })
+
     it('should roundtrip encode/decode', () => {
       const original = new Uint8Array([1, 2, 3, 4, 5, 255, 0, 128])
       expect(hexDecode(hexEncode(original))).toEqual(original)
