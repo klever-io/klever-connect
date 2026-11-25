@@ -824,6 +824,20 @@ describe('KleverProvider', () => {
       )
     })
 
+    it.each(['0xabc', 'abc12'])(
+      'should reject odd-length hex %s instead of broadcasting a truncated byte',
+      async (oddHex) => {
+        // '0xabc' used to decode as [0xab, 0x0c]: the last single digit became a byte.
+        const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
+          hash: 'hash',
+        })
+        await expect(provider.sendRawTransaction(oddHex)).rejects.toThrow(
+          'Invalid transaction data: hex string must have even length',
+        )
+        expect(mockBroadcast).not.toHaveBeenCalled()
+      },
+    )
+
     it('should throw error for empty hex string', async () => {
       const emptyHex = '0x'
 

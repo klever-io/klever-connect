@@ -967,7 +967,12 @@ export class KleverProvider implements IProvider {
           })
         }
 
-        const bytes = hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16))
+        // Without this, the last single digit of an odd-length string became its own byte
+        if (hex.length % 2 !== 0) {
+          throw new ValidationError('Invalid transaction data: hex string must have even length')
+        }
+
+        const bytes = hex.match(/.{2}/g)?.map((byte) => parseInt(byte, 16))
         if (!bytes || bytes.length === 0) {
           throw new ValidationError('Invalid transaction data: empty hex string')
         }
