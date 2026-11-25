@@ -546,6 +546,43 @@ describe('Result Decoder', () => {
       expect(result.values[0]?.value).toBe(42)
       expect(result.values[0]?.raw).toBe('0x2a')
     })
+
+    describe('malformed hex', () => {
+      const abi: ContractABI = {
+        buildInfo: {
+          rustc: { version: '1.0', commitHash: '', commitDate: '', channel: 'Stable', short: '' },
+          contractCrate: { name: 'test', version: '1.0' },
+          framework: { name: 'klever-sc', version: '1.0' },
+        },
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        upgradeConstructor: { name: 'upgrade', inputs: [], outputs: [] },
+        endpoints: [],
+        kdaAttributes: [],
+        types: {},
+      }
+      const params = [{ name: 'value', type: 'u32' }]
+
+      it.each([
+        ['unparseable', 'zz', 'Hex string contains non-hex characters'],
+        ['a valid prefix', '7z', 'Hex string contains non-hex characters'],
+        ['odd-length', '2a0', 'Hex string must have even length'],
+      ])('should reject %s hex instead of decoding wrong bytes', (_, hex, message) => {
+        expect(() => decodeResultsWithMetadata([hex], params, abi, 'hex')).toThrow(message)
+      })
+
+      it('should still return raw hex when valid bytes fail type decoding', () => {
+        // Valid hex, but 5 bytes is not an Address: decoding fails and falls back to raw.
+        const hex = '0102030405'
+        const result = decodeResultsWithMetadata(
+          [hex],
+          [{ name: 'a', type: 'Address' }],
+          abi,
+          'hex',
+        )
+        expect(result.values[0]).toEqual({ type: 'Address', value: hex, raw: hex })
+      })
+    })
   })
 
   describe('hexToBase64', () => {
@@ -565,6 +602,14 @@ describe('Result Decoder', () => {
       const hex = ''
       const base64 = hexToBase64(hex)
       expect(base64).toBe('')
+    })
+
+    it.each([
+      ['unparseable', 'zz', 'Hex string contains non-hex characters'],
+      ['a valid prefix', '7z', 'Hex string contains non-hex characters'],
+      ['odd-length', '123', 'Hex string must have even length'],
+    ])('should reject %s hex instead of converting wrong bytes', (_, input, message) => {
+      expect(() => hexToBase64(input)).toThrow(message)
     })
   })
 

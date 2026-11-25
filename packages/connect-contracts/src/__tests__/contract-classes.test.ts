@@ -334,6 +334,14 @@ describe('ContractFactory', () => {
       const factory = new ContractFactory(abi, hexBytecode, mockSigner)
       expect(Array.from(factory.bytecode)).toEqual([1, 2, 3])
     })
+
+    it.each([
+      ['unparseable', '01zz03', 'Hex string contains non-hex characters'],
+      ['a valid prefix', '017z03', 'Hex string contains non-hex characters'],
+      ['odd-length', '01020', 'Hex string must have even length'],
+    ])('should reject %s bytecode instead of deploying wrong bytes', (_, hex, message) => {
+      expect(() => new ContractFactory(abi, hex, mockSigner)).toThrow(message)
+    })
   })
 
   describe('attach', () => {

@@ -181,6 +181,18 @@ describe('Parameter Encoder', () => {
     it('should throw on odd-length hex', () => {
       expect(() => hexToBytes('123')).toThrow('Hex string must have even length')
     })
+
+    it('should handle 0X prefix', () => {
+      expect(Array.from(hexToBytes('0X010203'))).toEqual([1, 2, 3])
+    })
+
+    it.each([
+      ['unparseable', 'zz'],
+      ['a valid prefix', '7z'],
+      ['whitespace', '01 2'],
+    ])('should reject %s hex instead of encoding wrong bytes', (_, input) => {
+      expect(() => hexToBytes(input)).toThrow('Hex string contains non-hex characters')
+    })
   })
 
   describe('bytesToHex', () => {

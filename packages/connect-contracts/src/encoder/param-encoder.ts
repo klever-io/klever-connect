@@ -41,7 +41,7 @@
  * ```
  */
 
-import { bech32Decode } from '@klever/connect-encoding'
+import { bech32Decode, hexDecode } from '@klever/connect-encoding'
 
 /**
  * Encode unsigned 8-bit integer (u8)
@@ -370,19 +370,8 @@ export function bytesToHex(bytes: Uint8Array): string {
  * ```
  */
 export function hexToBytes(hex: string): Uint8Array {
-  // Remove 0x prefix if present
-  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
-
-  if (cleanHex.length % 2 !== 0) {
-    throw new Error('Hex string must have even length')
-  }
-
-  const bytes = new Uint8Array(cleanHex.length / 2)
-  for (let i = 0; i < cleanHex.length; i += 2) {
-    bytes[i / 2] = parseInt(cleanHex.slice(i, i + 2), 16)
-  }
-
-  return bytes
+  // hexDecode strips a 0x/0X prefix and rejects odd-length or malformed hex
+  return hexDecode(hex)
 }
 
 function decodeBech32(address: string): Uint8Array {
