@@ -62,15 +62,15 @@ const tx = TransactionBuilder.create()
     amount: '1000000',
   })
   .buildProto({
-    chainId: '100', // Mainnet
+    chainId: '108', // Mainnet (testnet is '109')
     fees: {
-      kAppFee: 500000,
-      bandwidthFee: 100000,
+      kAppFee: 1000000,
+      bandwidthFee: 2000000,
     },
   })
 
 await tx.sign(privateKey)
-// Later: broadcast tx.toHex()
+// Later, from a connected machine: provider.sendRawTransaction(tx.toHex())
 ```
 
 ## Building Modes Comparison
@@ -144,34 +144,72 @@ const hash = await provider.sendRawTransaction(tx)
 - No automatic validation (easy to create invalid transactions)
 - Requires more code and blockchain knowledge
 
+**Supported contracts:** Transfer (0), Freeze (4), Unfreeze (5), Delegate (6),
+Undelegate (7), Withdraw (8), Claim (9), Vote (14) and Smart Contract (63:
+invoke and deploy, with `callValue`). Each is encoded the way the node encodes
+it for `/transaction/send`, so the signed bytes match. Any other contract type
+throws a `ValidationError`; build it with `build()`.
+
+**Things the node fills in that you must provide offline:**
+
+- **Royalties.** For a KDA with transfer royalties, the node reads the royalty
+  amounts from chain state whenever `kdaRoyalties` or `klvRoyalties` is 0.
+  Offline, pass both to `transfer()`; one left at 0 stays 0.
+- **Call values with royalties.** A smart-contract `callValue` is encoded
+  without royalties. If one of its assets has transfer royalties, the call is
+  accepted into a block and then fails on chain, and the fees are spent. Build
+  those calls with `build()`.
+- **Version.** Defaults to 1, the version the node sets. Override with
+  `buildProto({ version })` if the network requires another.
+- **Fees.** Default to 0 when not given.
+
 **Fee Estimation:**
 
-- KAppFee: Base fee for contract type (typically 500000-1000000)
-- BandwidthFee: Based on transaction size (typically 100000-500000)
-- Use previous transaction fees as reference or query node's fee table
+- On mainnet the node charges a KLV transfer `kAppFee: 1000000` and
+  `bandwidthFee: 2000000`. Bandwidth grows with transaction size, so contract
+  calls with data cost more.
+- To get exact values, build the same transaction once with `build()` (or
+  `provider.buildTransaction(builder.buildRequest())`) and read
+  `RawData.KAppFee` and `RawData.BandwidthFee`.
 
 ```typescript
 // Fetch nonce first (can be done earlier)
-const account = await provider.getAccount('klv1...')
+const nonce = await provider.getNonce('klv1...')
 
 // Build completely offline
 const tx = TransactionBuilder.create()
   .sender('klv1...')
-  .nonce(account.nonce)
+  .nonce(nonce)
   .transfer({ receiver: 'klv1...', amount: '1000000' })
   .buildProto({
-    chainId: '100', // Mainnet
+    chainId: '108', // Mainnet (testnet is '109')
     fees: {
-      kAppFee: 500000, // Base fee
-      bandwidthFee: 100000, // Size-based fee
+      kAppFee: 1000000, // Base fee
+      bandwidthFee: 2000000, // Size-based fee
     },
   })
 
 // Sign offline (can be done on air-gapped machine)
 await tx.sign(privateKey)
 
-// Later: broadcast to network
+// Later: move the hex to a connected machine and broadcast it
 const hex = tx.toHex()
+const hash = await provider.sendRawTransaction(hex)
+```
+
+Smart contract calls work the same way:
+
+```typescript
+const call = TransactionBuilder.create()
+  .sender('klv1...')
+  .nonce(nonce)
+  .smartContract({
+    scType: 0, // Invoke
+    address: contractAddress, // a KleverAddress
+    callValue: { KLV: 1000000n }, // optional
+  })
+  .data(['deposit@01'])
+  .buildProto({ chainId: '108', fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
 ```
 
 ### 3. Request Building (`buildRequest()`)
@@ -207,14 +245,14 @@ console.log(JSON.stringify(request, null, 2))
 // Modify if needed
 request.nonce = 150
 
-// Send to node endpoint manually
-const response = await fetch('https://api.mainnet.klever.finance/v1.0/transaction/build', {
+// Send it to the node yourself (this is what build() does)
+const response = await fetch('https://node.mainnet.klever.org/transaction/send', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(request),
 })
 
-const data = await response.json()
+const { data } = await response.json()
 const tx = Transaction.fromObject(data.result)
 
 // Now ready to sign
@@ -635,13 +673,13 @@ const tx = await TransactionBuilder.create(provider)
 Vote on an active governance proposal.
 
 ```typescript
-// Vote YES
+// Vote YES (klever-go VoteContract.EnumVoteType: 0 = Yes, 1 = No)
 const tx = await TransactionBuilder.create(provider)
   .sender('klv1...')
   .vote({
     proposalId: 5,
-    type: 1, // 1 = Yes
-    amount: '1000000', // Optional voting weight
+    type: 0, // 0 = Yes
+    amount: '1000000', // Voting weight; the node rejects a vote without it
   })
   .build()
 
@@ -650,16 +688,8 @@ const tx = await TransactionBuilder.create(provider)
   .sender('klv1...')
   .vote({
     proposalId: 5,
-    type: 2, // 2 = No
-  })
-  .build()
-
-// Abstain
-const tx = await TransactionBuilder.create(provider)
-  .sender('klv1...')
-  .vote({
-    proposalId: 5,
-    type: 0, // 0 = Abstain
+    type: 1, // 1 = No
+    amount: '1000000',
   })
   .build()
 ```
@@ -1047,7 +1077,7 @@ const tx = TransactionBuilder.create()
   .kdaFee({ kda: 'MYTOKEN-ABCD', amount: '1000000' })
   .transfer({ receiver: 'klv1...', amount: '1000000' })
   .buildProto({
-    chainId: '100',
+    chainId: '108',
     fees: { kAppFee: 0, bandwidthFee: 0 }, // Zeros because using KDA fee
   })
 ```
@@ -1071,8 +1101,8 @@ const tx = TransactionBuilder.create()
   .nonce(123) // Use fetched nonce
   .transfer({ receiver: 'klv1recipient...', amount: '1000000' })
   .buildProto({
-    chainId: '100',
-    fees: { kAppFee: 500000, bandwidthFee: 100000 },
+    chainId: '108',
+    fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
   })
 
 await tx.sign(privateKey)
@@ -1107,8 +1137,8 @@ for (let i = 0; i < 10; i++) {
       amount: '1000000',
     })
     .buildProto({
-      chainId: '100',
-      fees: { kAppFee: 500000, bandwidthFee: 100000 },
+      chainId: '108',
+      fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
     })
 
   await tx.sign(privateKey)
@@ -1157,13 +1187,13 @@ const tx1 = TransactionBuilder.create()
   .sender('klv1...')
   .nonce(await nonceManager.getNextNonce(provider, 'klv1...'))
   .transfer({ receiver: 'klv1a...', amount: '1000000' })
-  .buildProto({ chainId: '100', fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+  .buildProto({ chainId: '108', fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
 
 const tx2 = TransactionBuilder.create()
   .sender('klv1...')
   .nonce(await nonceManager.getNextNonce(provider, 'klv1...'))
   .transfer({ receiver: 'klv1b...', amount: '2000000' })
-  .buildProto({ chainId: '100', fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+  .buildProto({ chainId: '108', fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
 
 // Strategy 3: Retry on nonce error
 async function sendWithRetry(tx: Transaction, maxRetries = 3): Promise<string> {
@@ -1225,8 +1255,8 @@ const tx = TransactionBuilder.create()
   .nonce(account.nonce)
   .transfer({ receiver: 'klv1recipient...', amount: '1000000' })
   .buildProto({
-    chainId: '100',
-    fees: { kAppFee: 500000, bandwidthFee: 100000 },
+    chainId: '108',
+    fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
   })
 
 // Get transaction hash for hardware wallet
@@ -1465,8 +1495,8 @@ async function buildTransaction(
     .nonce(nonce)
     .transfer({ receiver, amount })
     .buildProto({
-      chainId: '100',
-      fees: { kAppFee: 500000, bandwidthFee: 100000 },
+      chainId: '108',
+      fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
     })
 }
 ```
@@ -1685,7 +1715,7 @@ class BatchTransactionProcessor {
         .transfer({ receiver: op.receiver, amount: op.amount })
         .buildProto({
           chainId: this.provider.getNetwork().chainId,
-          fees: { kAppFee: 500000, bandwidthFee: 100000 },
+          fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
         })
 
       await tx.sign(this.privateKey)

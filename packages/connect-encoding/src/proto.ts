@@ -43,10 +43,13 @@ export const SmartContract = protoTypes.proto.SmartContract
 // Nested Enums (for convenience)
 // ============================================
 
-export const WithdrawType = protoTypes.proto.WithdrawContract.WithdrawType
-export const ClaimType = protoTypes.proto.ClaimContract.ClaimType
-export const VoteType = protoTypes.proto.VoteContract.VoteType
-export const AssetType = protoTypes.proto.CreateAssetContract.AssetType
+// Names kept from the SDK's earlier proto; the node's proto (klever-go
+// data/transaction/proto/contracts.proto) calls them Enum<Name>.
+export const WithdrawType = protoTypes.proto.WithdrawContract.EnumWithdrawType
+export const ClaimType = protoTypes.proto.ClaimContract.EnumClaimType
+export const VoteType = protoTypes.proto.VoteContract.EnumVoteType
+export const AssetType = protoTypes.proto.CreateAssetContract.EnumAssetType
+export const SCType = protoTypes.proto.SmartContract.SCType
 
 // ============================================
 // TypeScript Interface Types
@@ -68,8 +71,9 @@ export type ICreateAssetContract = protoTypes.proto.ICreateAssetContract
 export type ISmartContract = protoTypes.proto.ISmartContract
 
 // Nested interfaces
-export type IAssetProperties = protoTypes.proto.CreateAssetContract.IAssetProperties
-export type IAssetAttributes = protoTypes.proto.CreateAssetContract.IAssetAttributes
+export type IAssetProperties = protoTypes.proto.IPropertiesInfo
+export type IAssetAttributes = protoTypes.proto.IAttributesInfo
+export type ICallValue = protoTypes.proto.ICallValue
 export type IKDAFee = protoTypes.proto.Transaction.IKDAFee
 export type IRaw = protoTypes.proto.Transaction.IRaw
 export type IReceipt = protoTypes.proto.Transaction.IReceipt

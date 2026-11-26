@@ -12,6 +12,7 @@ import type { Transaction } from '@klever/connect-transactions'
 import type { TransactionLog } from '../event-parser'
 import type { KleverAddress } from '@klever/connect-core'
 import { loadABI } from '../utils'
+import { SmartContract, base64Encode, bech32Decode } from '@klever/connect-encoding'
 import diceAbi from '../../examples/dice/dice.abi.json'
 
 const contractAddress =
@@ -171,6 +172,44 @@ describe('Contract', () => {
       const contract = new Contract(contractAddress, abi, mockProvider)
       expect(contract.provider).toBe(mockProvider)
       expect(contract.signer).toBeUndefined()
+    })
+
+    it('should build an offline call with its contract, call value and data', async () => {
+      // A signer without a provider: populateTransaction builds with buildProto()
+      const offlineSigner = {
+        address: signerAddress,
+        signTransaction: async (tx: Transaction) => tx,
+      }
+      const contract = new Contract(contractAddress, abi, offlineSigner as unknown as Signer)
+
+      const tx = await contract.populateTransaction['bet']!(0, 50, {
+        nonce: 0,
+        chainId: '108',
+        value: { KLV: 1000n },
+      })
+
+      const raw = tx.RawData!
+      expect(raw.Nonce ?? 0).toBe(0)
+      expect(raw.Data?.map((d) => new TextDecoder().decode(d))).toEqual(['bet@00@32'])
+      const sc = SmartContract.toObject(SmartContract.decode(raw.Contract![0]!.Parameter!.value!), {
+        longs: Number,
+        bytes: String,
+      })
+      expect(raw.Contract![0]!.Type).toBe(63)
+      expect(sc['CallValue']).toEqual({ KLV: { Amount: 1000 } })
+      expect(sc['Address']).toBe(base64Encode(bech32Decode(contractAddress).data))
+    })
+
+    it('should require a nonce for an offline call', async () => {
+      const offlineSigner = {
+        address: signerAddress,
+        signTransaction: async (tx: Transaction) => tx,
+      }
+      const contract = new Contract(contractAddress, abi, offlineSigner as unknown as Signer)
+
+      await expect(contract.populateTransaction['bet']!(0, 50, { chainId: '108' })).rejects.toThrow(
+        'Nonce is required for offline transaction building',
+      )
     })
 
     it('should create contract with signer', () => {

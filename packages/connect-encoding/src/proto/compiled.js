@@ -29,7 +29,7 @@ export const proto = $root.proto = (() => {
         /**
          * Constructs a new TXContract.
          * @memberof proto
-         * @classdesc Represents a TXContract.
+         * @classdesc TXContract available
          * @implements ITXContract
          * @constructor
          * @param {proto.ITXContract=} [properties] Properties to set
@@ -492,7 +492,7 @@ export const proto = $root.proto = (() => {
         /**
          * Constructs a new Transaction.
          * @memberof proto
-         * @classdesc Represents a Transaction.
+         * @classdesc Transaction holds all the data needed for a value transfer
          * @implements ITransaction
          * @constructor
          * @param {proto.ITransaction=} [properties] Properties to set
@@ -2555,14 +2555,16 @@ export const proto = $root.proto = (() => {
          * @memberof proto
          * @interface ITransferContract
          * @property {Uint8Array|null} [ToAddress] TransferContract ToAddress
-         * @property {number|null} [Amount] TransferContract Amount
          * @property {Uint8Array|null} [AssetID] TransferContract AssetID
+         * @property {number|null} [Amount] TransferContract Amount
+         * @property {number|null} [KDARoyalties] TransferContract KDARoyalties
+         * @property {number|null} [KLVRoyalties] TransferContract KLVRoyalties
          */
 
         /**
          * Constructs a new TransferContract.
          * @memberof proto
-         * @classdesc Represents a TransferContract.
+         * @classdesc TXContract available
          * @implements ITransferContract
          * @constructor
          * @param {proto.ITransferContract=} [properties] Properties to set
@@ -2583,6 +2585,14 @@ export const proto = $root.proto = (() => {
         TransferContract.prototype.ToAddress = $util.newBuffer([]);
 
         /**
+         * TransferContract AssetID.
+         * @member {Uint8Array} AssetID
+         * @memberof proto.TransferContract
+         * @instance
+         */
+        TransferContract.prototype.AssetID = $util.newBuffer([]);
+
+        /**
          * TransferContract Amount.
          * @member {number} Amount
          * @memberof proto.TransferContract
@@ -2591,12 +2601,20 @@ export const proto = $root.proto = (() => {
         TransferContract.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
-         * TransferContract AssetID.
-         * @member {Uint8Array} AssetID
+         * TransferContract KDARoyalties.
+         * @member {number} KDARoyalties
          * @memberof proto.TransferContract
          * @instance
          */
-        TransferContract.prototype.AssetID = $util.newBuffer([]);
+        TransferContract.prototype.KDARoyalties = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * TransferContract KLVRoyalties.
+         * @member {number} KLVRoyalties
+         * @memberof proto.TransferContract
+         * @instance
+         */
+        TransferContract.prototype.KLVRoyalties = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
          * Creates a new TransferContract instance using the specified properties.
@@ -2628,10 +2646,14 @@ export const proto = $root.proto = (() => {
                 throw Error("max depth exceeded");
             if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.ToAddress);
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.Amount);
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.AssetID);
+                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.AssetID);
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.Amount);
+            if (message.KDARoyalties != null && Object.hasOwnProperty.call(message, "KDARoyalties"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.KDARoyalties);
+            if (message.KLVRoyalties != null && Object.hasOwnProperty.call(message, "KLVRoyalties"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.KLVRoyalties);
             return writer;
         };
 
@@ -2677,11 +2699,19 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 case 2: {
-                        message.Amount = reader.int64();
+                        message.AssetID = reader.bytes();
                         break;
                     }
                 case 3: {
-                        message.AssetID = reader.bytes();
+                        message.Amount = reader.int64();
+                        break;
+                    }
+                case 4: {
+                        message.KDARoyalties = reader.int64();
+                        break;
+                    }
+                case 5: {
+                        message.KLVRoyalties = reader.int64();
                         break;
                     }
                 default:
@@ -2726,12 +2756,18 @@ export const proto = $root.proto = (() => {
             if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 if (!(message.ToAddress && typeof message.ToAddress.length === "number" || $util.isString(message.ToAddress)))
                     return "ToAddress: buffer expected";
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
-                    return "Amount: integer|Long expected";
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
+                    return "Amount: integer|Long expected";
+            if (message.KDARoyalties != null && Object.hasOwnProperty.call(message, "KDARoyalties"))
+                if (!$util.isInteger(message.KDARoyalties) && !(message.KDARoyalties && $util.isInteger(message.KDARoyalties.low) && $util.isInteger(message.KDARoyalties.high)))
+                    return "KDARoyalties: integer|Long expected";
+            if (message.KLVRoyalties != null && Object.hasOwnProperty.call(message, "KLVRoyalties"))
+                if (!$util.isInteger(message.KLVRoyalties) && !(message.KLVRoyalties && $util.isInteger(message.KLVRoyalties.low) && $util.isInteger(message.KLVRoyalties.high)))
+                    return "KLVRoyalties: integer|Long expected";
             return null;
         };
 
@@ -2758,6 +2794,11 @@ export const proto = $root.proto = (() => {
                     $util.base64.decode(object.ToAddress, message.ToAddress = $util.newBuffer($util.base64.length(object.ToAddress)), 0);
                 else if (object.ToAddress.length >= 0)
                     message.ToAddress = object.ToAddress;
+            if (object.AssetID != null)
+                if (typeof object.AssetID === "string")
+                    $util.base64.decode(object.AssetID, message.AssetID = $util.newBuffer($util.base64.length(object.AssetID)), 0);
+                else if (object.AssetID.length >= 0)
+                    message.AssetID = object.AssetID;
             if (object.Amount != null)
                 if ($util.Long)
                     message.Amount = $util.Long.fromValue(object.Amount, false);
@@ -2767,11 +2808,24 @@ export const proto = $root.proto = (() => {
                     message.Amount = object.Amount;
                 else if (typeof object.Amount === "object")
                     message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
-            if (object.AssetID != null)
-                if (typeof object.AssetID === "string")
-                    $util.base64.decode(object.AssetID, message.AssetID = $util.newBuffer($util.base64.length(object.AssetID)), 0);
-                else if (object.AssetID.length >= 0)
-                    message.AssetID = object.AssetID;
+            if (object.KDARoyalties != null)
+                if ($util.Long)
+                    message.KDARoyalties = $util.Long.fromValue(object.KDARoyalties, false);
+                else if (typeof object.KDARoyalties === "string")
+                    message.KDARoyalties = parseInt(object.KDARoyalties, 10);
+                else if (typeof object.KDARoyalties === "number")
+                    message.KDARoyalties = object.KDARoyalties;
+                else if (typeof object.KDARoyalties === "object")
+                    message.KDARoyalties = new $util.LongBits(object.KDARoyalties.low >>> 0, object.KDARoyalties.high >>> 0).toNumber();
+            if (object.KLVRoyalties != null)
+                if ($util.Long)
+                    message.KLVRoyalties = $util.Long.fromValue(object.KLVRoyalties, false);
+                else if (typeof object.KLVRoyalties === "string")
+                    message.KLVRoyalties = parseInt(object.KLVRoyalties, 10);
+                else if (typeof object.KLVRoyalties === "number")
+                    message.KLVRoyalties = object.KLVRoyalties;
+                else if (typeof object.KLVRoyalties === "object")
+                    message.KLVRoyalties = new $util.LongBits(object.KLVRoyalties.low >>> 0, object.KLVRoyalties.high >>> 0).toNumber();
             return message;
         };
 
@@ -2800,11 +2854,6 @@ export const proto = $root.proto = (() => {
                     if (options.bytes !== Array)
                         object.ToAddress = $util.newBuffer(object.ToAddress);
                 }
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
-                } else
-                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if (options.bytes === String)
                     object.AssetID = "";
                 else {
@@ -2812,9 +2861,26 @@ export const proto = $root.proto = (() => {
                     if (options.bytes !== Array)
                         object.AssetID = $util.newBuffer(object.AssetID);
                 }
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.KDARoyalties = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.KDARoyalties = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.KLVRoyalties = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.KLVRoyalties = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
             }
             if (message.ToAddress != null && Object.hasOwnProperty.call(message, "ToAddress"))
                 object.ToAddress = options.bytes === String ? $util.base64.encode(message.ToAddress, 0, message.ToAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.ToAddress) : message.ToAddress;
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
+                object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
             if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
@@ -2822,8 +2888,20 @@ export const proto = $root.proto = (() => {
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
-            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
+            if (message.KDARoyalties != null && Object.hasOwnProperty.call(message, "KDARoyalties"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.KDARoyalties = typeof message.KDARoyalties === "number" ? BigInt(message.KDARoyalties) : $util.Long.fromBits(message.KDARoyalties.low >>> 0, message.KDARoyalties.high >>> 0, false).toBigInt();
+                else if (typeof message.KDARoyalties === "number")
+                    object.KDARoyalties = options.longs === String ? String(message.KDARoyalties) : message.KDARoyalties;
+                else
+                    object.KDARoyalties = options.longs === String ? $util.Long.prototype.toString.call(message.KDARoyalties) : options.longs === Number ? new $util.LongBits(message.KDARoyalties.low >>> 0, message.KDARoyalties.high >>> 0).toNumber() : message.KDARoyalties;
+            if (message.KLVRoyalties != null && Object.hasOwnProperty.call(message, "KLVRoyalties"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.KLVRoyalties = typeof message.KLVRoyalties === "number" ? BigInt(message.KLVRoyalties) : $util.Long.fromBits(message.KLVRoyalties.low >>> 0, message.KLVRoyalties.high >>> 0, false).toBigInt();
+                else if (typeof message.KLVRoyalties === "number")
+                    object.KLVRoyalties = options.longs === String ? String(message.KLVRoyalties) : message.KLVRoyalties;
+                else
+                    object.KLVRoyalties = options.longs === String ? $util.Long.prototype.toString.call(message.KLVRoyalties) : options.longs === Number ? new $util.LongBits(message.KLVRoyalties.low >>> 0, message.KLVRoyalties.high >>> 0).toNumber() : message.KLVRoyalties;
             return object;
         };
 
@@ -2856,20 +2934,3260 @@ export const proto = $root.proto = (() => {
         return TransferContract;
     })();
 
+    proto.CreateAssetContract = (function() {
+
+        /**
+         * Properties of a CreateAssetContract.
+         * @memberof proto
+         * @interface ICreateAssetContract
+         * @property {proto.CreateAssetContract.EnumAssetType|null} [Type] CreateAssetContract Type
+         * @property {Uint8Array|null} [Name] CreateAssetContract Name
+         * @property {Uint8Array|null} [Ticker] CreateAssetContract Ticker
+         * @property {Uint8Array|null} [OwnerAddress] CreateAssetContract OwnerAddress
+         * @property {string|null} [Logo] CreateAssetContract Logo
+         * @property {Object.<string,string>|null} [URIs] CreateAssetContract URIs
+         * @property {number|null} [Precision] CreateAssetContract Precision
+         * @property {number|null} [InitialSupply] CreateAssetContract InitialSupply
+         * @property {number|null} [MaxSupply] CreateAssetContract MaxSupply
+         * @property {proto.IRoyaltiesInfo|null} [Royalties] CreateAssetContract Royalties
+         * @property {proto.IPropertiesInfo|null} [Properties] CreateAssetContract Properties
+         * @property {proto.IAttributesInfo|null} [Attributes] CreateAssetContract Attributes
+         * @property {proto.IStakingInfo|null} [Staking] CreateAssetContract Staking
+         * @property {Array.<proto.IRolesInfo>|null} [Roles] CreateAssetContract Roles
+         * @property {Uint8Array|null} [AdminAddress] CreateAssetContract AdminAddress
+         */
+
+        /**
+         * Constructs a new CreateAssetContract.
+         * @memberof proto
+         * @classdesc CreateAssetContract holds the data for a Klever digital asset
+         * @implements ICreateAssetContract
+         * @constructor
+         * @param {proto.ICreateAssetContract=} [properties] Properties to set
+         */
+        function CreateAssetContract(properties) {
+            this.URIs = {};
+            this.Roles = [];
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * CreateAssetContract Type.
+         * @member {proto.CreateAssetContract.EnumAssetType} Type
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Type = 0;
+
+        /**
+         * CreateAssetContract Name.
+         * @member {Uint8Array} Name
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Name = $util.newBuffer([]);
+
+        /**
+         * CreateAssetContract Ticker.
+         * @member {Uint8Array} Ticker
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Ticker = $util.newBuffer([]);
+
+        /**
+         * CreateAssetContract OwnerAddress.
+         * @member {Uint8Array} OwnerAddress
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.OwnerAddress = $util.newBuffer([]);
+
+        /**
+         * CreateAssetContract Logo.
+         * @member {string} Logo
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Logo = "";
+
+        /**
+         * CreateAssetContract URIs.
+         * @member {Object.<string,string>} URIs
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.URIs = $util.emptyObject;
+
+        /**
+         * CreateAssetContract Precision.
+         * @member {number} Precision
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Precision = 0;
+
+        /**
+         * CreateAssetContract InitialSupply.
+         * @member {number} InitialSupply
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.InitialSupply = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * CreateAssetContract MaxSupply.
+         * @member {number} MaxSupply
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.MaxSupply = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * CreateAssetContract Royalties.
+         * @member {proto.IRoyaltiesInfo|null|undefined} Royalties
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Royalties = null;
+
+        /**
+         * CreateAssetContract Properties.
+         * @member {proto.IPropertiesInfo|null|undefined} Properties
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Properties = null;
+
+        /**
+         * CreateAssetContract Attributes.
+         * @member {proto.IAttributesInfo|null|undefined} Attributes
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Attributes = null;
+
+        /**
+         * CreateAssetContract Staking.
+         * @member {proto.IStakingInfo|null|undefined} Staking
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Staking = null;
+
+        /**
+         * CreateAssetContract Roles.
+         * @member {Array.<proto.IRolesInfo>} Roles
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.Roles = $util.emptyArray;
+
+        /**
+         * CreateAssetContract AdminAddress.
+         * @member {Uint8Array} AdminAddress
+         * @memberof proto.CreateAssetContract
+         * @instance
+         */
+        CreateAssetContract.prototype.AdminAddress = $util.newBuffer([]);
+
+        /**
+         * Creates a new CreateAssetContract instance using the specified properties.
+         * @function create
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {proto.ICreateAssetContract=} [properties] Properties to set
+         * @returns {proto.CreateAssetContract} CreateAssetContract instance
+         */
+        CreateAssetContract.create = function create(properties) {
+            return new CreateAssetContract(properties);
+        };
+
+        /**
+         * Encodes the specified CreateAssetContract message. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
+         * @function encode
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {proto.ICreateAssetContract} message CreateAssetContract message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        CreateAssetContract.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
+            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
+                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.Name);
+            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
+                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.Ticker);
+            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
+                writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.OwnerAddress);
+            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.Logo);
+            if (message.URIs != null && Object.hasOwnProperty.call(message, "URIs"))
+                for (let keys = Object.keys(message.URIs), i = 0; i < keys.length; ++i)
+                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]).uint32(/* id 2, wireType 2 =*/18).string(message.URIs[keys[i]]).ldelim();
+            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
+                writer.uint32(/* id 7, wireType 0 =*/56).uint32(message.Precision);
+            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
+                writer.uint32(/* id 8, wireType 0 =*/64).int64(message.InitialSupply);
+            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int64(message.MaxSupply);
+            if (message.Royalties != null && Object.hasOwnProperty.call(message, "Royalties"))
+                $root.proto.RoyaltiesInfo.encode(message.Royalties, writer.uint32(/* id 10, wireType 2 =*/82).fork(), q + 1).ldelim();
+            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties"))
+                $root.proto.PropertiesInfo.encode(message.Properties, writer.uint32(/* id 11, wireType 2 =*/90).fork(), q + 1).ldelim();
+            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes"))
+                $root.proto.AttributesInfo.encode(message.Attributes, writer.uint32(/* id 12, wireType 2 =*/98).fork(), q + 1).ldelim();
+            if (message.Staking != null && Object.hasOwnProperty.call(message, "Staking"))
+                $root.proto.StakingInfo.encode(message.Staking, writer.uint32(/* id 13, wireType 2 =*/106).fork(), q + 1).ldelim();
+            if (message.Roles != null && message.Roles.length)
+                for (let i = 0; i < message.Roles.length; ++i)
+                    $root.proto.RolesInfo.encode(message.Roles[i], writer.uint32(/* id 14, wireType 2 =*/114).fork(), q + 1).ldelim();
+            if (message.AdminAddress != null && Object.hasOwnProperty.call(message, "AdminAddress"))
+                writer.uint32(/* id 15, wireType 2 =*/122).bytes(message.AdminAddress);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified CreateAssetContract message, length delimited. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {proto.ICreateAssetContract} message CreateAssetContract message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        CreateAssetContract.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a CreateAssetContract message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.CreateAssetContract} CreateAssetContract
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        CreateAssetContract.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract(), key, value;
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.Type = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.Name = reader.bytes();
+                        break;
+                    }
+                case 3: {
+                        message.Ticker = reader.bytes();
+                        break;
+                    }
+                case 4: {
+                        message.OwnerAddress = reader.bytes();
+                        break;
+                    }
+                case 5: {
+                        message.Logo = reader.string();
+                        break;
+                    }
+                case 6: {
+                        if (message.URIs === $util.emptyObject)
+                            message.URIs = {};
+                        let end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = "";
+                        while (reader.pos < end2) {
+                            let tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = reader.string();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7, long);
+                                break;
+                            }
+                        }
+                        if (key === "__proto__")
+                            $util.makeProp(message.URIs, key);
+                        message.URIs[key] = value;
+                        break;
+                    }
+                case 7: {
+                        message.Precision = reader.uint32();
+                        break;
+                    }
+                case 8: {
+                        message.InitialSupply = reader.int64();
+                        break;
+                    }
+                case 9: {
+                        message.MaxSupply = reader.int64();
+                        break;
+                    }
+                case 10: {
+                        message.Royalties = $root.proto.RoyaltiesInfo.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
+                case 11: {
+                        message.Properties = $root.proto.PropertiesInfo.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
+                case 12: {
+                        message.Attributes = $root.proto.AttributesInfo.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
+                case 13: {
+                        message.Staking = $root.proto.StakingInfo.decode(reader, reader.uint32(), undefined, long + 1);
+                        break;
+                    }
+                case 14: {
+                        if (!(message.Roles && message.Roles.length))
+                            message.Roles = [];
+                        message.Roles.push($root.proto.RolesInfo.decode(reader, reader.uint32(), undefined, long + 1));
+                        break;
+                    }
+                case 15: {
+                        message.AdminAddress = reader.bytes();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a CreateAssetContract message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.CreateAssetContract} CreateAssetContract
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        CreateAssetContract.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a CreateAssetContract message.
+         * @function verify
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        CreateAssetContract.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                switch (message.Type) {
+                default:
+                    return "Type: enum value expected";
+                case 0:
+                case 1:
+                case 2:
+                    break;
+                }
+            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
+                if (!(message.Name && typeof message.Name.length === "number" || $util.isString(message.Name)))
+                    return "Name: buffer expected";
+            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
+                if (!(message.Ticker && typeof message.Ticker.length === "number" || $util.isString(message.Ticker)))
+                    return "Ticker: buffer expected";
+            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
+                if (!(message.OwnerAddress && typeof message.OwnerAddress.length === "number" || $util.isString(message.OwnerAddress)))
+                    return "OwnerAddress: buffer expected";
+            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
+                if (!$util.isString(message.Logo))
+                    return "Logo: string expected";
+            if (message.URIs != null && Object.hasOwnProperty.call(message, "URIs")) {
+                if (!$util.isObject(message.URIs))
+                    return "URIs: object expected";
+                let key = Object.keys(message.URIs);
+                for (let i = 0; i < key.length; ++i)
+                    if (!$util.isString(message.URIs[key[i]]))
+                        return "URIs: string{k:string} expected";
+            }
+            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
+                if (!$util.isInteger(message.Precision))
+                    return "Precision: integer expected";
+            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
+                if (!$util.isInteger(message.InitialSupply) && !(message.InitialSupply && $util.isInteger(message.InitialSupply.low) && $util.isInteger(message.InitialSupply.high)))
+                    return "InitialSupply: integer|Long expected";
+            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
+                if (!$util.isInteger(message.MaxSupply) && !(message.MaxSupply && $util.isInteger(message.MaxSupply.low) && $util.isInteger(message.MaxSupply.high)))
+                    return "MaxSupply: integer|Long expected";
+            if (message.Royalties != null && Object.hasOwnProperty.call(message, "Royalties")) {
+                let error = $root.proto.RoyaltiesInfo.verify(message.Royalties, long + 1);
+                if (error)
+                    return "Royalties." + error;
+            }
+            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties")) {
+                let error = $root.proto.PropertiesInfo.verify(message.Properties, long + 1);
+                if (error)
+                    return "Properties." + error;
+            }
+            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes")) {
+                let error = $root.proto.AttributesInfo.verify(message.Attributes, long + 1);
+                if (error)
+                    return "Attributes." + error;
+            }
+            if (message.Staking != null && Object.hasOwnProperty.call(message, "Staking")) {
+                let error = $root.proto.StakingInfo.verify(message.Staking, long + 1);
+                if (error)
+                    return "Staking." + error;
+            }
+            if (message.Roles != null && Object.hasOwnProperty.call(message, "Roles")) {
+                if (!Array.isArray(message.Roles))
+                    return "Roles: array expected";
+                for (let i = 0; i < message.Roles.length; ++i) {
+                    let error = $root.proto.RolesInfo.verify(message.Roles[i], long + 1);
+                    if (error)
+                        return "Roles." + error;
+                }
+            }
+            if (message.AdminAddress != null && Object.hasOwnProperty.call(message, "AdminAddress"))
+                if (!(message.AdminAddress && typeof message.AdminAddress.length === "number" || $util.isString(message.AdminAddress)))
+                    return "AdminAddress: buffer expected";
+            return null;
+        };
+
+        /**
+         * Creates a CreateAssetContract message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.CreateAssetContract} CreateAssetContract
+         */
+        CreateAssetContract.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.CreateAssetContract)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.CreateAssetContract: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.CreateAssetContract();
+            switch (object.Type) {
+            default:
+                if (typeof object.Type === "number") {
+                    message.Type = object.Type;
+                    break;
+                }
+                break;
+            case "Fungible":
+            case 0:
+                message.Type = 0;
+                break;
+            case "NonFungible":
+            case 1:
+                message.Type = 1;
+                break;
+            case "SemiFungible":
+            case 2:
+                message.Type = 2;
+                break;
+            }
+            if (object.Name != null)
+                if (typeof object.Name === "string")
+                    $util.base64.decode(object.Name, message.Name = $util.newBuffer($util.base64.length(object.Name)), 0);
+                else if (object.Name.length >= 0)
+                    message.Name = object.Name;
+            if (object.Ticker != null)
+                if (typeof object.Ticker === "string")
+                    $util.base64.decode(object.Ticker, message.Ticker = $util.newBuffer($util.base64.length(object.Ticker)), 0);
+                else if (object.Ticker.length >= 0)
+                    message.Ticker = object.Ticker;
+            if (object.OwnerAddress != null)
+                if (typeof object.OwnerAddress === "string")
+                    $util.base64.decode(object.OwnerAddress, message.OwnerAddress = $util.newBuffer($util.base64.length(object.OwnerAddress)), 0);
+                else if (object.OwnerAddress.length >= 0)
+                    message.OwnerAddress = object.OwnerAddress;
+            if (object.Logo != null)
+                message.Logo = String(object.Logo);
+            if (object.URIs) {
+                if (!$util.isObject(object.URIs))
+                    throw TypeError(".proto.CreateAssetContract.URIs: object expected");
+                message.URIs = {};
+                for (let keys = Object.keys(object.URIs), i = 0; i < keys.length; ++i) {
+                    if (keys[i] === "__proto__")
+                        $util.makeProp(message.URIs, keys[i]);
+                    message.URIs[keys[i]] = String(object.URIs[keys[i]]);
+                }
+            }
+            if (object.Precision != null)
+                message.Precision = object.Precision >>> 0;
+            if (object.InitialSupply != null)
+                if ($util.Long)
+                    message.InitialSupply = $util.Long.fromValue(object.InitialSupply, false);
+                else if (typeof object.InitialSupply === "string")
+                    message.InitialSupply = parseInt(object.InitialSupply, 10);
+                else if (typeof object.InitialSupply === "number")
+                    message.InitialSupply = object.InitialSupply;
+                else if (typeof object.InitialSupply === "object")
+                    message.InitialSupply = new $util.LongBits(object.InitialSupply.low >>> 0, object.InitialSupply.high >>> 0).toNumber();
+            if (object.MaxSupply != null)
+                if ($util.Long)
+                    message.MaxSupply = $util.Long.fromValue(object.MaxSupply, false);
+                else if (typeof object.MaxSupply === "string")
+                    message.MaxSupply = parseInt(object.MaxSupply, 10);
+                else if (typeof object.MaxSupply === "number")
+                    message.MaxSupply = object.MaxSupply;
+                else if (typeof object.MaxSupply === "object")
+                    message.MaxSupply = new $util.LongBits(object.MaxSupply.low >>> 0, object.MaxSupply.high >>> 0).toNumber();
+            if (object.Royalties != null) {
+                if (!$util.isObject(object.Royalties))
+                    throw TypeError(".proto.CreateAssetContract.Royalties: object expected");
+                message.Royalties = $root.proto.RoyaltiesInfo.fromObject(object.Royalties, long + 1);
+            }
+            if (object.Properties != null) {
+                if (!$util.isObject(object.Properties))
+                    throw TypeError(".proto.CreateAssetContract.Properties: object expected");
+                message.Properties = $root.proto.PropertiesInfo.fromObject(object.Properties, long + 1);
+            }
+            if (object.Attributes != null) {
+                if (!$util.isObject(object.Attributes))
+                    throw TypeError(".proto.CreateAssetContract.Attributes: object expected");
+                message.Attributes = $root.proto.AttributesInfo.fromObject(object.Attributes, long + 1);
+            }
+            if (object.Staking != null) {
+                if (!$util.isObject(object.Staking))
+                    throw TypeError(".proto.CreateAssetContract.Staking: object expected");
+                message.Staking = $root.proto.StakingInfo.fromObject(object.Staking, long + 1);
+            }
+            if (object.Roles) {
+                if (!Array.isArray(object.Roles))
+                    throw TypeError(".proto.CreateAssetContract.Roles: array expected");
+                message.Roles = [];
+                for (let i = 0; i < object.Roles.length; ++i) {
+                    if (!$util.isObject(object.Roles[i]))
+                        throw TypeError(".proto.CreateAssetContract.Roles: object expected");
+                    message.Roles[i] = $root.proto.RolesInfo.fromObject(object.Roles[i], long + 1);
+                }
+            }
+            if (object.AdminAddress != null)
+                if (typeof object.AdminAddress === "string")
+                    $util.base64.decode(object.AdminAddress, message.AdminAddress = $util.newBuffer($util.base64.length(object.AdminAddress)), 0);
+                else if (object.AdminAddress.length >= 0)
+                    message.AdminAddress = object.AdminAddress;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a CreateAssetContract message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {proto.CreateAssetContract} message CreateAssetContract
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        CreateAssetContract.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.arrays || options.defaults)
+                object.Roles = [];
+            if (options.objects || options.defaults)
+                object.URIs = {};
+            if (options.defaults) {
+                object.Type = options.enums === String ? "Fungible" : 0;
+                if (options.bytes === String)
+                    object.Name = "";
+                else {
+                    object.Name = [];
+                    if (options.bytes !== Array)
+                        object.Name = $util.newBuffer(object.Name);
+                }
+                if (options.bytes === String)
+                    object.Ticker = "";
+                else {
+                    object.Ticker = [];
+                    if (options.bytes !== Array)
+                        object.Ticker = $util.newBuffer(object.Ticker);
+                }
+                if (options.bytes === String)
+                    object.OwnerAddress = "";
+                else {
+                    object.OwnerAddress = [];
+                    if (options.bytes !== Array)
+                        object.OwnerAddress = $util.newBuffer(object.OwnerAddress);
+                }
+                object.Logo = "";
+                object.Precision = 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.InitialSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.InitialSupply = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.MaxSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.MaxSupply = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                object.Royalties = null;
+                object.Properties = null;
+                object.Attributes = null;
+                object.Staking = null;
+                if (options.bytes === String)
+                    object.AdminAddress = "";
+                else {
+                    object.AdminAddress = [];
+                    if (options.bytes !== Array)
+                        object.AdminAddress = $util.newBuffer(object.AdminAddress);
+                }
+            }
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                object.Type = options.enums === String ? $root.proto.CreateAssetContract.EnumAssetType[message.Type] === undefined ? message.Type : $root.proto.CreateAssetContract.EnumAssetType[message.Type] : message.Type;
+            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
+                object.Name = options.bytes === String ? $util.base64.encode(message.Name, 0, message.Name.length) : options.bytes === Array ? Array.prototype.slice.call(message.Name) : message.Name;
+            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
+                object.Ticker = options.bytes === String ? $util.base64.encode(message.Ticker, 0, message.Ticker.length) : options.bytes === Array ? Array.prototype.slice.call(message.Ticker) : message.Ticker;
+            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
+                object.OwnerAddress = options.bytes === String ? $util.base64.encode(message.OwnerAddress, 0, message.OwnerAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.OwnerAddress) : message.OwnerAddress;
+            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
+                object.Logo = message.Logo;
+            let keys2;
+            if (message.URIs && (keys2 = Object.keys(message.URIs)).length) {
+                object.URIs = {};
+                for (let j = 0; j < keys2.length; ++j) {
+                    if (keys2[j] === "__proto__")
+                        $util.makeProp(object.URIs, keys2[j]);
+                    object.URIs[keys2[j]] = message.URIs[keys2[j]];
+                }
+            }
+            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
+                object.Precision = message.Precision;
+            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.InitialSupply = typeof message.InitialSupply === "number" ? BigInt(message.InitialSupply) : $util.Long.fromBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0, false).toBigInt();
+                else if (typeof message.InitialSupply === "number")
+                    object.InitialSupply = options.longs === String ? String(message.InitialSupply) : message.InitialSupply;
+                else
+                    object.InitialSupply = options.longs === String ? $util.Long.prototype.toString.call(message.InitialSupply) : options.longs === Number ? new $util.LongBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0).toNumber() : message.InitialSupply;
+            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.MaxSupply = typeof message.MaxSupply === "number" ? BigInt(message.MaxSupply) : $util.Long.fromBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0, false).toBigInt();
+                else if (typeof message.MaxSupply === "number")
+                    object.MaxSupply = options.longs === String ? String(message.MaxSupply) : message.MaxSupply;
+                else
+                    object.MaxSupply = options.longs === String ? $util.Long.prototype.toString.call(message.MaxSupply) : options.longs === Number ? new $util.LongBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0).toNumber() : message.MaxSupply;
+            if (message.Royalties != null && Object.hasOwnProperty.call(message, "Royalties"))
+                object.Royalties = $root.proto.RoyaltiesInfo.toObject(message.Royalties, options, q + 1);
+            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties"))
+                object.Properties = $root.proto.PropertiesInfo.toObject(message.Properties, options, q + 1);
+            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes"))
+                object.Attributes = $root.proto.AttributesInfo.toObject(message.Attributes, options, q + 1);
+            if (message.Staking != null && Object.hasOwnProperty.call(message, "Staking"))
+                object.Staking = $root.proto.StakingInfo.toObject(message.Staking, options, q + 1);
+            if (message.Roles && message.Roles.length) {
+                object.Roles = [];
+                for (let j = 0; j < message.Roles.length; ++j)
+                    object.Roles[j] = $root.proto.RolesInfo.toObject(message.Roles[j], options, q + 1);
+            }
+            if (message.AdminAddress != null && Object.hasOwnProperty.call(message, "AdminAddress"))
+                object.AdminAddress = options.bytes === String ? $util.base64.encode(message.AdminAddress, 0, message.AdminAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.AdminAddress) : message.AdminAddress;
+            return object;
+        };
+
+        /**
+         * Converts this CreateAssetContract to JSON.
+         * @function toJSON
+         * @memberof proto.CreateAssetContract
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        CreateAssetContract.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for CreateAssetContract
+         * @function getTypeUrl
+         * @memberof proto.CreateAssetContract
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        CreateAssetContract.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.CreateAssetContract";
+        };
+
+        /**
+         * EnumAssetType enum.
+         * @name proto.CreateAssetContract.EnumAssetType
+         * @enum {number}
+         * @property {number} Fungible=0 Fungible value
+         * @property {number} NonFungible=1 NonFungible value
+         * @property {number} SemiFungible=2 SemiFungible value
+         */
+        CreateAssetContract.EnumAssetType = (function() {
+            const valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[0] = "Fungible"] = 0;
+            values[valuesById[1] = "NonFungible"] = 1;
+            values[valuesById[2] = "SemiFungible"] = 2;
+            return values;
+        })();
+
+        return CreateAssetContract;
+    })();
+
+    proto.PropertiesInfo = (function() {
+
+        /**
+         * Properties of a PropertiesInfo.
+         * @memberof proto
+         * @interface IPropertiesInfo
+         * @property {boolean|null} [CanFreeze] PropertiesInfo CanFreeze
+         * @property {boolean|null} [CanWipe] PropertiesInfo CanWipe
+         * @property {boolean|null} [CanPause] PropertiesInfo CanPause
+         * @property {boolean|null} [CanMint] PropertiesInfo CanMint
+         * @property {boolean|null} [CanBurn] PropertiesInfo CanBurn
+         * @property {boolean|null} [CanChangeOwner] PropertiesInfo CanChangeOwner
+         * @property {boolean|null} [CanAddRoles] PropertiesInfo CanAddRoles
+         * @property {boolean|null} [LimitTransfer] PropertiesInfo LimitTransfer
+         */
+
+        /**
+         * Constructs a new PropertiesInfo.
+         * @memberof proto
+         * @classdesc PropertiesInfo hold the properties structure for the KDA asset
+         * @implements IPropertiesInfo
+         * @constructor
+         * @param {proto.IPropertiesInfo=} [properties] Properties to set
+         */
+        function PropertiesInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * PropertiesInfo CanFreeze.
+         * @member {boolean} CanFreeze
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.CanFreeze = false;
+
+        /**
+         * PropertiesInfo CanWipe.
+         * @member {boolean} CanWipe
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.CanWipe = false;
+
+        /**
+         * PropertiesInfo CanPause.
+         * @member {boolean} CanPause
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.CanPause = false;
+
+        /**
+         * PropertiesInfo CanMint.
+         * @member {boolean} CanMint
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.CanMint = false;
+
+        /**
+         * PropertiesInfo CanBurn.
+         * @member {boolean} CanBurn
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.CanBurn = false;
+
+        /**
+         * PropertiesInfo CanChangeOwner.
+         * @member {boolean} CanChangeOwner
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.CanChangeOwner = false;
+
+        /**
+         * PropertiesInfo CanAddRoles.
+         * @member {boolean} CanAddRoles
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.CanAddRoles = false;
+
+        /**
+         * PropertiesInfo LimitTransfer.
+         * @member {boolean} LimitTransfer
+         * @memberof proto.PropertiesInfo
+         * @instance
+         */
+        PropertiesInfo.prototype.LimitTransfer = false;
+
+        /**
+         * Creates a new PropertiesInfo instance using the specified properties.
+         * @function create
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {proto.IPropertiesInfo=} [properties] Properties to set
+         * @returns {proto.PropertiesInfo} PropertiesInfo instance
+         */
+        PropertiesInfo.create = function create(properties) {
+            return new PropertiesInfo(properties);
+        };
+
+        /**
+         * Encodes the specified PropertiesInfo message. Does not implicitly {@link proto.PropertiesInfo.verify|verify} messages.
+         * @function encode
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {proto.IPropertiesInfo} message PropertiesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PropertiesInfo.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
+                writer.uint32(/* id 1, wireType 0 =*/8).bool(message.CanFreeze);
+            if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
+                writer.uint32(/* id 2, wireType 0 =*/16).bool(message.CanWipe);
+            if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
+                writer.uint32(/* id 3, wireType 0 =*/24).bool(message.CanPause);
+            if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.CanMint);
+            if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
+                writer.uint32(/* id 5, wireType 0 =*/40).bool(message.CanBurn);
+            if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
+                writer.uint32(/* id 6, wireType 0 =*/48).bool(message.CanChangeOwner);
+            if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
+                writer.uint32(/* id 7, wireType 0 =*/56).bool(message.CanAddRoles);
+            if (message.LimitTransfer != null && Object.hasOwnProperty.call(message, "LimitTransfer"))
+                writer.uint32(/* id 8, wireType 0 =*/64).bool(message.LimitTransfer);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified PropertiesInfo message, length delimited. Does not implicitly {@link proto.PropertiesInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {proto.IPropertiesInfo} message PropertiesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PropertiesInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a PropertiesInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.PropertiesInfo} PropertiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PropertiesInfo.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.PropertiesInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.CanFreeze = reader.bool();
+                        break;
+                    }
+                case 2: {
+                        message.CanWipe = reader.bool();
+                        break;
+                    }
+                case 3: {
+                        message.CanPause = reader.bool();
+                        break;
+                    }
+                case 4: {
+                        message.CanMint = reader.bool();
+                        break;
+                    }
+                case 5: {
+                        message.CanBurn = reader.bool();
+                        break;
+                    }
+                case 6: {
+                        message.CanChangeOwner = reader.bool();
+                        break;
+                    }
+                case 7: {
+                        message.CanAddRoles = reader.bool();
+                        break;
+                    }
+                case 8: {
+                        message.LimitTransfer = reader.bool();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a PropertiesInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.PropertiesInfo} PropertiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PropertiesInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a PropertiesInfo message.
+         * @function verify
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        PropertiesInfo.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
+                if (typeof message.CanFreeze !== "boolean")
+                    return "CanFreeze: boolean expected";
+            if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
+                if (typeof message.CanWipe !== "boolean")
+                    return "CanWipe: boolean expected";
+            if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
+                if (typeof message.CanPause !== "boolean")
+                    return "CanPause: boolean expected";
+            if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
+                if (typeof message.CanMint !== "boolean")
+                    return "CanMint: boolean expected";
+            if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
+                if (typeof message.CanBurn !== "boolean")
+                    return "CanBurn: boolean expected";
+            if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
+                if (typeof message.CanChangeOwner !== "boolean")
+                    return "CanChangeOwner: boolean expected";
+            if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
+                if (typeof message.CanAddRoles !== "boolean")
+                    return "CanAddRoles: boolean expected";
+            if (message.LimitTransfer != null && Object.hasOwnProperty.call(message, "LimitTransfer"))
+                if (typeof message.LimitTransfer !== "boolean")
+                    return "LimitTransfer: boolean expected";
+            return null;
+        };
+
+        /**
+         * Creates a PropertiesInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.PropertiesInfo} PropertiesInfo
+         */
+        PropertiesInfo.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.PropertiesInfo)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.PropertiesInfo: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.PropertiesInfo();
+            if (object.CanFreeze != null)
+                message.CanFreeze = Boolean(object.CanFreeze);
+            if (object.CanWipe != null)
+                message.CanWipe = Boolean(object.CanWipe);
+            if (object.CanPause != null)
+                message.CanPause = Boolean(object.CanPause);
+            if (object.CanMint != null)
+                message.CanMint = Boolean(object.CanMint);
+            if (object.CanBurn != null)
+                message.CanBurn = Boolean(object.CanBurn);
+            if (object.CanChangeOwner != null)
+                message.CanChangeOwner = Boolean(object.CanChangeOwner);
+            if (object.CanAddRoles != null)
+                message.CanAddRoles = Boolean(object.CanAddRoles);
+            if (object.LimitTransfer != null)
+                message.LimitTransfer = Boolean(object.LimitTransfer);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a PropertiesInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {proto.PropertiesInfo} message PropertiesInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        PropertiesInfo.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.defaults) {
+                object.CanFreeze = false;
+                object.CanWipe = false;
+                object.CanPause = false;
+                object.CanMint = false;
+                object.CanBurn = false;
+                object.CanChangeOwner = false;
+                object.CanAddRoles = false;
+                object.LimitTransfer = false;
+            }
+            if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
+                object.CanFreeze = message.CanFreeze;
+            if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
+                object.CanWipe = message.CanWipe;
+            if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
+                object.CanPause = message.CanPause;
+            if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
+                object.CanMint = message.CanMint;
+            if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
+                object.CanBurn = message.CanBurn;
+            if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
+                object.CanChangeOwner = message.CanChangeOwner;
+            if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
+                object.CanAddRoles = message.CanAddRoles;
+            if (message.LimitTransfer != null && Object.hasOwnProperty.call(message, "LimitTransfer"))
+                object.LimitTransfer = message.LimitTransfer;
+            return object;
+        };
+
+        /**
+         * Converts this PropertiesInfo to JSON.
+         * @function toJSON
+         * @memberof proto.PropertiesInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        PropertiesInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for PropertiesInfo
+         * @function getTypeUrl
+         * @memberof proto.PropertiesInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PropertiesInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.PropertiesInfo";
+        };
+
+        return PropertiesInfo;
+    })();
+
+    proto.AttributesInfo = (function() {
+
+        /**
+         * Properties of an AttributesInfo.
+         * @memberof proto
+         * @interface IAttributesInfo
+         * @property {boolean|null} [IsPaused] AttributesInfo IsPaused
+         * @property {boolean|null} [IsNFTMintStopped] AttributesInfo IsNFTMintStopped
+         * @property {boolean|null} [IsRoyaltiesChangeStopped] AttributesInfo IsRoyaltiesChangeStopped
+         * @property {boolean|null} [IsNFTMetadataChangeStopped] AttributesInfo IsNFTMetadataChangeStopped
+         */
+
+        /**
+         * Constructs a new AttributesInfo.
+         * @memberof proto
+         * @classdesc AttributesInfo hold the attributes structure for the KDA asset
+         * @implements IAttributesInfo
+         * @constructor
+         * @param {proto.IAttributesInfo=} [properties] Properties to set
+         */
+        function AttributesInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * AttributesInfo IsPaused.
+         * @member {boolean} IsPaused
+         * @memberof proto.AttributesInfo
+         * @instance
+         */
+        AttributesInfo.prototype.IsPaused = false;
+
+        /**
+         * AttributesInfo IsNFTMintStopped.
+         * @member {boolean} IsNFTMintStopped
+         * @memberof proto.AttributesInfo
+         * @instance
+         */
+        AttributesInfo.prototype.IsNFTMintStopped = false;
+
+        /**
+         * AttributesInfo IsRoyaltiesChangeStopped.
+         * @member {boolean} IsRoyaltiesChangeStopped
+         * @memberof proto.AttributesInfo
+         * @instance
+         */
+        AttributesInfo.prototype.IsRoyaltiesChangeStopped = false;
+
+        /**
+         * AttributesInfo IsNFTMetadataChangeStopped.
+         * @member {boolean} IsNFTMetadataChangeStopped
+         * @memberof proto.AttributesInfo
+         * @instance
+         */
+        AttributesInfo.prototype.IsNFTMetadataChangeStopped = false;
+
+        /**
+         * Creates a new AttributesInfo instance using the specified properties.
+         * @function create
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {proto.IAttributesInfo=} [properties] Properties to set
+         * @returns {proto.AttributesInfo} AttributesInfo instance
+         */
+        AttributesInfo.create = function create(properties) {
+            return new AttributesInfo(properties);
+        };
+
+        /**
+         * Encodes the specified AttributesInfo message. Does not implicitly {@link proto.AttributesInfo.verify|verify} messages.
+         * @function encode
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {proto.IAttributesInfo} message AttributesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        AttributesInfo.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
+                writer.uint32(/* id 1, wireType 0 =*/8).bool(message.IsPaused);
+            if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
+                writer.uint32(/* id 2, wireType 0 =*/16).bool(message.IsNFTMintStopped);
+            if (message.IsRoyaltiesChangeStopped != null && Object.hasOwnProperty.call(message, "IsRoyaltiesChangeStopped"))
+                writer.uint32(/* id 3, wireType 0 =*/24).bool(message.IsRoyaltiesChangeStopped);
+            if (message.IsNFTMetadataChangeStopped != null && Object.hasOwnProperty.call(message, "IsNFTMetadataChangeStopped"))
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.IsNFTMetadataChangeStopped);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified AttributesInfo message, length delimited. Does not implicitly {@link proto.AttributesInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {proto.IAttributesInfo} message AttributesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        AttributesInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes an AttributesInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.AttributesInfo} AttributesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        AttributesInfo.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.AttributesInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.IsPaused = reader.bool();
+                        break;
+                    }
+                case 2: {
+                        message.IsNFTMintStopped = reader.bool();
+                        break;
+                    }
+                case 3: {
+                        message.IsRoyaltiesChangeStopped = reader.bool();
+                        break;
+                    }
+                case 4: {
+                        message.IsNFTMetadataChangeStopped = reader.bool();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an AttributesInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.AttributesInfo} AttributesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        AttributesInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an AttributesInfo message.
+         * @function verify
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        AttributesInfo.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
+                if (typeof message.IsPaused !== "boolean")
+                    return "IsPaused: boolean expected";
+            if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
+                if (typeof message.IsNFTMintStopped !== "boolean")
+                    return "IsNFTMintStopped: boolean expected";
+            if (message.IsRoyaltiesChangeStopped != null && Object.hasOwnProperty.call(message, "IsRoyaltiesChangeStopped"))
+                if (typeof message.IsRoyaltiesChangeStopped !== "boolean")
+                    return "IsRoyaltiesChangeStopped: boolean expected";
+            if (message.IsNFTMetadataChangeStopped != null && Object.hasOwnProperty.call(message, "IsNFTMetadataChangeStopped"))
+                if (typeof message.IsNFTMetadataChangeStopped !== "boolean")
+                    return "IsNFTMetadataChangeStopped: boolean expected";
+            return null;
+        };
+
+        /**
+         * Creates an AttributesInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.AttributesInfo} AttributesInfo
+         */
+        AttributesInfo.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.AttributesInfo)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.AttributesInfo: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.AttributesInfo();
+            if (object.IsPaused != null)
+                message.IsPaused = Boolean(object.IsPaused);
+            if (object.IsNFTMintStopped != null)
+                message.IsNFTMintStopped = Boolean(object.IsNFTMintStopped);
+            if (object.IsRoyaltiesChangeStopped != null)
+                message.IsRoyaltiesChangeStopped = Boolean(object.IsRoyaltiesChangeStopped);
+            if (object.IsNFTMetadataChangeStopped != null)
+                message.IsNFTMetadataChangeStopped = Boolean(object.IsNFTMetadataChangeStopped);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from an AttributesInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {proto.AttributesInfo} message AttributesInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        AttributesInfo.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.defaults) {
+                object.IsPaused = false;
+                object.IsNFTMintStopped = false;
+                object.IsRoyaltiesChangeStopped = false;
+                object.IsNFTMetadataChangeStopped = false;
+            }
+            if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
+                object.IsPaused = message.IsPaused;
+            if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
+                object.IsNFTMintStopped = message.IsNFTMintStopped;
+            if (message.IsRoyaltiesChangeStopped != null && Object.hasOwnProperty.call(message, "IsRoyaltiesChangeStopped"))
+                object.IsRoyaltiesChangeStopped = message.IsRoyaltiesChangeStopped;
+            if (message.IsNFTMetadataChangeStopped != null && Object.hasOwnProperty.call(message, "IsNFTMetadataChangeStopped"))
+                object.IsNFTMetadataChangeStopped = message.IsNFTMetadataChangeStopped;
+            return object;
+        };
+
+        /**
+         * Converts this AttributesInfo to JSON.
+         * @function toJSON
+         * @memberof proto.AttributesInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        AttributesInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for AttributesInfo
+         * @function getTypeUrl
+         * @memberof proto.AttributesInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        AttributesInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.AttributesInfo";
+        };
+
+        return AttributesInfo;
+    })();
+
+    proto.StakingInfo = (function() {
+
+        /**
+         * Properties of a StakingInfo.
+         * @memberof proto
+         * @interface IStakingInfo
+         * @property {proto.StakingInfo.InterestType|null} [Type] StakingInfo Type
+         * @property {number|null} [APR] StakingInfo APR
+         * @property {number|null} [MinEpochsToClaim] StakingInfo MinEpochsToClaim
+         * @property {number|null} [MinEpochsToUnstake] StakingInfo MinEpochsToUnstake
+         * @property {number|null} [MinEpochsToWithdraw] StakingInfo MinEpochsToWithdraw
+         */
+
+        /**
+         * Constructs a new StakingInfo.
+         * @memberof proto
+         * @classdesc StakingInfo hold the staking structure for the KDA asset
+         * @implements IStakingInfo
+         * @constructor
+         * @param {proto.IStakingInfo=} [properties] Properties to set
+         */
+        function StakingInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * StakingInfo Type.
+         * @member {proto.StakingInfo.InterestType} Type
+         * @memberof proto.StakingInfo
+         * @instance
+         */
+        StakingInfo.prototype.Type = 0;
+
+        /**
+         * StakingInfo APR.
+         * @member {number} APR
+         * @memberof proto.StakingInfo
+         * @instance
+         */
+        StakingInfo.prototype.APR = 0;
+
+        /**
+         * StakingInfo MinEpochsToClaim.
+         * @member {number} MinEpochsToClaim
+         * @memberof proto.StakingInfo
+         * @instance
+         */
+        StakingInfo.prototype.MinEpochsToClaim = 0;
+
+        /**
+         * StakingInfo MinEpochsToUnstake.
+         * @member {number} MinEpochsToUnstake
+         * @memberof proto.StakingInfo
+         * @instance
+         */
+        StakingInfo.prototype.MinEpochsToUnstake = 0;
+
+        /**
+         * StakingInfo MinEpochsToWithdraw.
+         * @member {number} MinEpochsToWithdraw
+         * @memberof proto.StakingInfo
+         * @instance
+         */
+        StakingInfo.prototype.MinEpochsToWithdraw = 0;
+
+        /**
+         * Creates a new StakingInfo instance using the specified properties.
+         * @function create
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {proto.IStakingInfo=} [properties] Properties to set
+         * @returns {proto.StakingInfo} StakingInfo instance
+         */
+        StakingInfo.create = function create(properties) {
+            return new StakingInfo(properties);
+        };
+
+        /**
+         * Encodes the specified StakingInfo message. Does not implicitly {@link proto.StakingInfo.verify|verify} messages.
+         * @function encode
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {proto.IStakingInfo} message StakingInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        StakingInfo.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
+            if (message.APR != null && Object.hasOwnProperty.call(message, "APR"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.APR);
+            if (message.MinEpochsToClaim != null && Object.hasOwnProperty.call(message, "MinEpochsToClaim"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.MinEpochsToClaim);
+            if (message.MinEpochsToUnstake != null && Object.hasOwnProperty.call(message, "MinEpochsToUnstake"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.MinEpochsToUnstake);
+            if (message.MinEpochsToWithdraw != null && Object.hasOwnProperty.call(message, "MinEpochsToWithdraw"))
+                writer.uint32(/* id 5, wireType 0 =*/40).uint32(message.MinEpochsToWithdraw);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified StakingInfo message, length delimited. Does not implicitly {@link proto.StakingInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {proto.IStakingInfo} message StakingInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        StakingInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a StakingInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.StakingInfo} StakingInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        StakingInfo.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.StakingInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.Type = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.APR = reader.uint32();
+                        break;
+                    }
+                case 3: {
+                        message.MinEpochsToClaim = reader.uint32();
+                        break;
+                    }
+                case 4: {
+                        message.MinEpochsToUnstake = reader.uint32();
+                        break;
+                    }
+                case 5: {
+                        message.MinEpochsToWithdraw = reader.uint32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a StakingInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.StakingInfo} StakingInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        StakingInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a StakingInfo message.
+         * @function verify
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        StakingInfo.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                switch (message.Type) {
+                default:
+                    return "Type: enum value expected";
+                case 0:
+                case 1:
+                    break;
+                }
+            if (message.APR != null && Object.hasOwnProperty.call(message, "APR"))
+                if (!$util.isInteger(message.APR))
+                    return "APR: integer expected";
+            if (message.MinEpochsToClaim != null && Object.hasOwnProperty.call(message, "MinEpochsToClaim"))
+                if (!$util.isInteger(message.MinEpochsToClaim))
+                    return "MinEpochsToClaim: integer expected";
+            if (message.MinEpochsToUnstake != null && Object.hasOwnProperty.call(message, "MinEpochsToUnstake"))
+                if (!$util.isInteger(message.MinEpochsToUnstake))
+                    return "MinEpochsToUnstake: integer expected";
+            if (message.MinEpochsToWithdraw != null && Object.hasOwnProperty.call(message, "MinEpochsToWithdraw"))
+                if (!$util.isInteger(message.MinEpochsToWithdraw))
+                    return "MinEpochsToWithdraw: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a StakingInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.StakingInfo} StakingInfo
+         */
+        StakingInfo.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.StakingInfo)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.StakingInfo: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.StakingInfo();
+            switch (object.Type) {
+            default:
+                if (typeof object.Type === "number") {
+                    message.Type = object.Type;
+                    break;
+                }
+                break;
+            case "APRI":
+            case 0:
+                message.Type = 0;
+                break;
+            case "FPRI":
+            case 1:
+                message.Type = 1;
+                break;
+            }
+            if (object.APR != null)
+                message.APR = object.APR >>> 0;
+            if (object.MinEpochsToClaim != null)
+                message.MinEpochsToClaim = object.MinEpochsToClaim >>> 0;
+            if (object.MinEpochsToUnstake != null)
+                message.MinEpochsToUnstake = object.MinEpochsToUnstake >>> 0;
+            if (object.MinEpochsToWithdraw != null)
+                message.MinEpochsToWithdraw = object.MinEpochsToWithdraw >>> 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a StakingInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {proto.StakingInfo} message StakingInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        StakingInfo.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.defaults) {
+                object.Type = options.enums === String ? "APRI" : 0;
+                object.APR = 0;
+                object.MinEpochsToClaim = 0;
+                object.MinEpochsToUnstake = 0;
+                object.MinEpochsToWithdraw = 0;
+            }
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                object.Type = options.enums === String ? $root.proto.StakingInfo.InterestType[message.Type] === undefined ? message.Type : $root.proto.StakingInfo.InterestType[message.Type] : message.Type;
+            if (message.APR != null && Object.hasOwnProperty.call(message, "APR"))
+                object.APR = message.APR;
+            if (message.MinEpochsToClaim != null && Object.hasOwnProperty.call(message, "MinEpochsToClaim"))
+                object.MinEpochsToClaim = message.MinEpochsToClaim;
+            if (message.MinEpochsToUnstake != null && Object.hasOwnProperty.call(message, "MinEpochsToUnstake"))
+                object.MinEpochsToUnstake = message.MinEpochsToUnstake;
+            if (message.MinEpochsToWithdraw != null && Object.hasOwnProperty.call(message, "MinEpochsToWithdraw"))
+                object.MinEpochsToWithdraw = message.MinEpochsToWithdraw;
+            return object;
+        };
+
+        /**
+         * Converts this StakingInfo to JSON.
+         * @function toJSON
+         * @memberof proto.StakingInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        StakingInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for StakingInfo
+         * @function getTypeUrl
+         * @memberof proto.StakingInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        StakingInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.StakingInfo";
+        };
+
+        /**
+         * InterestType enum.
+         * @name proto.StakingInfo.InterestType
+         * @enum {number}
+         * @property {number} APRI=0 APRI value
+         * @property {number} FPRI=1 FPRI value
+         */
+        StakingInfo.InterestType = (function() {
+            const valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[0] = "APRI"] = 0;
+            values[valuesById[1] = "FPRI"] = 1;
+            return values;
+        })();
+
+        return StakingInfo;
+    })();
+
+    proto.RolesInfo = (function() {
+
+        /**
+         * Properties of a RolesInfo.
+         * @memberof proto
+         * @interface IRolesInfo
+         * @property {Uint8Array|null} [Address] RolesInfo Address
+         * @property {boolean|null} [HasRoleMint] RolesInfo HasRoleMint
+         * @property {boolean|null} [HasRoleSetITOPrices] RolesInfo HasRoleSetITOPrices
+         * @property {boolean|null} [HasRoleDeposit] RolesInfo HasRoleDeposit
+         * @property {boolean|null} [HasRoleTransfer] RolesInfo HasRoleTransfer
+         */
+
+        /**
+         * Constructs a new RolesInfo.
+         * @memberof proto
+         * @classdesc RolesInfo holds the roles for a given asset and the given address
+         * @implements IRolesInfo
+         * @constructor
+         * @param {proto.IRolesInfo=} [properties] Properties to set
+         */
+        function RolesInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * RolesInfo Address.
+         * @member {Uint8Array} Address
+         * @memberof proto.RolesInfo
+         * @instance
+         */
+        RolesInfo.prototype.Address = $util.newBuffer([]);
+
+        /**
+         * RolesInfo HasRoleMint.
+         * @member {boolean} HasRoleMint
+         * @memberof proto.RolesInfo
+         * @instance
+         */
+        RolesInfo.prototype.HasRoleMint = false;
+
+        /**
+         * RolesInfo HasRoleSetITOPrices.
+         * @member {boolean} HasRoleSetITOPrices
+         * @memberof proto.RolesInfo
+         * @instance
+         */
+        RolesInfo.prototype.HasRoleSetITOPrices = false;
+
+        /**
+         * RolesInfo HasRoleDeposit.
+         * @member {boolean} HasRoleDeposit
+         * @memberof proto.RolesInfo
+         * @instance
+         */
+        RolesInfo.prototype.HasRoleDeposit = false;
+
+        /**
+         * RolesInfo HasRoleTransfer.
+         * @member {boolean} HasRoleTransfer
+         * @memberof proto.RolesInfo
+         * @instance
+         */
+        RolesInfo.prototype.HasRoleTransfer = false;
+
+        /**
+         * Creates a new RolesInfo instance using the specified properties.
+         * @function create
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {proto.IRolesInfo=} [properties] Properties to set
+         * @returns {proto.RolesInfo} RolesInfo instance
+         */
+        RolesInfo.create = function create(properties) {
+            return new RolesInfo(properties);
+        };
+
+        /**
+         * Encodes the specified RolesInfo message. Does not implicitly {@link proto.RolesInfo.verify|verify} messages.
+         * @function encode
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {proto.IRolesInfo} message RolesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RolesInfo.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.Address);
+            if (message.HasRoleMint != null && Object.hasOwnProperty.call(message, "HasRoleMint"))
+                writer.uint32(/* id 2, wireType 0 =*/16).bool(message.HasRoleMint);
+            if (message.HasRoleSetITOPrices != null && Object.hasOwnProperty.call(message, "HasRoleSetITOPrices"))
+                writer.uint32(/* id 3, wireType 0 =*/24).bool(message.HasRoleSetITOPrices);
+            if (message.HasRoleDeposit != null && Object.hasOwnProperty.call(message, "HasRoleDeposit"))
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.HasRoleDeposit);
+            if (message.HasRoleTransfer != null && Object.hasOwnProperty.call(message, "HasRoleTransfer"))
+                writer.uint32(/* id 5, wireType 0 =*/40).bool(message.HasRoleTransfer);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified RolesInfo message, length delimited. Does not implicitly {@link proto.RolesInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {proto.IRolesInfo} message RolesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RolesInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a RolesInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.RolesInfo} RolesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RolesInfo.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.RolesInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.Address = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.HasRoleMint = reader.bool();
+                        break;
+                    }
+                case 3: {
+                        message.HasRoleSetITOPrices = reader.bool();
+                        break;
+                    }
+                case 4: {
+                        message.HasRoleDeposit = reader.bool();
+                        break;
+                    }
+                case 5: {
+                        message.HasRoleTransfer = reader.bool();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a RolesInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.RolesInfo} RolesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RolesInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a RolesInfo message.
+         * @function verify
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        RolesInfo.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
+                if (!(message.Address && typeof message.Address.length === "number" || $util.isString(message.Address)))
+                    return "Address: buffer expected";
+            if (message.HasRoleMint != null && Object.hasOwnProperty.call(message, "HasRoleMint"))
+                if (typeof message.HasRoleMint !== "boolean")
+                    return "HasRoleMint: boolean expected";
+            if (message.HasRoleSetITOPrices != null && Object.hasOwnProperty.call(message, "HasRoleSetITOPrices"))
+                if (typeof message.HasRoleSetITOPrices !== "boolean")
+                    return "HasRoleSetITOPrices: boolean expected";
+            if (message.HasRoleDeposit != null && Object.hasOwnProperty.call(message, "HasRoleDeposit"))
+                if (typeof message.HasRoleDeposit !== "boolean")
+                    return "HasRoleDeposit: boolean expected";
+            if (message.HasRoleTransfer != null && Object.hasOwnProperty.call(message, "HasRoleTransfer"))
+                if (typeof message.HasRoleTransfer !== "boolean")
+                    return "HasRoleTransfer: boolean expected";
+            return null;
+        };
+
+        /**
+         * Creates a RolesInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.RolesInfo} RolesInfo
+         */
+        RolesInfo.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.RolesInfo)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.RolesInfo: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.RolesInfo();
+            if (object.Address != null)
+                if (typeof object.Address === "string")
+                    $util.base64.decode(object.Address, message.Address = $util.newBuffer($util.base64.length(object.Address)), 0);
+                else if (object.Address.length >= 0)
+                    message.Address = object.Address;
+            if (object.HasRoleMint != null)
+                message.HasRoleMint = Boolean(object.HasRoleMint);
+            if (object.HasRoleSetITOPrices != null)
+                message.HasRoleSetITOPrices = Boolean(object.HasRoleSetITOPrices);
+            if (object.HasRoleDeposit != null)
+                message.HasRoleDeposit = Boolean(object.HasRoleDeposit);
+            if (object.HasRoleTransfer != null)
+                message.HasRoleTransfer = Boolean(object.HasRoleTransfer);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a RolesInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {proto.RolesInfo} message RolesInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        RolesInfo.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.Address = "";
+                else {
+                    object.Address = [];
+                    if (options.bytes !== Array)
+                        object.Address = $util.newBuffer(object.Address);
+                }
+                object.HasRoleMint = false;
+                object.HasRoleSetITOPrices = false;
+                object.HasRoleDeposit = false;
+                object.HasRoleTransfer = false;
+            }
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
+                object.Address = options.bytes === String ? $util.base64.encode(message.Address, 0, message.Address.length) : options.bytes === Array ? Array.prototype.slice.call(message.Address) : message.Address;
+            if (message.HasRoleMint != null && Object.hasOwnProperty.call(message, "HasRoleMint"))
+                object.HasRoleMint = message.HasRoleMint;
+            if (message.HasRoleSetITOPrices != null && Object.hasOwnProperty.call(message, "HasRoleSetITOPrices"))
+                object.HasRoleSetITOPrices = message.HasRoleSetITOPrices;
+            if (message.HasRoleDeposit != null && Object.hasOwnProperty.call(message, "HasRoleDeposit"))
+                object.HasRoleDeposit = message.HasRoleDeposit;
+            if (message.HasRoleTransfer != null && Object.hasOwnProperty.call(message, "HasRoleTransfer"))
+                object.HasRoleTransfer = message.HasRoleTransfer;
+            return object;
+        };
+
+        /**
+         * Converts this RolesInfo to JSON.
+         * @function toJSON
+         * @memberof proto.RolesInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        RolesInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for RolesInfo
+         * @function getTypeUrl
+         * @memberof proto.RolesInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        RolesInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.RolesInfo";
+        };
+
+        return RolesInfo;
+    })();
+
+    proto.RoyaltiesInfo = (function() {
+
+        /**
+         * Properties of a RoyaltiesInfo.
+         * @memberof proto
+         * @interface IRoyaltiesInfo
+         * @property {Uint8Array|null} [Address] RoyaltiesInfo Address
+         * @property {Array.<proto.IRoyaltyInfo>|null} [TransferPercentage] RoyaltiesInfo TransferPercentage
+         * @property {number|null} [TransferFixed] RoyaltiesInfo TransferFixed
+         * @property {number|null} [MarketPercentage] RoyaltiesInfo MarketPercentage
+         * @property {number|null} [MarketFixed] RoyaltiesInfo MarketFixed
+         * @property {Object.<string,proto.IRoyaltySplitInfo>|null} [SplitRoyalties] RoyaltiesInfo SplitRoyalties
+         * @property {number|null} [ITOFixed] RoyaltiesInfo ITOFixed
+         * @property {number|null} [ITOPercentage] RoyaltiesInfo ITOPercentage
+         */
+
+        /**
+         * Constructs a new RoyaltiesInfo.
+         * @memberof proto
+         * @classdesc RoyaltiesInfo holds the royalties for a given asset
+         * @implements IRoyaltiesInfo
+         * @constructor
+         * @param {proto.IRoyaltiesInfo=} [properties] Properties to set
+         */
+        function RoyaltiesInfo(properties) {
+            this.TransferPercentage = [];
+            this.SplitRoyalties = {};
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * RoyaltiesInfo Address.
+         * @member {Uint8Array} Address
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.Address = $util.newBuffer([]);
+
+        /**
+         * RoyaltiesInfo TransferPercentage.
+         * @member {Array.<proto.IRoyaltyInfo>} TransferPercentage
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.TransferPercentage = $util.emptyArray;
+
+        /**
+         * RoyaltiesInfo TransferFixed.
+         * @member {number} TransferFixed
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.TransferFixed = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * RoyaltiesInfo MarketPercentage.
+         * @member {number} MarketPercentage
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.MarketPercentage = 0;
+
+        /**
+         * RoyaltiesInfo MarketFixed.
+         * @member {number} MarketFixed
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.MarketFixed = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * RoyaltiesInfo SplitRoyalties.
+         * @member {Object.<string,proto.IRoyaltySplitInfo>} SplitRoyalties
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.SplitRoyalties = $util.emptyObject;
+
+        /**
+         * RoyaltiesInfo ITOFixed.
+         * @member {number} ITOFixed
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.ITOFixed = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * RoyaltiesInfo ITOPercentage.
+         * @member {number} ITOPercentage
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         */
+        RoyaltiesInfo.prototype.ITOPercentage = 0;
+
+        /**
+         * Creates a new RoyaltiesInfo instance using the specified properties.
+         * @function create
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {proto.IRoyaltiesInfo=} [properties] Properties to set
+         * @returns {proto.RoyaltiesInfo} RoyaltiesInfo instance
+         */
+        RoyaltiesInfo.create = function create(properties) {
+            return new RoyaltiesInfo(properties);
+        };
+
+        /**
+         * Encodes the specified RoyaltiesInfo message. Does not implicitly {@link proto.RoyaltiesInfo.verify|verify} messages.
+         * @function encode
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {proto.IRoyaltiesInfo} message RoyaltiesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoyaltiesInfo.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.Address);
+            if (message.TransferPercentage != null && message.TransferPercentage.length)
+                for (let i = 0; i < message.TransferPercentage.length; ++i)
+                    $root.proto.RoyaltyInfo.encode(message.TransferPercentage[i], writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
+            if (message.TransferFixed != null && Object.hasOwnProperty.call(message, "TransferFixed"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.TransferFixed);
+            if (message.MarketPercentage != null && Object.hasOwnProperty.call(message, "MarketPercentage"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.MarketPercentage);
+            if (message.MarketFixed != null && Object.hasOwnProperty.call(message, "MarketFixed"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.MarketFixed);
+            if (message.SplitRoyalties != null && Object.hasOwnProperty.call(message, "SplitRoyalties"))
+                for (let keys = Object.keys(message.SplitRoyalties), i = 0; i < keys.length; ++i) {
+                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                    $root.proto.RoyaltySplitInfo.encode(message.SplitRoyalties[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim().ldelim();
+                }
+            if (message.ITOFixed != null && Object.hasOwnProperty.call(message, "ITOFixed"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int64(message.ITOFixed);
+            if (message.ITOPercentage != null && Object.hasOwnProperty.call(message, "ITOPercentage"))
+                writer.uint32(/* id 8, wireType 0 =*/64).uint32(message.ITOPercentage);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified RoyaltiesInfo message, length delimited. Does not implicitly {@link proto.RoyaltiesInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {proto.IRoyaltiesInfo} message RoyaltiesInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoyaltiesInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a RoyaltiesInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.RoyaltiesInfo} RoyaltiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoyaltiesInfo.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.RoyaltiesInfo(), key, value;
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.Address = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        if (!(message.TransferPercentage && message.TransferPercentage.length))
+                            message.TransferPercentage = [];
+                        message.TransferPercentage.push($root.proto.RoyaltyInfo.decode(reader, reader.uint32(), undefined, long + 1));
+                        break;
+                    }
+                case 3: {
+                        message.TransferFixed = reader.int64();
+                        break;
+                    }
+                case 4: {
+                        message.MarketPercentage = reader.uint32();
+                        break;
+                    }
+                case 5: {
+                        message.MarketFixed = reader.int64();
+                        break;
+                    }
+                case 6: {
+                        if (message.SplitRoyalties === $util.emptyObject)
+                            message.SplitRoyalties = {};
+                        let end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            let tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.proto.RoyaltySplitInfo.decode(reader, reader.uint32(), undefined, long + 1);
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7, long);
+                                break;
+                            }
+                        }
+                        if (key === "__proto__")
+                            $util.makeProp(message.SplitRoyalties, key);
+                        message.SplitRoyalties[key] = value;
+                        break;
+                    }
+                case 7: {
+                        message.ITOFixed = reader.int64();
+                        break;
+                    }
+                case 8: {
+                        message.ITOPercentage = reader.uint32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a RoyaltiesInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.RoyaltiesInfo} RoyaltiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoyaltiesInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a RoyaltiesInfo message.
+         * @function verify
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        RoyaltiesInfo.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
+                if (!(message.Address && typeof message.Address.length === "number" || $util.isString(message.Address)))
+                    return "Address: buffer expected";
+            if (message.TransferPercentage != null && Object.hasOwnProperty.call(message, "TransferPercentage")) {
+                if (!Array.isArray(message.TransferPercentage))
+                    return "TransferPercentage: array expected";
+                for (let i = 0; i < message.TransferPercentage.length; ++i) {
+                    let error = $root.proto.RoyaltyInfo.verify(message.TransferPercentage[i], long + 1);
+                    if (error)
+                        return "TransferPercentage." + error;
+                }
+            }
+            if (message.TransferFixed != null && Object.hasOwnProperty.call(message, "TransferFixed"))
+                if (!$util.isInteger(message.TransferFixed) && !(message.TransferFixed && $util.isInteger(message.TransferFixed.low) && $util.isInteger(message.TransferFixed.high)))
+                    return "TransferFixed: integer|Long expected";
+            if (message.MarketPercentage != null && Object.hasOwnProperty.call(message, "MarketPercentage"))
+                if (!$util.isInteger(message.MarketPercentage))
+                    return "MarketPercentage: integer expected";
+            if (message.MarketFixed != null && Object.hasOwnProperty.call(message, "MarketFixed"))
+                if (!$util.isInteger(message.MarketFixed) && !(message.MarketFixed && $util.isInteger(message.MarketFixed.low) && $util.isInteger(message.MarketFixed.high)))
+                    return "MarketFixed: integer|Long expected";
+            if (message.SplitRoyalties != null && Object.hasOwnProperty.call(message, "SplitRoyalties")) {
+                if (!$util.isObject(message.SplitRoyalties))
+                    return "SplitRoyalties: object expected";
+                let key = Object.keys(message.SplitRoyalties);
+                for (let i = 0; i < key.length; ++i) {
+                    let error = $root.proto.RoyaltySplitInfo.verify(message.SplitRoyalties[key[i]], long + 1);
+                    if (error)
+                        return "SplitRoyalties." + error;
+                }
+            }
+            if (message.ITOFixed != null && Object.hasOwnProperty.call(message, "ITOFixed"))
+                if (!$util.isInteger(message.ITOFixed) && !(message.ITOFixed && $util.isInteger(message.ITOFixed.low) && $util.isInteger(message.ITOFixed.high)))
+                    return "ITOFixed: integer|Long expected";
+            if (message.ITOPercentage != null && Object.hasOwnProperty.call(message, "ITOPercentage"))
+                if (!$util.isInteger(message.ITOPercentage))
+                    return "ITOPercentage: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a RoyaltiesInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.RoyaltiesInfo} RoyaltiesInfo
+         */
+        RoyaltiesInfo.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.RoyaltiesInfo)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.RoyaltiesInfo: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.RoyaltiesInfo();
+            if (object.Address != null)
+                if (typeof object.Address === "string")
+                    $util.base64.decode(object.Address, message.Address = $util.newBuffer($util.base64.length(object.Address)), 0);
+                else if (object.Address.length >= 0)
+                    message.Address = object.Address;
+            if (object.TransferPercentage) {
+                if (!Array.isArray(object.TransferPercentage))
+                    throw TypeError(".proto.RoyaltiesInfo.TransferPercentage: array expected");
+                message.TransferPercentage = [];
+                for (let i = 0; i < object.TransferPercentage.length; ++i) {
+                    if (!$util.isObject(object.TransferPercentage[i]))
+                        throw TypeError(".proto.RoyaltiesInfo.TransferPercentage: object expected");
+                    message.TransferPercentage[i] = $root.proto.RoyaltyInfo.fromObject(object.TransferPercentage[i], long + 1);
+                }
+            }
+            if (object.TransferFixed != null)
+                if ($util.Long)
+                    message.TransferFixed = $util.Long.fromValue(object.TransferFixed, false);
+                else if (typeof object.TransferFixed === "string")
+                    message.TransferFixed = parseInt(object.TransferFixed, 10);
+                else if (typeof object.TransferFixed === "number")
+                    message.TransferFixed = object.TransferFixed;
+                else if (typeof object.TransferFixed === "object")
+                    message.TransferFixed = new $util.LongBits(object.TransferFixed.low >>> 0, object.TransferFixed.high >>> 0).toNumber();
+            if (object.MarketPercentage != null)
+                message.MarketPercentage = object.MarketPercentage >>> 0;
+            if (object.MarketFixed != null)
+                if ($util.Long)
+                    message.MarketFixed = $util.Long.fromValue(object.MarketFixed, false);
+                else if (typeof object.MarketFixed === "string")
+                    message.MarketFixed = parseInt(object.MarketFixed, 10);
+                else if (typeof object.MarketFixed === "number")
+                    message.MarketFixed = object.MarketFixed;
+                else if (typeof object.MarketFixed === "object")
+                    message.MarketFixed = new $util.LongBits(object.MarketFixed.low >>> 0, object.MarketFixed.high >>> 0).toNumber();
+            if (object.SplitRoyalties) {
+                if (!$util.isObject(object.SplitRoyalties))
+                    throw TypeError(".proto.RoyaltiesInfo.SplitRoyalties: object expected");
+                message.SplitRoyalties = {};
+                for (let keys = Object.keys(object.SplitRoyalties), i = 0; i < keys.length; ++i) {
+                    if (keys[i] === "__proto__")
+                        $util.makeProp(message.SplitRoyalties, keys[i]);
+                    if (!$util.isObject(object.SplitRoyalties[keys[i]]))
+                        throw TypeError(".proto.RoyaltiesInfo.SplitRoyalties: object expected");
+                    message.SplitRoyalties[keys[i]] = $root.proto.RoyaltySplitInfo.fromObject(object.SplitRoyalties[keys[i]], long + 1);
+                }
+            }
+            if (object.ITOFixed != null)
+                if ($util.Long)
+                    message.ITOFixed = $util.Long.fromValue(object.ITOFixed, false);
+                else if (typeof object.ITOFixed === "string")
+                    message.ITOFixed = parseInt(object.ITOFixed, 10);
+                else if (typeof object.ITOFixed === "number")
+                    message.ITOFixed = object.ITOFixed;
+                else if (typeof object.ITOFixed === "object")
+                    message.ITOFixed = new $util.LongBits(object.ITOFixed.low >>> 0, object.ITOFixed.high >>> 0).toNumber();
+            if (object.ITOPercentage != null)
+                message.ITOPercentage = object.ITOPercentage >>> 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a RoyaltiesInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {proto.RoyaltiesInfo} message RoyaltiesInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        RoyaltiesInfo.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.arrays || options.defaults)
+                object.TransferPercentage = [];
+            if (options.objects || options.defaults)
+                object.SplitRoyalties = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.Address = "";
+                else {
+                    object.Address = [];
+                    if (options.bytes !== Array)
+                        object.Address = $util.newBuffer(object.Address);
+                }
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.TransferFixed = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.TransferFixed = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                object.MarketPercentage = 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.MarketFixed = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.MarketFixed = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.ITOFixed = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.ITOFixed = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                object.ITOPercentage = 0;
+            }
+            if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
+                object.Address = options.bytes === String ? $util.base64.encode(message.Address, 0, message.Address.length) : options.bytes === Array ? Array.prototype.slice.call(message.Address) : message.Address;
+            if (message.TransferPercentage && message.TransferPercentage.length) {
+                object.TransferPercentage = [];
+                for (let j = 0; j < message.TransferPercentage.length; ++j)
+                    object.TransferPercentage[j] = $root.proto.RoyaltyInfo.toObject(message.TransferPercentage[j], options, q + 1);
+            }
+            if (message.TransferFixed != null && Object.hasOwnProperty.call(message, "TransferFixed"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.TransferFixed = typeof message.TransferFixed === "number" ? BigInt(message.TransferFixed) : $util.Long.fromBits(message.TransferFixed.low >>> 0, message.TransferFixed.high >>> 0, false).toBigInt();
+                else if (typeof message.TransferFixed === "number")
+                    object.TransferFixed = options.longs === String ? String(message.TransferFixed) : message.TransferFixed;
+                else
+                    object.TransferFixed = options.longs === String ? $util.Long.prototype.toString.call(message.TransferFixed) : options.longs === Number ? new $util.LongBits(message.TransferFixed.low >>> 0, message.TransferFixed.high >>> 0).toNumber() : message.TransferFixed;
+            if (message.MarketPercentage != null && Object.hasOwnProperty.call(message, "MarketPercentage"))
+                object.MarketPercentage = message.MarketPercentage;
+            if (message.MarketFixed != null && Object.hasOwnProperty.call(message, "MarketFixed"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.MarketFixed = typeof message.MarketFixed === "number" ? BigInt(message.MarketFixed) : $util.Long.fromBits(message.MarketFixed.low >>> 0, message.MarketFixed.high >>> 0, false).toBigInt();
+                else if (typeof message.MarketFixed === "number")
+                    object.MarketFixed = options.longs === String ? String(message.MarketFixed) : message.MarketFixed;
+                else
+                    object.MarketFixed = options.longs === String ? $util.Long.prototype.toString.call(message.MarketFixed) : options.longs === Number ? new $util.LongBits(message.MarketFixed.low >>> 0, message.MarketFixed.high >>> 0).toNumber() : message.MarketFixed;
+            let keys2;
+            if (message.SplitRoyalties && (keys2 = Object.keys(message.SplitRoyalties)).length) {
+                object.SplitRoyalties = {};
+                for (let j = 0; j < keys2.length; ++j) {
+                    if (keys2[j] === "__proto__")
+                        $util.makeProp(object.SplitRoyalties, keys2[j]);
+                    object.SplitRoyalties[keys2[j]] = $root.proto.RoyaltySplitInfo.toObject(message.SplitRoyalties[keys2[j]], options, q + 1);
+                }
+            }
+            if (message.ITOFixed != null && Object.hasOwnProperty.call(message, "ITOFixed"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.ITOFixed = typeof message.ITOFixed === "number" ? BigInt(message.ITOFixed) : $util.Long.fromBits(message.ITOFixed.low >>> 0, message.ITOFixed.high >>> 0, false).toBigInt();
+                else if (typeof message.ITOFixed === "number")
+                    object.ITOFixed = options.longs === String ? String(message.ITOFixed) : message.ITOFixed;
+                else
+                    object.ITOFixed = options.longs === String ? $util.Long.prototype.toString.call(message.ITOFixed) : options.longs === Number ? new $util.LongBits(message.ITOFixed.low >>> 0, message.ITOFixed.high >>> 0).toNumber() : message.ITOFixed;
+            if (message.ITOPercentage != null && Object.hasOwnProperty.call(message, "ITOPercentage"))
+                object.ITOPercentage = message.ITOPercentage;
+            return object;
+        };
+
+        /**
+         * Converts this RoyaltiesInfo to JSON.
+         * @function toJSON
+         * @memberof proto.RoyaltiesInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        RoyaltiesInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for RoyaltiesInfo
+         * @function getTypeUrl
+         * @memberof proto.RoyaltiesInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        RoyaltiesInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.RoyaltiesInfo";
+        };
+
+        return RoyaltiesInfo;
+    })();
+
+    proto.RoyaltySplitInfo = (function() {
+
+        /**
+         * Properties of a RoyaltySplitInfo.
+         * @memberof proto
+         * @interface IRoyaltySplitInfo
+         * @property {number|null} [PercentTransferPercentage] RoyaltySplitInfo PercentTransferPercentage
+         * @property {number|null} [PercentTransferFixed] RoyaltySplitInfo PercentTransferFixed
+         * @property {number|null} [PercentMarketPercentage] RoyaltySplitInfo PercentMarketPercentage
+         * @property {number|null} [PercentMarketFixed] RoyaltySplitInfo PercentMarketFixed
+         * @property {number|null} [PercentITOPercentage] RoyaltySplitInfo PercentITOPercentage
+         * @property {number|null} [PercentITOFixed] RoyaltySplitInfo PercentITOFixed
+         */
+
+        /**
+         * Constructs a new RoyaltySplitInfo.
+         * @memberof proto
+         * @classdesc RoyaltySplitInfo holds the royalty split
+         * @implements IRoyaltySplitInfo
+         * @constructor
+         * @param {proto.IRoyaltySplitInfo=} [properties] Properties to set
+         */
+        function RoyaltySplitInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * RoyaltySplitInfo PercentTransferPercentage.
+         * @member {number} PercentTransferPercentage
+         * @memberof proto.RoyaltySplitInfo
+         * @instance
+         */
+        RoyaltySplitInfo.prototype.PercentTransferPercentage = 0;
+
+        /**
+         * RoyaltySplitInfo PercentTransferFixed.
+         * @member {number} PercentTransferFixed
+         * @memberof proto.RoyaltySplitInfo
+         * @instance
+         */
+        RoyaltySplitInfo.prototype.PercentTransferFixed = 0;
+
+        /**
+         * RoyaltySplitInfo PercentMarketPercentage.
+         * @member {number} PercentMarketPercentage
+         * @memberof proto.RoyaltySplitInfo
+         * @instance
+         */
+        RoyaltySplitInfo.prototype.PercentMarketPercentage = 0;
+
+        /**
+         * RoyaltySplitInfo PercentMarketFixed.
+         * @member {number} PercentMarketFixed
+         * @memberof proto.RoyaltySplitInfo
+         * @instance
+         */
+        RoyaltySplitInfo.prototype.PercentMarketFixed = 0;
+
+        /**
+         * RoyaltySplitInfo PercentITOPercentage.
+         * @member {number} PercentITOPercentage
+         * @memberof proto.RoyaltySplitInfo
+         * @instance
+         */
+        RoyaltySplitInfo.prototype.PercentITOPercentage = 0;
+
+        /**
+         * RoyaltySplitInfo PercentITOFixed.
+         * @member {number} PercentITOFixed
+         * @memberof proto.RoyaltySplitInfo
+         * @instance
+         */
+        RoyaltySplitInfo.prototype.PercentITOFixed = 0;
+
+        /**
+         * Creates a new RoyaltySplitInfo instance using the specified properties.
+         * @function create
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {proto.IRoyaltySplitInfo=} [properties] Properties to set
+         * @returns {proto.RoyaltySplitInfo} RoyaltySplitInfo instance
+         */
+        RoyaltySplitInfo.create = function create(properties) {
+            return new RoyaltySplitInfo(properties);
+        };
+
+        /**
+         * Encodes the specified RoyaltySplitInfo message. Does not implicitly {@link proto.RoyaltySplitInfo.verify|verify} messages.
+         * @function encode
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {proto.IRoyaltySplitInfo} message RoyaltySplitInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoyaltySplitInfo.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.PercentTransferPercentage != null && Object.hasOwnProperty.call(message, "PercentTransferPercentage"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.PercentTransferPercentage);
+            if (message.PercentTransferFixed != null && Object.hasOwnProperty.call(message, "PercentTransferFixed"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.PercentTransferFixed);
+            if (message.PercentMarketPercentage != null && Object.hasOwnProperty.call(message, "PercentMarketPercentage"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.PercentMarketPercentage);
+            if (message.PercentMarketFixed != null && Object.hasOwnProperty.call(message, "PercentMarketFixed"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.PercentMarketFixed);
+            if (message.PercentITOPercentage != null && Object.hasOwnProperty.call(message, "PercentITOPercentage"))
+                writer.uint32(/* id 5, wireType 0 =*/40).uint32(message.PercentITOPercentage);
+            if (message.PercentITOFixed != null && Object.hasOwnProperty.call(message, "PercentITOFixed"))
+                writer.uint32(/* id 6, wireType 0 =*/48).uint32(message.PercentITOFixed);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified RoyaltySplitInfo message, length delimited. Does not implicitly {@link proto.RoyaltySplitInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {proto.IRoyaltySplitInfo} message RoyaltySplitInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoyaltySplitInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a RoyaltySplitInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.RoyaltySplitInfo} RoyaltySplitInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoyaltySplitInfo.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.RoyaltySplitInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.PercentTransferPercentage = reader.uint32();
+                        break;
+                    }
+                case 2: {
+                        message.PercentTransferFixed = reader.uint32();
+                        break;
+                    }
+                case 3: {
+                        message.PercentMarketPercentage = reader.uint32();
+                        break;
+                    }
+                case 4: {
+                        message.PercentMarketFixed = reader.uint32();
+                        break;
+                    }
+                case 5: {
+                        message.PercentITOPercentage = reader.uint32();
+                        break;
+                    }
+                case 6: {
+                        message.PercentITOFixed = reader.uint32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a RoyaltySplitInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.RoyaltySplitInfo} RoyaltySplitInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoyaltySplitInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a RoyaltySplitInfo message.
+         * @function verify
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        RoyaltySplitInfo.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.PercentTransferPercentage != null && Object.hasOwnProperty.call(message, "PercentTransferPercentage"))
+                if (!$util.isInteger(message.PercentTransferPercentage))
+                    return "PercentTransferPercentage: integer expected";
+            if (message.PercentTransferFixed != null && Object.hasOwnProperty.call(message, "PercentTransferFixed"))
+                if (!$util.isInteger(message.PercentTransferFixed))
+                    return "PercentTransferFixed: integer expected";
+            if (message.PercentMarketPercentage != null && Object.hasOwnProperty.call(message, "PercentMarketPercentage"))
+                if (!$util.isInteger(message.PercentMarketPercentage))
+                    return "PercentMarketPercentage: integer expected";
+            if (message.PercentMarketFixed != null && Object.hasOwnProperty.call(message, "PercentMarketFixed"))
+                if (!$util.isInteger(message.PercentMarketFixed))
+                    return "PercentMarketFixed: integer expected";
+            if (message.PercentITOPercentage != null && Object.hasOwnProperty.call(message, "PercentITOPercentage"))
+                if (!$util.isInteger(message.PercentITOPercentage))
+                    return "PercentITOPercentage: integer expected";
+            if (message.PercentITOFixed != null && Object.hasOwnProperty.call(message, "PercentITOFixed"))
+                if (!$util.isInteger(message.PercentITOFixed))
+                    return "PercentITOFixed: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a RoyaltySplitInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.RoyaltySplitInfo} RoyaltySplitInfo
+         */
+        RoyaltySplitInfo.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.RoyaltySplitInfo)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.RoyaltySplitInfo: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.RoyaltySplitInfo();
+            if (object.PercentTransferPercentage != null)
+                message.PercentTransferPercentage = object.PercentTransferPercentage >>> 0;
+            if (object.PercentTransferFixed != null)
+                message.PercentTransferFixed = object.PercentTransferFixed >>> 0;
+            if (object.PercentMarketPercentage != null)
+                message.PercentMarketPercentage = object.PercentMarketPercentage >>> 0;
+            if (object.PercentMarketFixed != null)
+                message.PercentMarketFixed = object.PercentMarketFixed >>> 0;
+            if (object.PercentITOPercentage != null)
+                message.PercentITOPercentage = object.PercentITOPercentage >>> 0;
+            if (object.PercentITOFixed != null)
+                message.PercentITOFixed = object.PercentITOFixed >>> 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a RoyaltySplitInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {proto.RoyaltySplitInfo} message RoyaltySplitInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        RoyaltySplitInfo.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.defaults) {
+                object.PercentTransferPercentage = 0;
+                object.PercentTransferFixed = 0;
+                object.PercentMarketPercentage = 0;
+                object.PercentMarketFixed = 0;
+                object.PercentITOPercentage = 0;
+                object.PercentITOFixed = 0;
+            }
+            if (message.PercentTransferPercentage != null && Object.hasOwnProperty.call(message, "PercentTransferPercentage"))
+                object.PercentTransferPercentage = message.PercentTransferPercentage;
+            if (message.PercentTransferFixed != null && Object.hasOwnProperty.call(message, "PercentTransferFixed"))
+                object.PercentTransferFixed = message.PercentTransferFixed;
+            if (message.PercentMarketPercentage != null && Object.hasOwnProperty.call(message, "PercentMarketPercentage"))
+                object.PercentMarketPercentage = message.PercentMarketPercentage;
+            if (message.PercentMarketFixed != null && Object.hasOwnProperty.call(message, "PercentMarketFixed"))
+                object.PercentMarketFixed = message.PercentMarketFixed;
+            if (message.PercentITOPercentage != null && Object.hasOwnProperty.call(message, "PercentITOPercentage"))
+                object.PercentITOPercentage = message.PercentITOPercentage;
+            if (message.PercentITOFixed != null && Object.hasOwnProperty.call(message, "PercentITOFixed"))
+                object.PercentITOFixed = message.PercentITOFixed;
+            return object;
+        };
+
+        /**
+         * Converts this RoyaltySplitInfo to JSON.
+         * @function toJSON
+         * @memberof proto.RoyaltySplitInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        RoyaltySplitInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for RoyaltySplitInfo
+         * @function getTypeUrl
+         * @memberof proto.RoyaltySplitInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        RoyaltySplitInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.RoyaltySplitInfo";
+        };
+
+        return RoyaltySplitInfo;
+    })();
+
+    proto.RoyaltyInfo = (function() {
+
+        /**
+         * Properties of a RoyaltyInfo.
+         * @memberof proto
+         * @interface IRoyaltyInfo
+         * @property {number|null} [Amount] RoyaltyInfo Amount
+         * @property {number|null} [Percentage] RoyaltyInfo Percentage
+         */
+
+        /**
+         * Constructs a new RoyaltyInfo.
+         * @memberof proto
+         * @classdesc RoyaltyInfo holds the royalty threshold
+         * @implements IRoyaltyInfo
+         * @constructor
+         * @param {proto.IRoyaltyInfo=} [properties] Properties to set
+         */
+        function RoyaltyInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * RoyaltyInfo Amount.
+         * @member {number} Amount
+         * @memberof proto.RoyaltyInfo
+         * @instance
+         */
+        RoyaltyInfo.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * RoyaltyInfo Percentage.
+         * @member {number} Percentage
+         * @memberof proto.RoyaltyInfo
+         * @instance
+         */
+        RoyaltyInfo.prototype.Percentage = 0;
+
+        /**
+         * Creates a new RoyaltyInfo instance using the specified properties.
+         * @function create
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {proto.IRoyaltyInfo=} [properties] Properties to set
+         * @returns {proto.RoyaltyInfo} RoyaltyInfo instance
+         */
+        RoyaltyInfo.create = function create(properties) {
+            return new RoyaltyInfo(properties);
+        };
+
+        /**
+         * Encodes the specified RoyaltyInfo message. Does not implicitly {@link proto.RoyaltyInfo.verify|verify} messages.
+         * @function encode
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {proto.IRoyaltyInfo} message RoyaltyInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoyaltyInfo.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int64(message.Amount);
+            if (message.Percentage != null && Object.hasOwnProperty.call(message, "Percentage"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.Percentage);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified RoyaltyInfo message, length delimited. Does not implicitly {@link proto.RoyaltyInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {proto.IRoyaltyInfo} message RoyaltyInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoyaltyInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+
+        /**
+         * Decodes a RoyaltyInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {proto.RoyaltyInfo} RoyaltyInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoyaltyInfo.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.RoyaltyInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.Amount = reader.int64();
+                        break;
+                    }
+                case 2: {
+                        message.Percentage = reader.uint32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a RoyaltyInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {proto.RoyaltyInfo} RoyaltyInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoyaltyInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a RoyaltyInfo message.
+         * @function verify
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        RoyaltyInfo.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
+                    return "Amount: integer|Long expected";
+            if (message.Percentage != null && Object.hasOwnProperty.call(message, "Percentage"))
+                if (!$util.isInteger(message.Percentage))
+                    return "Percentage: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a RoyaltyInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {proto.RoyaltyInfo} RoyaltyInfo
+         */
+        RoyaltyInfo.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.RoyaltyInfo)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".proto.RoyaltyInfo: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            let message = new $root.proto.RoyaltyInfo();
+            if (object.Amount != null)
+                if ($util.Long)
+                    message.Amount = $util.Long.fromValue(object.Amount, false);
+                else if (typeof object.Amount === "string")
+                    message.Amount = parseInt(object.Amount, 10);
+                else if (typeof object.Amount === "number")
+                    message.Amount = object.Amount;
+                else if (typeof object.Amount === "object")
+                    message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
+            if (object.Percentage != null)
+                message.Percentage = object.Percentage >>> 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a RoyaltyInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {proto.RoyaltyInfo} message RoyaltyInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        RoyaltyInfo.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            let object = {};
+            if (options.defaults) {
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                object.Percentage = 0;
+            }
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                else if (typeof message.Amount === "number")
+                    object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
+                else
+                    object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
+            if (message.Percentage != null && Object.hasOwnProperty.call(message, "Percentage"))
+                object.Percentage = message.Percentage;
+            return object;
+        };
+
+        /**
+         * Converts this RoyaltyInfo to JSON.
+         * @function toJSON
+         * @memberof proto.RoyaltyInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        RoyaltyInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for RoyaltyInfo
+         * @function getTypeUrl
+         * @memberof proto.RoyaltyInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        RoyaltyInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.RoyaltyInfo";
+        };
+
+        return RoyaltyInfo;
+    })();
+
     proto.FreezeContract = (function() {
 
         /**
          * Properties of a FreezeContract.
          * @memberof proto
          * @interface IFreezeContract
-         * @property {number|null} [Amount] FreezeContract Amount
          * @property {Uint8Array|null} [AssetID] FreezeContract AssetID
+         * @property {number|null} [Amount] FreezeContract Amount
          */
 
         /**
          * Constructs a new FreezeContract.
          * @memberof proto
-         * @classdesc Represents a FreezeContract.
+         * @classdesc FreezeContract holds the data for a freeze transaction
          * @implements IFreezeContract
          * @constructor
          * @param {proto.IFreezeContract=} [properties] Properties to set
@@ -2882,20 +6200,20 @@ export const proto = $root.proto = (() => {
         }
 
         /**
-         * FreezeContract Amount.
-         * @member {number} Amount
-         * @memberof proto.FreezeContract
-         * @instance
-         */
-        FreezeContract.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
          * FreezeContract AssetID.
          * @member {Uint8Array} AssetID
          * @memberof proto.FreezeContract
          * @instance
          */
         FreezeContract.prototype.AssetID = $util.newBuffer([]);
+
+        /**
+         * FreezeContract Amount.
+         * @member {number} Amount
+         * @memberof proto.FreezeContract
+         * @instance
+         */
+        FreezeContract.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
          * Creates a new FreezeContract instance using the specified properties.
@@ -2925,10 +6243,10 @@ export const proto = $root.proto = (() => {
                 q = 0;
             if (q > $util.recursionLimit)
                 throw Error("max depth exceeded");
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int64(message.Amount);
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.AssetID);
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.AssetID);
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.Amount);
             return writer;
         };
 
@@ -2970,11 +6288,11 @@ export const proto = $root.proto = (() => {
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.Amount = reader.int64();
+                        message.AssetID = reader.bytes();
                         break;
                     }
                 case 2: {
-                        message.AssetID = reader.bytes();
+                        message.Amount = reader.int64();
                         break;
                     }
                 default:
@@ -3016,12 +6334,12 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
-                    return "Amount: integer|Long expected";
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
+                    return "Amount: integer|Long expected";
             return null;
         };
 
@@ -3043,6 +6361,11 @@ export const proto = $root.proto = (() => {
             if (long > $util.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.FreezeContract();
+            if (object.AssetID != null)
+                if (typeof object.AssetID === "string")
+                    $util.base64.decode(object.AssetID, message.AssetID = $util.newBuffer($util.base64.length(object.AssetID)), 0);
+                else if (object.AssetID.length >= 0)
+                    message.AssetID = object.AssetID;
             if (object.Amount != null)
                 if ($util.Long)
                     message.Amount = $util.Long.fromValue(object.Amount, false);
@@ -3052,11 +6375,6 @@ export const proto = $root.proto = (() => {
                     message.Amount = object.Amount;
                 else if (typeof object.Amount === "object")
                     message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
-            if (object.AssetID != null)
-                if (typeof object.AssetID === "string")
-                    $util.base64.decode(object.AssetID, message.AssetID = $util.newBuffer($util.base64.length(object.AssetID)), 0);
-                else if (object.AssetID.length >= 0)
-                    message.AssetID = object.AssetID;
             return message;
         };
 
@@ -3078,11 +6396,6 @@ export const proto = $root.proto = (() => {
                 throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
-                } else
-                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if (options.bytes === String)
                     object.AssetID = "";
                 else {
@@ -3090,7 +6403,14 @@ export const proto = $root.proto = (() => {
                     if (options.bytes !== Array)
                         object.AssetID = $util.newBuffer(object.AssetID);
                 }
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
             }
+            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
+                object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
             if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
@@ -3098,8 +6418,6 @@ export const proto = $root.proto = (() => {
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
-            if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
             return object;
         };
 
@@ -3145,7 +6463,7 @@ export const proto = $root.proto = (() => {
         /**
          * Constructs a new UnfreezeContract.
          * @memberof proto
-         * @classdesc Represents an UnfreezeContract.
+         * @classdesc UnfreezeContract holds the data for a unfreeze transaction
          * @implements IUnfreezeContract
          * @constructor
          * @param {proto.IUnfreezeContract=} [properties] Properties to set
@@ -3414,7 +6732,7 @@ export const proto = $root.proto = (() => {
         /**
          * Constructs a new DelegateContract.
          * @memberof proto
-         * @classdesc Represents a DelegateContract.
+         * @classdesc DelegateContract holds the data for a delegate transaction
          * @implements IDelegateContract
          * @constructor
          * @param {proto.IDelegateContract=} [properties] Properties to set
@@ -3682,7 +7000,7 @@ export const proto = $root.proto = (() => {
         /**
          * Constructs a new UndelegateContract.
          * @memberof proto
-         * @classdesc Represents an UndelegateContract.
+         * @classdesc UndelegateContract holds the data for a undelegate transaction
          * @implements IUndelegateContract
          * @constructor
          * @param {proto.IUndelegateContract=} [properties] Properties to set
@@ -3912,16 +7230,16 @@ export const proto = $root.proto = (() => {
          * Properties of a WithdrawContract.
          * @memberof proto
          * @interface IWithdrawContract
-         * @property {proto.WithdrawContract.WithdrawType|null} [Type] WithdrawContract Type
          * @property {Uint8Array|null} [AssetID] WithdrawContract AssetID
-         * @property {number|null} [Amount] WithdrawContract Amount
+         * @property {proto.WithdrawContract.EnumWithdrawType|null} [WithdrawType] WithdrawContract WithdrawType
+         * @property {number|null} [amount] WithdrawContract amount
          * @property {Uint8Array|null} [CurrencyID] WithdrawContract CurrencyID
          */
 
         /**
          * Constructs a new WithdrawContract.
          * @memberof proto
-         * @classdesc Represents a WithdrawContract.
+         * @classdesc WithdrawContract holds the data for a withdraw transaction
          * @implements IWithdrawContract
          * @constructor
          * @param {proto.IWithdrawContract=} [properties] Properties to set
@@ -3934,14 +7252,6 @@ export const proto = $root.proto = (() => {
         }
 
         /**
-         * WithdrawContract Type.
-         * @member {proto.WithdrawContract.WithdrawType} Type
-         * @memberof proto.WithdrawContract
-         * @instance
-         */
-        WithdrawContract.prototype.Type = 0;
-
-        /**
          * WithdrawContract AssetID.
          * @member {Uint8Array} AssetID
          * @memberof proto.WithdrawContract
@@ -3950,12 +7260,20 @@ export const proto = $root.proto = (() => {
         WithdrawContract.prototype.AssetID = $util.newBuffer([]);
 
         /**
-         * WithdrawContract Amount.
-         * @member {number} Amount
+         * WithdrawContract WithdrawType.
+         * @member {proto.WithdrawContract.EnumWithdrawType} WithdrawType
          * @memberof proto.WithdrawContract
          * @instance
          */
-        WithdrawContract.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+        WithdrawContract.prototype.WithdrawType = 0;
+
+        /**
+         * WithdrawContract amount.
+         * @member {number} amount
+         * @memberof proto.WithdrawContract
+         * @instance
+         */
+        WithdrawContract.prototype.amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
          * WithdrawContract CurrencyID.
@@ -3993,12 +7311,12 @@ export const proto = $root.proto = (() => {
                 q = 0;
             if (q > $util.recursionLimit)
                 throw Error("max depth exceeded");
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.AssetID);
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.Amount);
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.AssetID);
+            if (message.WithdrawType != null && Object.hasOwnProperty.call(message, "WithdrawType"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.WithdrawType);
+            if (message.amount != null && Object.hasOwnProperty.call(message, "amount"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.amount);
             if (message.CurrencyID != null && Object.hasOwnProperty.call(message, "CurrencyID"))
                 writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.CurrencyID);
             return writer;
@@ -4042,15 +7360,15 @@ export const proto = $root.proto = (() => {
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.Type = reader.int32();
-                        break;
-                    }
-                case 2: {
                         message.AssetID = reader.bytes();
                         break;
                     }
+                case 2: {
+                        message.WithdrawType = reader.int32();
+                        break;
+                    }
                 case 3: {
-                        message.Amount = reader.int64();
+                        message.amount = reader.int64();
                         break;
                     }
                 case 4: {
@@ -4096,23 +7414,20 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                switch (message.Type) {
-                default:
-                    return "Type: enum value expected";
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    break;
-                }
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
                     return "AssetID: buffer expected";
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
-                    return "Amount: integer|Long expected";
+            if (message.WithdrawType != null && Object.hasOwnProperty.call(message, "WithdrawType"))
+                switch (message.WithdrawType) {
+                default:
+                    return "WithdrawType: enum value expected";
+                case 0:
+                case 1:
+                    break;
+                }
+            if (message.amount != null && Object.hasOwnProperty.call(message, "amount"))
+                if (!$util.isInteger(message.amount) && !(message.amount && $util.isInteger(message.amount.low) && $util.isInteger(message.amount.high)))
+                    return "amount: integer|Long expected";
             if (message.CurrencyID != null && Object.hasOwnProperty.call(message, "CurrencyID"))
                 if (!(message.CurrencyID && typeof message.CurrencyID.length === "number" || $util.isString(message.CurrencyID)))
                     return "CurrencyID: buffer expected";
@@ -4137,48 +7452,36 @@ export const proto = $root.proto = (() => {
             if (long > $util.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.WithdrawContract();
-            switch (object.Type) {
-            default:
-                if (typeof object.Type === "number") {
-                    message.Type = object.Type;
-                    break;
-                }
-                break;
-            case "StakingReward":
-            case 0:
-                message.Type = 0;
-                break;
-            case "KDAPool":
-            case 1:
-                message.Type = 1;
-                break;
-            case "KDAFeePool":
-            case 2:
-                message.Type = 2;
-                break;
-            case "MarketOrderIDXIN":
-            case 3:
-                message.Type = 3;
-                break;
-            case "MarketOrderIDXOUT":
-            case 4:
-                message.Type = 4;
-                break;
-            }
             if (object.AssetID != null)
                 if (typeof object.AssetID === "string")
                     $util.base64.decode(object.AssetID, message.AssetID = $util.newBuffer($util.base64.length(object.AssetID)), 0);
                 else if (object.AssetID.length >= 0)
                     message.AssetID = object.AssetID;
-            if (object.Amount != null)
+            switch (object.WithdrawType) {
+            default:
+                if (typeof object.WithdrawType === "number") {
+                    message.WithdrawType = object.WithdrawType;
+                    break;
+                }
+                break;
+            case "Staking":
+            case 0:
+                message.WithdrawType = 0;
+                break;
+            case "KDAPool":
+            case 1:
+                message.WithdrawType = 1;
+                break;
+            }
+            if (object.amount != null)
                 if ($util.Long)
-                    message.Amount = $util.Long.fromValue(object.Amount, false);
-                else if (typeof object.Amount === "string")
-                    message.Amount = parseInt(object.Amount, 10);
-                else if (typeof object.Amount === "number")
-                    message.Amount = object.Amount;
-                else if (typeof object.Amount === "object")
-                    message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
+                    message.amount = $util.Long.fromValue(object.amount, false);
+                else if (typeof object.amount === "string")
+                    message.amount = parseInt(object.amount, 10);
+                else if (typeof object.amount === "number")
+                    message.amount = object.amount;
+                else if (typeof object.amount === "object")
+                    message.amount = new $util.LongBits(object.amount.low >>> 0, object.amount.high >>> 0).toNumber();
             if (object.CurrencyID != null)
                 if (typeof object.CurrencyID === "string")
                     $util.base64.decode(object.CurrencyID, message.CurrencyID = $util.newBuffer($util.base64.length(object.CurrencyID)), 0);
@@ -4205,7 +7508,6 @@ export const proto = $root.proto = (() => {
                 throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
-                object.Type = options.enums === String ? "StakingReward" : 0;
                 if (options.bytes === String)
                     object.AssetID = "";
                 else {
@@ -4213,11 +7515,12 @@ export const proto = $root.proto = (() => {
                     if (options.bytes !== Array)
                         object.AssetID = $util.newBuffer(object.AssetID);
                 }
+                object.WithdrawType = options.enums === String ? "Staking" : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                    object.amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                    object.amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if (options.bytes === String)
                     object.CurrencyID = "";
                 else {
@@ -4226,17 +7529,17 @@ export const proto = $root.proto = (() => {
                         object.CurrencyID = $util.newBuffer(object.CurrencyID);
                 }
             }
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                object.Type = options.enums === String ? $root.proto.WithdrawContract.WithdrawType[message.Type] === undefined ? message.Type : $root.proto.WithdrawContract.WithdrawType[message.Type] : message.Type;
             if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
                 object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+            if (message.WithdrawType != null && Object.hasOwnProperty.call(message, "WithdrawType"))
+                object.WithdrawType = options.enums === String ? $root.proto.WithdrawContract.EnumWithdrawType[message.WithdrawType] === undefined ? message.WithdrawType : $root.proto.WithdrawContract.EnumWithdrawType[message.WithdrawType] : message.WithdrawType;
+            if (message.amount != null && Object.hasOwnProperty.call(message, "amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
-                    object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
-                else if (typeof message.Amount === "number")
-                    object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
+                    object.amount = typeof message.amount === "number" ? BigInt(message.amount) : $util.Long.fromBits(message.amount.low >>> 0, message.amount.high >>> 0, false).toBigInt();
+                else if (typeof message.amount === "number")
+                    object.amount = options.longs === String ? String(message.amount) : message.amount;
                 else
-                    object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
+                    object.amount = options.longs === String ? $util.Long.prototype.toString.call(message.amount) : options.longs === Number ? new $util.LongBits(message.amount.low >>> 0, message.amount.high >>> 0).toNumber() : message.amount;
             if (message.CurrencyID != null && Object.hasOwnProperty.call(message, "CurrencyID"))
                 object.CurrencyID = options.bytes === String ? $util.base64.encode(message.CurrencyID, 0, message.CurrencyID.length) : options.bytes === Array ? Array.prototype.slice.call(message.CurrencyID) : message.CurrencyID;
             return object;
@@ -4269,22 +7572,16 @@ export const proto = $root.proto = (() => {
         };
 
         /**
-         * WithdrawType enum.
-         * @name proto.WithdrawContract.WithdrawType
+         * EnumWithdrawType enum.
+         * @name proto.WithdrawContract.EnumWithdrawType
          * @enum {number}
-         * @property {number} StakingReward=0 StakingReward value
+         * @property {number} Staking=0 Staking value
          * @property {number} KDAPool=1 KDAPool value
-         * @property {number} KDAFeePool=2 KDAFeePool value
-         * @property {number} MarketOrderIDXIN=3 MarketOrderIDXIN value
-         * @property {number} MarketOrderIDXOUT=4 MarketOrderIDXOUT value
          */
-        WithdrawContract.WithdrawType = (function() {
+        WithdrawContract.EnumWithdrawType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[0] = "StakingReward"] = 0;
+            values[valuesById[0] = "Staking"] = 0;
             values[valuesById[1] = "KDAPool"] = 1;
-            values[valuesById[2] = "KDAFeePool"] = 2;
-            values[valuesById[3] = "MarketOrderIDXIN"] = 3;
-            values[valuesById[4] = "MarketOrderIDXOUT"] = 4;
             return values;
         })();
 
@@ -4297,14 +7594,14 @@ export const proto = $root.proto = (() => {
          * Properties of a ClaimContract.
          * @memberof proto
          * @interface IClaimContract
-         * @property {proto.ClaimContract.ClaimType|null} [Type] ClaimContract Type
+         * @property {proto.ClaimContract.EnumClaimType|null} [ClaimType] ClaimContract ClaimType
          * @property {Uint8Array|null} [ID] ClaimContract ID
          */
 
         /**
          * Constructs a new ClaimContract.
          * @memberof proto
-         * @classdesc Represents a ClaimContract.
+         * @classdesc ClaimContract holds the data for a claim transaction
          * @implements IClaimContract
          * @constructor
          * @param {proto.IClaimContract=} [properties] Properties to set
@@ -4317,12 +7614,12 @@ export const proto = $root.proto = (() => {
         }
 
         /**
-         * ClaimContract Type.
-         * @member {proto.ClaimContract.ClaimType} Type
+         * ClaimContract ClaimType.
+         * @member {proto.ClaimContract.EnumClaimType} ClaimType
          * @memberof proto.ClaimContract
          * @instance
          */
-        ClaimContract.prototype.Type = 0;
+        ClaimContract.prototype.ClaimType = 0;
 
         /**
          * ClaimContract ID.
@@ -4360,8 +7657,8 @@ export const proto = $root.proto = (() => {
                 q = 0;
             if (q > $util.recursionLimit)
                 throw Error("max depth exceeded");
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
+            if (message.ClaimType != null && Object.hasOwnProperty.call(message, "ClaimType"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.ClaimType);
             if (message.ID != null && Object.hasOwnProperty.call(message, "ID"))
                 writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.ID);
             return writer;
@@ -4405,7 +7702,7 @@ export const proto = $root.proto = (() => {
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.Type = reader.int32();
+                        message.ClaimType = reader.int32();
                         break;
                     }
                 case 2: {
@@ -4451,10 +7748,10 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                switch (message.Type) {
+            if (message.ClaimType != null && Object.hasOwnProperty.call(message, "ClaimType"))
+                switch (message.ClaimType) {
                 default:
-                    return "Type: enum value expected";
+                    return "ClaimType: enum value expected";
                 case 0:
                 case 1:
                 case 2:
@@ -4484,24 +7781,24 @@ export const proto = $root.proto = (() => {
             if (long > $util.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
             let message = new $root.proto.ClaimContract();
-            switch (object.Type) {
+            switch (object.ClaimType) {
             default:
-                if (typeof object.Type === "number") {
-                    message.Type = object.Type;
+                if (typeof object.ClaimType === "number") {
+                    message.ClaimType = object.ClaimType;
                     break;
                 }
                 break;
             case "StakingClaim":
             case 0:
-                message.Type = 0;
+                message.ClaimType = 0;
                 break;
             case "AllowanceClaim":
             case 1:
-                message.Type = 1;
+                message.ClaimType = 1;
                 break;
             case "MarketClaim":
             case 2:
-                message.Type = 2;
+                message.ClaimType = 2;
                 break;
             }
             if (object.ID != null)
@@ -4530,7 +7827,7 @@ export const proto = $root.proto = (() => {
                 throw Error("max depth exceeded");
             let object = {};
             if (options.defaults) {
-                object.Type = options.enums === String ? "StakingClaim" : 0;
+                object.ClaimType = options.enums === String ? "StakingClaim" : 0;
                 if (options.bytes === String)
                     object.ID = "";
                 else {
@@ -4539,8 +7836,8 @@ export const proto = $root.proto = (() => {
                         object.ID = $util.newBuffer(object.ID);
                 }
             }
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                object.Type = options.enums === String ? $root.proto.ClaimContract.ClaimType[message.Type] === undefined ? message.Type : $root.proto.ClaimContract.ClaimType[message.Type] : message.Type;
+            if (message.ClaimType != null && Object.hasOwnProperty.call(message, "ClaimType"))
+                object.ClaimType = options.enums === String ? $root.proto.ClaimContract.EnumClaimType[message.ClaimType] === undefined ? message.ClaimType : $root.proto.ClaimContract.EnumClaimType[message.ClaimType] : message.ClaimType;
             if (message.ID != null && Object.hasOwnProperty.call(message, "ID"))
                 object.ID = options.bytes === String ? $util.base64.encode(message.ID, 0, message.ID.length) : options.bytes === Array ? Array.prototype.slice.call(message.ID) : message.ID;
             return object;
@@ -4573,14 +7870,14 @@ export const proto = $root.proto = (() => {
         };
 
         /**
-         * ClaimType enum.
-         * @name proto.ClaimContract.ClaimType
+         * EnumClaimType enum.
+         * @name proto.ClaimContract.EnumClaimType
          * @enum {number}
          * @property {number} StakingClaim=0 StakingClaim value
          * @property {number} AllowanceClaim=1 AllowanceClaim value
          * @property {number} MarketClaim=2 MarketClaim value
          */
-        ClaimContract.ClaimType = (function() {
+        ClaimContract.EnumClaimType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
             values[valuesById[0] = "StakingClaim"] = 0;
             values[valuesById[1] = "AllowanceClaim"] = 1;
@@ -4598,14 +7895,14 @@ export const proto = $root.proto = (() => {
          * @memberof proto
          * @interface IVoteContract
          * @property {number|null} [ProposalID] VoteContract ProposalID
-         * @property {proto.VoteContract.VoteType|null} [Type] VoteContract Type
          * @property {number|null} [Amount] VoteContract Amount
+         * @property {proto.VoteContract.EnumVoteType|null} [Type] VoteContract Type
          */
 
         /**
          * Constructs a new VoteContract.
          * @memberof proto
-         * @classdesc Represents a VoteContract.
+         * @classdesc VoteContract holds the data for a vote transaction
          * @implements IVoteContract
          * @constructor
          * @param {proto.IVoteContract=} [properties] Properties to set
@@ -4626,20 +7923,20 @@ export const proto = $root.proto = (() => {
         VoteContract.prototype.ProposalID = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
-         * VoteContract Type.
-         * @member {proto.VoteContract.VoteType} Type
-         * @memberof proto.VoteContract
-         * @instance
-         */
-        VoteContract.prototype.Type = 0;
-
-        /**
          * VoteContract Amount.
          * @member {number} Amount
          * @memberof proto.VoteContract
          * @instance
          */
         VoteContract.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * VoteContract Type.
+         * @member {proto.VoteContract.EnumVoteType} Type
+         * @memberof proto.VoteContract
+         * @instance
+         */
+        VoteContract.prototype.Type = 0;
 
         /**
          * Creates a new VoteContract instance using the specified properties.
@@ -4671,10 +7968,10 @@ export const proto = $root.proto = (() => {
                 throw Error("max depth exceeded");
             if (message.ProposalID != null && Object.hasOwnProperty.call(message, "ProposalID"))
                 writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.ProposalID);
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.Type);
             if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.Amount);
+                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.Amount);
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.Type);
             return writer;
         };
 
@@ -4720,11 +8017,11 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 case 2: {
-                        message.Type = reader.int32();
+                        message.Amount = reader.int64();
                         break;
                     }
                 case 3: {
-                        message.Amount = reader.int64();
+                        message.Type = reader.int32();
                         break;
                     }
                 default:
@@ -4769,18 +8066,17 @@ export const proto = $root.proto = (() => {
             if (message.ProposalID != null && Object.hasOwnProperty.call(message, "ProposalID"))
                 if (!$util.isInteger(message.ProposalID) && !(message.ProposalID && $util.isInteger(message.ProposalID.low) && $util.isInteger(message.ProposalID.high)))
                     return "ProposalID: integer|Long expected";
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
+                    return "Amount: integer|Long expected";
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 switch (message.Type) {
                 default:
                     return "Type: enum value expected";
                 case 0:
                 case 1:
-                case 2:
                     break;
                 }
-            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
-                    return "Amount: integer|Long expected";
             return null;
         };
 
@@ -4811,6 +8107,15 @@ export const proto = $root.proto = (() => {
                     message.ProposalID = object.ProposalID;
                 else if (typeof object.ProposalID === "object")
                     message.ProposalID = new $util.LongBits(object.ProposalID.low >>> 0, object.ProposalID.high >>> 0).toNumber(true);
+            if (object.Amount != null)
+                if ($util.Long)
+                    message.Amount = $util.Long.fromValue(object.Amount, false);
+                else if (typeof object.Amount === "string")
+                    message.Amount = parseInt(object.Amount, 10);
+                else if (typeof object.Amount === "number")
+                    message.Amount = object.Amount;
+                else if (typeof object.Amount === "object")
+                    message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
             switch (object.Type) {
             default:
                 if (typeof object.Type === "number") {
@@ -4826,20 +8131,7 @@ export const proto = $root.proto = (() => {
             case 1:
                 message.Type = 1;
                 break;
-            case "Abstain":
-            case 2:
-                message.Type = 2;
-                break;
             }
-            if (object.Amount != null)
-                if ($util.Long)
-                    message.Amount = $util.Long.fromValue(object.Amount, false);
-                else if (typeof object.Amount === "string")
-                    message.Amount = parseInt(object.Amount, 10);
-                else if (typeof object.Amount === "number")
-                    message.Amount = object.Amount;
-                else if (typeof object.Amount === "object")
-                    message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
             return message;
         };
 
@@ -4866,12 +8158,12 @@ export const proto = $root.proto = (() => {
                     object.ProposalID = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
                     object.ProposalID = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
-                object.Type = options.enums === String ? "Yes" : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
                     object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
                     object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                object.Type = options.enums === String ? "Yes" : 0;
             }
             if (message.ProposalID != null && Object.hasOwnProperty.call(message, "ProposalID"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
@@ -4880,8 +8172,6 @@ export const proto = $root.proto = (() => {
                     object.ProposalID = options.longs === String ? String(message.ProposalID) : message.ProposalID;
                 else
                     object.ProposalID = options.longs === String ? $util.Long.prototype.toString.call(message.ProposalID) : options.longs === Number ? new $util.LongBits(message.ProposalID.low >>> 0, message.ProposalID.high >>> 0).toNumber(true) : message.ProposalID;
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                object.Type = options.enums === String ? $root.proto.VoteContract.VoteType[message.Type] === undefined ? message.Type : $root.proto.VoteContract.VoteType[message.Type] : message.Type;
             if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
                     object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
@@ -4889,6 +8179,8 @@ export const proto = $root.proto = (() => {
                     object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
                     object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
+            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
+                object.Type = options.enums === String ? $root.proto.VoteContract.EnumVoteType[message.Type] === undefined ? message.Type : $root.proto.VoteContract.EnumVoteType[message.Type] : message.Type;
             return object;
         };
 
@@ -4919,53 +8211,42 @@ export const proto = $root.proto = (() => {
         };
 
         /**
-         * VoteType enum.
-         * @name proto.VoteContract.VoteType
+         * EnumVoteType enum.
+         * @name proto.VoteContract.EnumVoteType
          * @enum {number}
          * @property {number} Yes=0 Yes value
          * @property {number} No=1 No value
-         * @property {number} Abstain=2 Abstain value
          */
-        VoteContract.VoteType = (function() {
+        VoteContract.EnumVoteType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
             values[valuesById[0] = "Yes"] = 0;
             values[valuesById[1] = "No"] = 1;
-            values[valuesById[2] = "Abstain"] = 2;
             return values;
         })();
 
         return VoteContract;
     })();
 
-    proto.CreateAssetContract = (function() {
+    proto.CallValue = (function() {
 
         /**
-         * Properties of a CreateAssetContract.
+         * Properties of a CallValue.
          * @memberof proto
-         * @interface ICreateAssetContract
-         * @property {proto.CreateAssetContract.AssetType|null} [Type] CreateAssetContract Type
-         * @property {string|null} [Name] CreateAssetContract Name
-         * @property {string|null} [Ticker] CreateAssetContract Ticker
-         * @property {Uint8Array|null} [OwnerAddress] CreateAssetContract OwnerAddress
-         * @property {string|null} [Logo] CreateAssetContract Logo
-         * @property {Array.<string>|null} [URIs] CreateAssetContract URIs
-         * @property {number|null} [Precision] CreateAssetContract Precision
-         * @property {number|null} [InitialSupply] CreateAssetContract InitialSupply
-         * @property {number|null} [MaxSupply] CreateAssetContract MaxSupply
-         * @property {proto.CreateAssetContract.IAssetProperties|null} [Properties] CreateAssetContract Properties
-         * @property {proto.CreateAssetContract.IAssetAttributes|null} [Attributes] CreateAssetContract Attributes
+         * @interface ICallValue
+         * @property {number|null} [Amount] CallValue Amount
+         * @property {number|null} [KDARoyalties] CallValue KDARoyalties
+         * @property {number|null} [KLVRoyalties] CallValue KLVRoyalties
          */
 
         /**
-         * Constructs a new CreateAssetContract.
+         * Constructs a new CallValue.
          * @memberof proto
-         * @classdesc Represents a CreateAssetContract.
-         * @implements ICreateAssetContract
+         * @classdesc Represents a CallValue.
+         * @implements ICallValue
          * @constructor
-         * @param {proto.ICreateAssetContract=} [properties] Properties to set
+         * @param {proto.ICallValue=} [properties] Properties to set
          */
-        function CreateAssetContract(properties) {
-            this.URIs = [];
+        function CallValue(properties) {
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null && keys[i] !== "__proto__")
@@ -4973,228 +8254,113 @@ export const proto = $root.proto = (() => {
         }
 
         /**
-         * CreateAssetContract Type.
-         * @member {proto.CreateAssetContract.AssetType} Type
-         * @memberof proto.CreateAssetContract
+         * CallValue Amount.
+         * @member {number} Amount
+         * @memberof proto.CallValue
          * @instance
          */
-        CreateAssetContract.prototype.Type = 0;
+        CallValue.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
-         * CreateAssetContract Name.
-         * @member {string} Name
-         * @memberof proto.CreateAssetContract
+         * CallValue KDARoyalties.
+         * @member {number} KDARoyalties
+         * @memberof proto.CallValue
          * @instance
          */
-        CreateAssetContract.prototype.Name = "";
+        CallValue.prototype.KDARoyalties = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
-         * CreateAssetContract Ticker.
-         * @member {string} Ticker
-         * @memberof proto.CreateAssetContract
+         * CallValue KLVRoyalties.
+         * @member {number} KLVRoyalties
+         * @memberof proto.CallValue
          * @instance
          */
-        CreateAssetContract.prototype.Ticker = "";
+        CallValue.prototype.KLVRoyalties = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
-         * CreateAssetContract OwnerAddress.
-         * @member {Uint8Array} OwnerAddress
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.OwnerAddress = $util.newBuffer([]);
-
-        /**
-         * CreateAssetContract Logo.
-         * @member {string} Logo
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.Logo = "";
-
-        /**
-         * CreateAssetContract URIs.
-         * @member {Array.<string>} URIs
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.URIs = $util.emptyArray;
-
-        /**
-         * CreateAssetContract Precision.
-         * @member {number} Precision
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.Precision = 0;
-
-        /**
-         * CreateAssetContract InitialSupply.
-         * @member {number} InitialSupply
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.InitialSupply = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * CreateAssetContract MaxSupply.
-         * @member {number} MaxSupply
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.MaxSupply = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * CreateAssetContract Properties.
-         * @member {proto.CreateAssetContract.IAssetProperties|null|undefined} Properties
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.Properties = null;
-
-        /**
-         * CreateAssetContract Attributes.
-         * @member {proto.CreateAssetContract.IAssetAttributes|null|undefined} Attributes
-         * @memberof proto.CreateAssetContract
-         * @instance
-         */
-        CreateAssetContract.prototype.Attributes = null;
-
-        /**
-         * Creates a new CreateAssetContract instance using the specified properties.
+         * Creates a new CallValue instance using the specified properties.
          * @function create
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
-         * @param {proto.ICreateAssetContract=} [properties] Properties to set
-         * @returns {proto.CreateAssetContract} CreateAssetContract instance
+         * @param {proto.ICallValue=} [properties] Properties to set
+         * @returns {proto.CallValue} CallValue instance
          */
-        CreateAssetContract.create = function create(properties) {
-            return new CreateAssetContract(properties);
+        CallValue.create = function create(properties) {
+            return new CallValue(properties);
         };
 
         /**
-         * Encodes the specified CreateAssetContract message. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
+         * Encodes the specified CallValue message. Does not implicitly {@link proto.CallValue.verify|verify} messages.
          * @function encode
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
-         * @param {proto.ICreateAssetContract} message CreateAssetContract message or plain object to encode
+         * @param {proto.ICallValue} message CallValue message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        CreateAssetContract.encode = function encode(message, writer, q) {
+        CallValue.encode = function encode(message, writer, q) {
             if (!writer)
                 writer = $Writer.create();
             if (q === undefined)
                 q = 0;
             if (q > $util.recursionLimit)
                 throw Error("max depth exceeded");
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
-            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.Name);
-            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
-                writer.uint32(/* id 3, wireType 2 =*/26).string(message.Ticker);
-            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
-                writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.OwnerAddress);
-            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
-                writer.uint32(/* id 5, wireType 2 =*/42).string(message.Logo);
-            if (message.URIs != null && message.URIs.length)
-                for (let i = 0; i < message.URIs.length; ++i)
-                    writer.uint32(/* id 6, wireType 2 =*/50).string(message.URIs[i]);
-            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
-                writer.uint32(/* id 7, wireType 0 =*/56).uint32(message.Precision);
-            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
-                writer.uint32(/* id 8, wireType 0 =*/64).int64(message.InitialSupply);
-            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
-                writer.uint32(/* id 9, wireType 0 =*/72).int64(message.MaxSupply);
-            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties"))
-                $root.proto.CreateAssetContract.AssetProperties.encode(message.Properties, writer.uint32(/* id 10, wireType 2 =*/82).fork(), q + 1).ldelim();
-            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes"))
-                $root.proto.CreateAssetContract.AssetAttributes.encode(message.Attributes, writer.uint32(/* id 11, wireType 2 =*/90).fork(), q + 1).ldelim();
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int64(message.Amount);
+            if (message.KDARoyalties != null && Object.hasOwnProperty.call(message, "KDARoyalties"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.KDARoyalties);
+            if (message.KLVRoyalties != null && Object.hasOwnProperty.call(message, "KLVRoyalties"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.KLVRoyalties);
             return writer;
         };
 
         /**
-         * Encodes the specified CreateAssetContract message, length delimited. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
+         * Encodes the specified CallValue message, length delimited. Does not implicitly {@link proto.CallValue.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
-         * @param {proto.ICreateAssetContract} message CreateAssetContract message or plain object to encode
+         * @param {proto.ICallValue} message CallValue message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        CreateAssetContract.encodeDelimited = function encodeDelimited(message, writer) {
+        CallValue.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
         };
 
         /**
-         * Decodes a CreateAssetContract message from the specified reader or buffer.
+         * Decodes a CallValue message from the specified reader or buffer.
          * @function decode
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {proto.CreateAssetContract} CreateAssetContract
+         * @returns {proto.CallValue} CallValue
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        CreateAssetContract.decode = function decode(reader, length, error, long) {
+        CallValue.decode = function decode(reader, length, error, long) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
             if (long === undefined)
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CallValue();
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 if (tag === error)
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.Type = reader.int32();
+                        message.Amount = reader.int64();
                         break;
                     }
                 case 2: {
-                        message.Name = reader.string();
+                        message.KDARoyalties = reader.int64();
                         break;
                     }
                 case 3: {
-                        message.Ticker = reader.string();
-                        break;
-                    }
-                case 4: {
-                        message.OwnerAddress = reader.bytes();
-                        break;
-                    }
-                case 5: {
-                        message.Logo = reader.string();
-                        break;
-                    }
-                case 6: {
-                        if (!(message.URIs && message.URIs.length))
-                            message.URIs = [];
-                        message.URIs.push(reader.string());
-                        break;
-                    }
-                case 7: {
-                        message.Precision = reader.uint32();
-                        break;
-                    }
-                case 8: {
-                        message.InitialSupply = reader.int64();
-                        break;
-                    }
-                case 9: {
-                        message.MaxSupply = reader.int64();
-                        break;
-                    }
-                case 10: {
-                        message.Properties = $root.proto.CreateAssetContract.AssetProperties.decode(reader, reader.uint32(), undefined, long + 1);
-                        break;
-                    }
-                case 11: {
-                        message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.decode(reader, reader.uint32(), undefined, long + 1);
+                        message.KLVRoyalties = reader.int64();
                         break;
                     }
                 default:
@@ -5206,185 +8372,106 @@ export const proto = $root.proto = (() => {
         };
 
         /**
-         * Decodes a CreateAssetContract message from the specified reader or buffer, length delimited.
+         * Decodes a CallValue message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {proto.CreateAssetContract} CreateAssetContract
+         * @returns {proto.CallValue} CallValue
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        CreateAssetContract.decodeDelimited = function decodeDelimited(reader) {
+        CallValue.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
                 reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
-         * Verifies a CreateAssetContract message.
+         * Verifies a CallValue message.
          * @function verify
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        CreateAssetContract.verify = function verify(message, long) {
+        CallValue.verify = function verify(message, long) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
                 return "maximum nesting depth exceeded";
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                switch (message.Type) {
-                default:
-                    return "Type: enum value expected";
-                case 0:
-                case 1:
-                case 2:
-                    break;
-                }
-            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
-                if (!$util.isString(message.Name))
-                    return "Name: string expected";
-            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
-                if (!$util.isString(message.Ticker))
-                    return "Ticker: string expected";
-            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
-                if (!(message.OwnerAddress && typeof message.OwnerAddress.length === "number" || $util.isString(message.OwnerAddress)))
-                    return "OwnerAddress: buffer expected";
-            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
-                if (!$util.isString(message.Logo))
-                    return "Logo: string expected";
-            if (message.URIs != null && Object.hasOwnProperty.call(message, "URIs")) {
-                if (!Array.isArray(message.URIs))
-                    return "URIs: array expected";
-                for (let i = 0; i < message.URIs.length; ++i)
-                    if (!$util.isString(message.URIs[i]))
-                        return "URIs: string[] expected";
-            }
-            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
-                if (!$util.isInteger(message.Precision))
-                    return "Precision: integer expected";
-            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
-                if (!$util.isInteger(message.InitialSupply) && !(message.InitialSupply && $util.isInteger(message.InitialSupply.low) && $util.isInteger(message.InitialSupply.high)))
-                    return "InitialSupply: integer|Long expected";
-            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
-                if (!$util.isInteger(message.MaxSupply) && !(message.MaxSupply && $util.isInteger(message.MaxSupply.low) && $util.isInteger(message.MaxSupply.high)))
-                    return "MaxSupply: integer|Long expected";
-            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties")) {
-                let error = $root.proto.CreateAssetContract.AssetProperties.verify(message.Properties, long + 1);
-                if (error)
-                    return "Properties." + error;
-            }
-            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes")) {
-                let error = $root.proto.CreateAssetContract.AssetAttributes.verify(message.Attributes, long + 1);
-                if (error)
-                    return "Attributes." + error;
-            }
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
+                if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
+                    return "Amount: integer|Long expected";
+            if (message.KDARoyalties != null && Object.hasOwnProperty.call(message, "KDARoyalties"))
+                if (!$util.isInteger(message.KDARoyalties) && !(message.KDARoyalties && $util.isInteger(message.KDARoyalties.low) && $util.isInteger(message.KDARoyalties.high)))
+                    return "KDARoyalties: integer|Long expected";
+            if (message.KLVRoyalties != null && Object.hasOwnProperty.call(message, "KLVRoyalties"))
+                if (!$util.isInteger(message.KLVRoyalties) && !(message.KLVRoyalties && $util.isInteger(message.KLVRoyalties.low) && $util.isInteger(message.KLVRoyalties.high)))
+                    return "KLVRoyalties: integer|Long expected";
             return null;
         };
 
         /**
-         * Creates a CreateAssetContract message from a plain object. Also converts values to their respective internal types.
+         * Creates a CallValue message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {proto.CreateAssetContract} CreateAssetContract
+         * @returns {proto.CallValue} CallValue
          */
-        CreateAssetContract.fromObject = function fromObject(object, long) {
-            if (object instanceof $root.proto.CreateAssetContract)
+        CallValue.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.proto.CallValue)
                 return object;
             if (!$util.isObject(object))
-                throw TypeError(".proto.CreateAssetContract: object expected");
+                throw TypeError(".proto.CallValue: object expected");
             if (long === undefined)
                 long = 0;
             if (long > $util.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            let message = new $root.proto.CreateAssetContract();
-            switch (object.Type) {
-            default:
-                if (typeof object.Type === "number") {
-                    message.Type = object.Type;
-                    break;
-                }
-                break;
-            case "Fungible":
-            case 0:
-                message.Type = 0;
-                break;
-            case "NonFungible":
-            case 1:
-                message.Type = 1;
-                break;
-            case "SemiFungible":
-            case 2:
-                message.Type = 2;
-                break;
-            }
-            if (object.Name != null)
-                message.Name = String(object.Name);
-            if (object.Ticker != null)
-                message.Ticker = String(object.Ticker);
-            if (object.OwnerAddress != null)
-                if (typeof object.OwnerAddress === "string")
-                    $util.base64.decode(object.OwnerAddress, message.OwnerAddress = $util.newBuffer($util.base64.length(object.OwnerAddress)), 0);
-                else if (object.OwnerAddress.length >= 0)
-                    message.OwnerAddress = object.OwnerAddress;
-            if (object.Logo != null)
-                message.Logo = String(object.Logo);
-            if (object.URIs) {
-                if (!Array.isArray(object.URIs))
-                    throw TypeError(".proto.CreateAssetContract.URIs: array expected");
-                message.URIs = [];
-                for (let i = 0; i < object.URIs.length; ++i)
-                    message.URIs[i] = String(object.URIs[i]);
-            }
-            if (object.Precision != null)
-                message.Precision = object.Precision >>> 0;
-            if (object.InitialSupply != null)
+            let message = new $root.proto.CallValue();
+            if (object.Amount != null)
                 if ($util.Long)
-                    message.InitialSupply = $util.Long.fromValue(object.InitialSupply, false);
-                else if (typeof object.InitialSupply === "string")
-                    message.InitialSupply = parseInt(object.InitialSupply, 10);
-                else if (typeof object.InitialSupply === "number")
-                    message.InitialSupply = object.InitialSupply;
-                else if (typeof object.InitialSupply === "object")
-                    message.InitialSupply = new $util.LongBits(object.InitialSupply.low >>> 0, object.InitialSupply.high >>> 0).toNumber();
-            if (object.MaxSupply != null)
+                    message.Amount = $util.Long.fromValue(object.Amount, false);
+                else if (typeof object.Amount === "string")
+                    message.Amount = parseInt(object.Amount, 10);
+                else if (typeof object.Amount === "number")
+                    message.Amount = object.Amount;
+                else if (typeof object.Amount === "object")
+                    message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
+            if (object.KDARoyalties != null)
                 if ($util.Long)
-                    message.MaxSupply = $util.Long.fromValue(object.MaxSupply, false);
-                else if (typeof object.MaxSupply === "string")
-                    message.MaxSupply = parseInt(object.MaxSupply, 10);
-                else if (typeof object.MaxSupply === "number")
-                    message.MaxSupply = object.MaxSupply;
-                else if (typeof object.MaxSupply === "object")
-                    message.MaxSupply = new $util.LongBits(object.MaxSupply.low >>> 0, object.MaxSupply.high >>> 0).toNumber();
-            if (object.Properties != null) {
-                if (!$util.isObject(object.Properties))
-                    throw TypeError(".proto.CreateAssetContract.Properties: object expected");
-                message.Properties = $root.proto.CreateAssetContract.AssetProperties.fromObject(object.Properties, long + 1);
-            }
-            if (object.Attributes != null) {
-                if (!$util.isObject(object.Attributes))
-                    throw TypeError(".proto.CreateAssetContract.Attributes: object expected");
-                message.Attributes = $root.proto.CreateAssetContract.AssetAttributes.fromObject(object.Attributes, long + 1);
-            }
+                    message.KDARoyalties = $util.Long.fromValue(object.KDARoyalties, false);
+                else if (typeof object.KDARoyalties === "string")
+                    message.KDARoyalties = parseInt(object.KDARoyalties, 10);
+                else if (typeof object.KDARoyalties === "number")
+                    message.KDARoyalties = object.KDARoyalties;
+                else if (typeof object.KDARoyalties === "object")
+                    message.KDARoyalties = new $util.LongBits(object.KDARoyalties.low >>> 0, object.KDARoyalties.high >>> 0).toNumber();
+            if (object.KLVRoyalties != null)
+                if ($util.Long)
+                    message.KLVRoyalties = $util.Long.fromValue(object.KLVRoyalties, false);
+                else if (typeof object.KLVRoyalties === "string")
+                    message.KLVRoyalties = parseInt(object.KLVRoyalties, 10);
+                else if (typeof object.KLVRoyalties === "number")
+                    message.KLVRoyalties = object.KLVRoyalties;
+                else if (typeof object.KLVRoyalties === "object")
+                    message.KLVRoyalties = new $util.LongBits(object.KLVRoyalties.low >>> 0, object.KLVRoyalties.high >>> 0).toNumber();
             return message;
         };
 
         /**
-         * Creates a plain object from a CreateAssetContract message. Also converts values to other types if specified.
+         * Creates a plain object from a CallValue message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
-         * @param {proto.CreateAssetContract} message CreateAssetContract
+         * @param {proto.CallValue} message CallValue
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        CreateAssetContract.toObject = function toObject(message, options, q) {
+        CallValue.toObject = function toObject(message, options, q) {
             if (!options)
                 options = {};
             if (q === undefined)
@@ -5392,732 +8479,74 @@ export const proto = $root.proto = (() => {
             if (q > $util.recursionLimit)
                 throw Error("max depth exceeded");
             let object = {};
-            if (options.arrays || options.defaults)
-                object.URIs = [];
             if (options.defaults) {
-                object.Type = options.enums === String ? "Fungible" : 0;
-                object.Name = "";
-                object.Ticker = "";
-                if (options.bytes === String)
-                    object.OwnerAddress = "";
-                else {
-                    object.OwnerAddress = [];
-                    if (options.bytes !== Array)
-                        object.OwnerAddress = $util.newBuffer(object.OwnerAddress);
-                }
-                object.Logo = "";
-                object.Precision = 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.InitialSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                    object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.InitialSupply = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                    object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, false);
-                    object.MaxSupply = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                    object.KDARoyalties = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                 } else
-                    object.MaxSupply = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
-                object.Properties = null;
-                object.Attributes = null;
+                    object.KDARoyalties = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.KLVRoyalties = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
+                } else
+                    object.KLVRoyalties = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
             }
-            if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
-                object.Type = options.enums === String ? $root.proto.CreateAssetContract.AssetType[message.Type] === undefined ? message.Type : $root.proto.CreateAssetContract.AssetType[message.Type] : message.Type;
-            if (message.Name != null && Object.hasOwnProperty.call(message, "Name"))
-                object.Name = message.Name;
-            if (message.Ticker != null && Object.hasOwnProperty.call(message, "Ticker"))
-                object.Ticker = message.Ticker;
-            if (message.OwnerAddress != null && Object.hasOwnProperty.call(message, "OwnerAddress"))
-                object.OwnerAddress = options.bytes === String ? $util.base64.encode(message.OwnerAddress, 0, message.OwnerAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.OwnerAddress) : message.OwnerAddress;
-            if (message.Logo != null && Object.hasOwnProperty.call(message, "Logo"))
-                object.Logo = message.Logo;
-            if (message.URIs && message.URIs.length) {
-                object.URIs = [];
-                for (let j = 0; j < message.URIs.length; ++j)
-                    object.URIs[j] = message.URIs[j];
-            }
-            if (message.Precision != null && Object.hasOwnProperty.call(message, "Precision"))
-                object.Precision = message.Precision;
-            if (message.InitialSupply != null && Object.hasOwnProperty.call(message, "InitialSupply"))
+            if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
-                    object.InitialSupply = typeof message.InitialSupply === "number" ? BigInt(message.InitialSupply) : $util.Long.fromBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0, false).toBigInt();
-                else if (typeof message.InitialSupply === "number")
-                    object.InitialSupply = options.longs === String ? String(message.InitialSupply) : message.InitialSupply;
+                    object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
+                else if (typeof message.Amount === "number")
+                    object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
                 else
-                    object.InitialSupply = options.longs === String ? $util.Long.prototype.toString.call(message.InitialSupply) : options.longs === Number ? new $util.LongBits(message.InitialSupply.low >>> 0, message.InitialSupply.high >>> 0).toNumber() : message.InitialSupply;
-            if (message.MaxSupply != null && Object.hasOwnProperty.call(message, "MaxSupply"))
+                    object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
+            if (message.KDARoyalties != null && Object.hasOwnProperty.call(message, "KDARoyalties"))
                 if (typeof BigInt !== "undefined" && options.longs === BigInt)
-                    object.MaxSupply = typeof message.MaxSupply === "number" ? BigInt(message.MaxSupply) : $util.Long.fromBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0, false).toBigInt();
-                else if (typeof message.MaxSupply === "number")
-                    object.MaxSupply = options.longs === String ? String(message.MaxSupply) : message.MaxSupply;
+                    object.KDARoyalties = typeof message.KDARoyalties === "number" ? BigInt(message.KDARoyalties) : $util.Long.fromBits(message.KDARoyalties.low >>> 0, message.KDARoyalties.high >>> 0, false).toBigInt();
+                else if (typeof message.KDARoyalties === "number")
+                    object.KDARoyalties = options.longs === String ? String(message.KDARoyalties) : message.KDARoyalties;
                 else
-                    object.MaxSupply = options.longs === String ? $util.Long.prototype.toString.call(message.MaxSupply) : options.longs === Number ? new $util.LongBits(message.MaxSupply.low >>> 0, message.MaxSupply.high >>> 0).toNumber() : message.MaxSupply;
-            if (message.Properties != null && Object.hasOwnProperty.call(message, "Properties"))
-                object.Properties = $root.proto.CreateAssetContract.AssetProperties.toObject(message.Properties, options, q + 1);
-            if (message.Attributes != null && Object.hasOwnProperty.call(message, "Attributes"))
-                object.Attributes = $root.proto.CreateAssetContract.AssetAttributes.toObject(message.Attributes, options, q + 1);
+                    object.KDARoyalties = options.longs === String ? $util.Long.prototype.toString.call(message.KDARoyalties) : options.longs === Number ? new $util.LongBits(message.KDARoyalties.low >>> 0, message.KDARoyalties.high >>> 0).toNumber() : message.KDARoyalties;
+            if (message.KLVRoyalties != null && Object.hasOwnProperty.call(message, "KLVRoyalties"))
+                if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                    object.KLVRoyalties = typeof message.KLVRoyalties === "number" ? BigInt(message.KLVRoyalties) : $util.Long.fromBits(message.KLVRoyalties.low >>> 0, message.KLVRoyalties.high >>> 0, false).toBigInt();
+                else if (typeof message.KLVRoyalties === "number")
+                    object.KLVRoyalties = options.longs === String ? String(message.KLVRoyalties) : message.KLVRoyalties;
+                else
+                    object.KLVRoyalties = options.longs === String ? $util.Long.prototype.toString.call(message.KLVRoyalties) : options.longs === Number ? new $util.LongBits(message.KLVRoyalties.low >>> 0, message.KLVRoyalties.high >>> 0).toNumber() : message.KLVRoyalties;
             return object;
         };
 
         /**
-         * Converts this CreateAssetContract to JSON.
+         * Converts this CallValue to JSON.
          * @function toJSON
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
-        CreateAssetContract.prototype.toJSON = function toJSON() {
+        CallValue.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
-         * Gets the default type url for CreateAssetContract
+         * Gets the default type url for CallValue
          * @function getTypeUrl
-         * @memberof proto.CreateAssetContract
+         * @memberof proto.CallValue
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        CreateAssetContract.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+        CallValue.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/proto.CreateAssetContract";
+            return typeUrlPrefix + "/proto.CallValue";
         };
 
-        /**
-         * AssetType enum.
-         * @name proto.CreateAssetContract.AssetType
-         * @enum {number}
-         * @property {number} Fungible=0 Fungible value
-         * @property {number} NonFungible=1 NonFungible value
-         * @property {number} SemiFungible=2 SemiFungible value
-         */
-        CreateAssetContract.AssetType = (function() {
-            const valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[0] = "Fungible"] = 0;
-            values[valuesById[1] = "NonFungible"] = 1;
-            values[valuesById[2] = "SemiFungible"] = 2;
-            return values;
-        })();
-
-        CreateAssetContract.AssetProperties = (function() {
-
-            /**
-             * Properties of an AssetProperties.
-             * @memberof proto.CreateAssetContract
-             * @interface IAssetProperties
-             * @property {boolean|null} [CanFreeze] AssetProperties CanFreeze
-             * @property {boolean|null} [CanWipe] AssetProperties CanWipe
-             * @property {boolean|null} [CanPause] AssetProperties CanPause
-             * @property {boolean|null} [CanMint] AssetProperties CanMint
-             * @property {boolean|null} [CanBurn] AssetProperties CanBurn
-             * @property {boolean|null} [CanChangeOwner] AssetProperties CanChangeOwner
-             * @property {boolean|null} [CanAddRoles] AssetProperties CanAddRoles
-             */
-
-            /**
-             * Constructs a new AssetProperties.
-             * @memberof proto.CreateAssetContract
-             * @classdesc Represents an AssetProperties.
-             * @implements IAssetProperties
-             * @constructor
-             * @param {proto.CreateAssetContract.IAssetProperties=} [properties] Properties to set
-             */
-            function AssetProperties(properties) {
-                if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
-                            this[keys[i]] = properties[keys[i]];
-            }
-
-            /**
-             * AssetProperties CanFreeze.
-             * @member {boolean} CanFreeze
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             */
-            AssetProperties.prototype.CanFreeze = false;
-
-            /**
-             * AssetProperties CanWipe.
-             * @member {boolean} CanWipe
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             */
-            AssetProperties.prototype.CanWipe = false;
-
-            /**
-             * AssetProperties CanPause.
-             * @member {boolean} CanPause
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             */
-            AssetProperties.prototype.CanPause = false;
-
-            /**
-             * AssetProperties CanMint.
-             * @member {boolean} CanMint
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             */
-            AssetProperties.prototype.CanMint = false;
-
-            /**
-             * AssetProperties CanBurn.
-             * @member {boolean} CanBurn
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             */
-            AssetProperties.prototype.CanBurn = false;
-
-            /**
-             * AssetProperties CanChangeOwner.
-             * @member {boolean} CanChangeOwner
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             */
-            AssetProperties.prototype.CanChangeOwner = false;
-
-            /**
-             * AssetProperties CanAddRoles.
-             * @member {boolean} CanAddRoles
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             */
-            AssetProperties.prototype.CanAddRoles = false;
-
-            /**
-             * Creates a new AssetProperties instance using the specified properties.
-             * @function create
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {proto.CreateAssetContract.IAssetProperties=} [properties] Properties to set
-             * @returns {proto.CreateAssetContract.AssetProperties} AssetProperties instance
-             */
-            AssetProperties.create = function create(properties) {
-                return new AssetProperties(properties);
-            };
-
-            /**
-             * Encodes the specified AssetProperties message. Does not implicitly {@link proto.CreateAssetContract.AssetProperties.verify|verify} messages.
-             * @function encode
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {proto.CreateAssetContract.IAssetProperties} message AssetProperties message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AssetProperties.encode = function encode(message, writer, q) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).bool(message.CanFreeze);
-                if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).bool(message.CanWipe);
-                if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
-                    writer.uint32(/* id 3, wireType 0 =*/24).bool(message.CanPause);
-                if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
-                    writer.uint32(/* id 4, wireType 0 =*/32).bool(message.CanMint);
-                if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
-                    writer.uint32(/* id 5, wireType 0 =*/40).bool(message.CanBurn);
-                if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
-                    writer.uint32(/* id 6, wireType 0 =*/48).bool(message.CanChangeOwner);
-                if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
-                    writer.uint32(/* id 7, wireType 0 =*/56).bool(message.CanAddRoles);
-                return writer;
-            };
-
-            /**
-             * Encodes the specified AssetProperties message, length delimited. Does not implicitly {@link proto.CreateAssetContract.AssetProperties.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {proto.CreateAssetContract.IAssetProperties} message AssetProperties message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AssetProperties.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
-            };
-
-            /**
-             * Decodes an AssetProperties message from the specified reader or buffer.
-             * @function decode
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {proto.CreateAssetContract.AssetProperties} AssetProperties
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AssetProperties.decode = function decode(reader, length, error, long) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract.AssetProperties();
-                while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.CanFreeze = reader.bool();
-                            break;
-                        }
-                    case 2: {
-                            message.CanWipe = reader.bool();
-                            break;
-                        }
-                    case 3: {
-                            message.CanPause = reader.bool();
-                            break;
-                        }
-                    case 4: {
-                            message.CanMint = reader.bool();
-                            break;
-                        }
-                    case 5: {
-                            message.CanBurn = reader.bool();
-                            break;
-                        }
-                    case 6: {
-                            message.CanChangeOwner = reader.bool();
-                            break;
-                        }
-                    case 7: {
-                            message.CanAddRoles = reader.bool();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
-                        break;
-                    }
-                }
-                return message;
-            };
-
-            /**
-             * Decodes an AssetProperties message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {proto.CreateAssetContract.AssetProperties} AssetProperties
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AssetProperties.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-
-            /**
-             * Verifies an AssetProperties message.
-             * @function verify
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            AssetProperties.verify = function verify(message, long) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
-                    if (typeof message.CanFreeze !== "boolean")
-                        return "CanFreeze: boolean expected";
-                if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
-                    if (typeof message.CanWipe !== "boolean")
-                        return "CanWipe: boolean expected";
-                if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
-                    if (typeof message.CanPause !== "boolean")
-                        return "CanPause: boolean expected";
-                if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
-                    if (typeof message.CanMint !== "boolean")
-                        return "CanMint: boolean expected";
-                if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
-                    if (typeof message.CanBurn !== "boolean")
-                        return "CanBurn: boolean expected";
-                if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
-                    if (typeof message.CanChangeOwner !== "boolean")
-                        return "CanChangeOwner: boolean expected";
-                if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
-                    if (typeof message.CanAddRoles !== "boolean")
-                        return "CanAddRoles: boolean expected";
-                return null;
-            };
-
-            /**
-             * Creates an AssetProperties message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {proto.CreateAssetContract.AssetProperties} AssetProperties
-             */
-            AssetProperties.fromObject = function fromObject(object, long) {
-                if (object instanceof $root.proto.CreateAssetContract.AssetProperties)
-                    return object;
-                if (!$util.isObject(object))
-                    throw TypeError(".proto.CreateAssetContract.AssetProperties: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let message = new $root.proto.CreateAssetContract.AssetProperties();
-                if (object.CanFreeze != null)
-                    message.CanFreeze = Boolean(object.CanFreeze);
-                if (object.CanWipe != null)
-                    message.CanWipe = Boolean(object.CanWipe);
-                if (object.CanPause != null)
-                    message.CanPause = Boolean(object.CanPause);
-                if (object.CanMint != null)
-                    message.CanMint = Boolean(object.CanMint);
-                if (object.CanBurn != null)
-                    message.CanBurn = Boolean(object.CanBurn);
-                if (object.CanChangeOwner != null)
-                    message.CanChangeOwner = Boolean(object.CanChangeOwner);
-                if (object.CanAddRoles != null)
-                    message.CanAddRoles = Boolean(object.CanAddRoles);
-                return message;
-            };
-
-            /**
-             * Creates a plain object from an AssetProperties message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {proto.CreateAssetContract.AssetProperties} message AssetProperties
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            AssetProperties.toObject = function toObject(message, options, q) {
-                if (!options)
-                    options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                let object = {};
-                if (options.defaults) {
-                    object.CanFreeze = false;
-                    object.CanWipe = false;
-                    object.CanPause = false;
-                    object.CanMint = false;
-                    object.CanBurn = false;
-                    object.CanChangeOwner = false;
-                    object.CanAddRoles = false;
-                }
-                if (message.CanFreeze != null && Object.hasOwnProperty.call(message, "CanFreeze"))
-                    object.CanFreeze = message.CanFreeze;
-                if (message.CanWipe != null && Object.hasOwnProperty.call(message, "CanWipe"))
-                    object.CanWipe = message.CanWipe;
-                if (message.CanPause != null && Object.hasOwnProperty.call(message, "CanPause"))
-                    object.CanPause = message.CanPause;
-                if (message.CanMint != null && Object.hasOwnProperty.call(message, "CanMint"))
-                    object.CanMint = message.CanMint;
-                if (message.CanBurn != null && Object.hasOwnProperty.call(message, "CanBurn"))
-                    object.CanBurn = message.CanBurn;
-                if (message.CanChangeOwner != null && Object.hasOwnProperty.call(message, "CanChangeOwner"))
-                    object.CanChangeOwner = message.CanChangeOwner;
-                if (message.CanAddRoles != null && Object.hasOwnProperty.call(message, "CanAddRoles"))
-                    object.CanAddRoles = message.CanAddRoles;
-                return object;
-            };
-
-            /**
-             * Converts this AssetProperties to JSON.
-             * @function toJSON
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            AssetProperties.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-
-            /**
-             * Gets the default type url for AssetProperties
-             * @function getTypeUrl
-             * @memberof proto.CreateAssetContract.AssetProperties
-             * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
-             */
-            AssetProperties.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/proto.CreateAssetContract.AssetProperties";
-            };
-
-            return AssetProperties;
-        })();
-
-        CreateAssetContract.AssetAttributes = (function() {
-
-            /**
-             * Properties of an AssetAttributes.
-             * @memberof proto.CreateAssetContract
-             * @interface IAssetAttributes
-             * @property {boolean|null} [IsPaused] AssetAttributes IsPaused
-             * @property {boolean|null} [IsNFTMintStopped] AssetAttributes IsNFTMintStopped
-             */
-
-            /**
-             * Constructs a new AssetAttributes.
-             * @memberof proto.CreateAssetContract
-             * @classdesc Represents an AssetAttributes.
-             * @implements IAssetAttributes
-             * @constructor
-             * @param {proto.CreateAssetContract.IAssetAttributes=} [properties] Properties to set
-             */
-            function AssetAttributes(properties) {
-                if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
-                            this[keys[i]] = properties[keys[i]];
-            }
-
-            /**
-             * AssetAttributes IsPaused.
-             * @member {boolean} IsPaused
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @instance
-             */
-            AssetAttributes.prototype.IsPaused = false;
-
-            /**
-             * AssetAttributes IsNFTMintStopped.
-             * @member {boolean} IsNFTMintStopped
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @instance
-             */
-            AssetAttributes.prototype.IsNFTMintStopped = false;
-
-            /**
-             * Creates a new AssetAttributes instance using the specified properties.
-             * @function create
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {proto.CreateAssetContract.IAssetAttributes=} [properties] Properties to set
-             * @returns {proto.CreateAssetContract.AssetAttributes} AssetAttributes instance
-             */
-            AssetAttributes.create = function create(properties) {
-                return new AssetAttributes(properties);
-            };
-
-            /**
-             * Encodes the specified AssetAttributes message. Does not implicitly {@link proto.CreateAssetContract.AssetAttributes.verify|verify} messages.
-             * @function encode
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {proto.CreateAssetContract.IAssetAttributes} message AssetAttributes message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AssetAttributes.encode = function encode(message, writer, q) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).bool(message.IsPaused);
-                if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).bool(message.IsNFTMintStopped);
-                return writer;
-            };
-
-            /**
-             * Encodes the specified AssetAttributes message, length delimited. Does not implicitly {@link proto.CreateAssetContract.AssetAttributes.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {proto.CreateAssetContract.IAssetAttributes} message AssetAttributes message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AssetAttributes.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
-            };
-
-            /**
-             * Decodes an AssetAttributes message from the specified reader or buffer.
-             * @function decode
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {proto.CreateAssetContract.AssetAttributes} AssetAttributes
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AssetAttributes.decode = function decode(reader, length, error, long) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.CreateAssetContract.AssetAttributes();
-                while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.IsPaused = reader.bool();
-                            break;
-                        }
-                    case 2: {
-                            message.IsNFTMintStopped = reader.bool();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
-                        break;
-                    }
-                }
-                return message;
-            };
-
-            /**
-             * Decodes an AssetAttributes message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {proto.CreateAssetContract.AssetAttributes} AssetAttributes
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AssetAttributes.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-
-            /**
-             * Verifies an AssetAttributes message.
-             * @function verify
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            AssetAttributes.verify = function verify(message, long) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
-                    if (typeof message.IsPaused !== "boolean")
-                        return "IsPaused: boolean expected";
-                if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
-                    if (typeof message.IsNFTMintStopped !== "boolean")
-                        return "IsNFTMintStopped: boolean expected";
-                return null;
-            };
-
-            /**
-             * Creates an AssetAttributes message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {proto.CreateAssetContract.AssetAttributes} AssetAttributes
-             */
-            AssetAttributes.fromObject = function fromObject(object, long) {
-                if (object instanceof $root.proto.CreateAssetContract.AssetAttributes)
-                    return object;
-                if (!$util.isObject(object))
-                    throw TypeError(".proto.CreateAssetContract.AssetAttributes: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let message = new $root.proto.CreateAssetContract.AssetAttributes();
-                if (object.IsPaused != null)
-                    message.IsPaused = Boolean(object.IsPaused);
-                if (object.IsNFTMintStopped != null)
-                    message.IsNFTMintStopped = Boolean(object.IsNFTMintStopped);
-                return message;
-            };
-
-            /**
-             * Creates a plain object from an AssetAttributes message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {proto.CreateAssetContract.AssetAttributes} message AssetAttributes
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            AssetAttributes.toObject = function toObject(message, options, q) {
-                if (!options)
-                    options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                let object = {};
-                if (options.defaults) {
-                    object.IsPaused = false;
-                    object.IsNFTMintStopped = false;
-                }
-                if (message.IsPaused != null && Object.hasOwnProperty.call(message, "IsPaused"))
-                    object.IsPaused = message.IsPaused;
-                if (message.IsNFTMintStopped != null && Object.hasOwnProperty.call(message, "IsNFTMintStopped"))
-                    object.IsNFTMintStopped = message.IsNFTMintStopped;
-                return object;
-            };
-
-            /**
-             * Converts this AssetAttributes to JSON.
-             * @function toJSON
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            AssetAttributes.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-
-            /**
-             * Gets the default type url for AssetAttributes
-             * @function getTypeUrl
-             * @memberof proto.CreateAssetContract.AssetAttributes
-             * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
-             */
-            AssetAttributes.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/proto.CreateAssetContract.AssetAttributes";
-            };
-
-            return AssetAttributes;
-        })();
-
-        return CreateAssetContract;
+        return CallValue;
     })();
 
     proto.SmartContract = (function() {
@@ -6128,9 +8557,8 @@ export const proto = $root.proto = (() => {
          * @interface ISmartContract
          * @property {proto.SmartContract.SCType|null} [Type] SmartContract Type
          * @property {Uint8Array|null} [Address] SmartContract Address
-         * @property {Array.<proto.SmartContract.ICallValueData>|null} [CallValue] SmartContract CallValue
-         * @property {Uint8Array|null} [Input] SmartContract Input
-         * @property {string|null} [VirtualMachine] SmartContract VirtualMachine
+         * @property {Object.<string,proto.ICallValue>|null} [CallValue] SmartContract CallValue is represented by a map of currencyID and amount
+         * should be limited to 50 currencies
          */
 
         /**
@@ -6142,7 +8570,7 @@ export const proto = $root.proto = (() => {
          * @param {proto.ISmartContract=} [properties] Properties to set
          */
         function SmartContract(properties) {
-            this.CallValue = [];
+            this.CallValue = {};
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null && keys[i] !== "__proto__")
@@ -6166,28 +8594,13 @@ export const proto = $root.proto = (() => {
         SmartContract.prototype.Address = $util.newBuffer([]);
 
         /**
-         * SmartContract CallValue.
-         * @member {Array.<proto.SmartContract.ICallValueData>} CallValue
+         * SmartContract CallValue is represented by a map of currencyID and amount
+         * should be limited to 50 currencies
+         * @member {Object.<string,proto.ICallValue>} CallValue
          * @memberof proto.SmartContract
          * @instance
          */
-        SmartContract.prototype.CallValue = $util.emptyArray;
-
-        /**
-         * SmartContract Input.
-         * @member {Uint8Array} Input
-         * @memberof proto.SmartContract
-         * @instance
-         */
-        SmartContract.prototype.Input = $util.newBuffer([]);
-
-        /**
-         * SmartContract VirtualMachine.
-         * @member {string} VirtualMachine
-         * @memberof proto.SmartContract
-         * @instance
-         */
-        SmartContract.prototype.VirtualMachine = "";
+        SmartContract.prototype.CallValue = $util.emptyObject;
 
         /**
          * Creates a new SmartContract instance using the specified properties.
@@ -6221,13 +8634,11 @@ export const proto = $root.proto = (() => {
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.Type);
             if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
                 writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.Address);
-            if (message.CallValue != null && message.CallValue.length)
-                for (let i = 0; i < message.CallValue.length; ++i)
-                    $root.proto.SmartContract.CallValueData.encode(message.CallValue[i], writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
-            if (message.Input != null && Object.hasOwnProperty.call(message, "Input"))
-                writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.Input);
-            if (message.VirtualMachine != null && Object.hasOwnProperty.call(message, "VirtualMachine"))
-                writer.uint32(/* id 5, wireType 2 =*/42).string(message.VirtualMachine);
+            if (message.CallValue != null && Object.hasOwnProperty.call(message, "CallValue"))
+                for (let keys = Object.keys(message.CallValue), i = 0; i < keys.length; ++i) {
+                    writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                    $root.proto.CallValue.encode(message.CallValue[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim().ldelim();
+                }
             return writer;
         };
 
@@ -6262,7 +8673,7 @@ export const proto = $root.proto = (() => {
                 long = 0;
             if (long > $Reader.recursionLimit)
                 throw Error("maximum nesting depth exceeded");
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.SmartContract();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.SmartContract(), key, value;
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 if (tag === error)
@@ -6277,17 +8688,28 @@ export const proto = $root.proto = (() => {
                         break;
                     }
                 case 3: {
-                        if (!(message.CallValue && message.CallValue.length))
-                            message.CallValue = [];
-                        message.CallValue.push($root.proto.SmartContract.CallValueData.decode(reader, reader.uint32(), undefined, long + 1));
-                        break;
-                    }
-                case 4: {
-                        message.Input = reader.bytes();
-                        break;
-                    }
-                case 5: {
-                        message.VirtualMachine = reader.string();
+                        if (message.CallValue === $util.emptyObject)
+                            message.CallValue = {};
+                        let end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            let tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.proto.CallValue.decode(reader, reader.uint32(), undefined, long + 1);
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7, long);
+                                break;
+                            }
+                        }
+                        if (key === "__proto__")
+                            $util.makeProp(message.CallValue, key);
+                        message.CallValue[key] = value;
                         break;
                     }
                 default:
@@ -6335,27 +8757,21 @@ export const proto = $root.proto = (() => {
                     return "Type: enum value expected";
                 case 0:
                 case 1:
-                case 2:
                     break;
                 }
             if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
                 if (!(message.Address && typeof message.Address.length === "number" || $util.isString(message.Address)))
                     return "Address: buffer expected";
             if (message.CallValue != null && Object.hasOwnProperty.call(message, "CallValue")) {
-                if (!Array.isArray(message.CallValue))
-                    return "CallValue: array expected";
-                for (let i = 0; i < message.CallValue.length; ++i) {
-                    let error = $root.proto.SmartContract.CallValueData.verify(message.CallValue[i], long + 1);
+                if (!$util.isObject(message.CallValue))
+                    return "CallValue: object expected";
+                let key = Object.keys(message.CallValue);
+                for (let i = 0; i < key.length; ++i) {
+                    let error = $root.proto.CallValue.verify(message.CallValue[key[i]], long + 1);
                     if (error)
                         return "CallValue." + error;
                 }
             }
-            if (message.Input != null && Object.hasOwnProperty.call(message, "Input"))
-                if (!(message.Input && typeof message.Input.length === "number" || $util.isString(message.Input)))
-                    return "Input: buffer expected";
-            if (message.VirtualMachine != null && Object.hasOwnProperty.call(message, "VirtualMachine"))
-                if (!$util.isString(message.VirtualMachine))
-                    return "VirtualMachine: string expected";
             return null;
         };
 
@@ -6384,17 +8800,13 @@ export const proto = $root.proto = (() => {
                     break;
                 }
                 break;
-            case "SCInvokeType":
+            case "SCInvoke":
             case 0:
                 message.Type = 0;
                 break;
-            case "SCDeployType":
+            case "SCDeploy":
             case 1:
                 message.Type = 1;
-                break;
-            case "SCUpgradeType":
-            case 2:
-                message.Type = 2;
                 break;
             }
             if (object.Address != null)
@@ -6403,22 +8815,17 @@ export const proto = $root.proto = (() => {
                 else if (object.Address.length >= 0)
                     message.Address = object.Address;
             if (object.CallValue) {
-                if (!Array.isArray(object.CallValue))
-                    throw TypeError(".proto.SmartContract.CallValue: array expected");
-                message.CallValue = [];
-                for (let i = 0; i < object.CallValue.length; ++i) {
-                    if (!$util.isObject(object.CallValue[i]))
+                if (!$util.isObject(object.CallValue))
+                    throw TypeError(".proto.SmartContract.CallValue: object expected");
+                message.CallValue = {};
+                for (let keys = Object.keys(object.CallValue), i = 0; i < keys.length; ++i) {
+                    if (keys[i] === "__proto__")
+                        $util.makeProp(message.CallValue, keys[i]);
+                    if (!$util.isObject(object.CallValue[keys[i]]))
                         throw TypeError(".proto.SmartContract.CallValue: object expected");
-                    message.CallValue[i] = $root.proto.SmartContract.CallValueData.fromObject(object.CallValue[i], long + 1);
+                    message.CallValue[keys[i]] = $root.proto.CallValue.fromObject(object.CallValue[keys[i]], long + 1);
                 }
             }
-            if (object.Input != null)
-                if (typeof object.Input === "string")
-                    $util.base64.decode(object.Input, message.Input = $util.newBuffer($util.base64.length(object.Input)), 0);
-                else if (object.Input.length >= 0)
-                    message.Input = object.Input;
-            if (object.VirtualMachine != null)
-                message.VirtualMachine = String(object.VirtualMachine);
             return message;
         };
 
@@ -6439,10 +8846,10 @@ export const proto = $root.proto = (() => {
             if (q > $util.recursionLimit)
                 throw Error("max depth exceeded");
             let object = {};
-            if (options.arrays || options.defaults)
-                object.CallValue = [];
+            if (options.objects || options.defaults)
+                object.CallValue = {};
             if (options.defaults) {
-                object.Type = options.enums === String ? "SCInvokeType" : 0;
+                object.Type = options.enums === String ? "SCInvoke" : 0;
                 if (options.bytes === String)
                     object.Address = "";
                 else {
@@ -6450,28 +8857,20 @@ export const proto = $root.proto = (() => {
                     if (options.bytes !== Array)
                         object.Address = $util.newBuffer(object.Address);
                 }
-                if (options.bytes === String)
-                    object.Input = "";
-                else {
-                    object.Input = [];
-                    if (options.bytes !== Array)
-                        object.Input = $util.newBuffer(object.Input);
-                }
-                object.VirtualMachine = "";
             }
             if (message.Type != null && Object.hasOwnProperty.call(message, "Type"))
                 object.Type = options.enums === String ? $root.proto.SmartContract.SCType[message.Type] === undefined ? message.Type : $root.proto.SmartContract.SCType[message.Type] : message.Type;
             if (message.Address != null && Object.hasOwnProperty.call(message, "Address"))
                 object.Address = options.bytes === String ? $util.base64.encode(message.Address, 0, message.Address.length) : options.bytes === Array ? Array.prototype.slice.call(message.Address) : message.Address;
-            if (message.CallValue && message.CallValue.length) {
-                object.CallValue = [];
-                for (let j = 0; j < message.CallValue.length; ++j)
-                    object.CallValue[j] = $root.proto.SmartContract.CallValueData.toObject(message.CallValue[j], options, q + 1);
+            let keys2;
+            if (message.CallValue && (keys2 = Object.keys(message.CallValue)).length) {
+                object.CallValue = {};
+                for (let j = 0; j < keys2.length; ++j) {
+                    if (keys2[j] === "__proto__")
+                        $util.makeProp(object.CallValue, keys2[j]);
+                    object.CallValue[keys2[j]] = $root.proto.CallValue.toObject(message.CallValue[keys2[j]], options, q + 1);
+                }
             }
-            if (message.Input != null && Object.hasOwnProperty.call(message, "Input"))
-                object.Input = options.bytes === String ? $util.base64.encode(message.Input, 0, message.Input.length) : options.bytes === Array ? Array.prototype.slice.call(message.Input) : message.Input;
-            if (message.VirtualMachine != null && Object.hasOwnProperty.call(message, "VirtualMachine"))
-                object.VirtualMachine = message.VirtualMachine;
             return object;
         };
 
@@ -6505,292 +8904,14 @@ export const proto = $root.proto = (() => {
          * SCType enum.
          * @name proto.SmartContract.SCType
          * @enum {number}
-         * @property {number} SCInvokeType=0 SCInvokeType value
-         * @property {number} SCDeployType=1 SCDeployType value
-         * @property {number} SCUpgradeType=2 SCUpgradeType value
+         * @property {number} SCInvoke=0 SCInvoke value
+         * @property {number} SCDeploy=1 SCDeploy value
          */
         SmartContract.SCType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[0] = "SCInvokeType"] = 0;
-            values[valuesById[1] = "SCDeployType"] = 1;
-            values[valuesById[2] = "SCUpgradeType"] = 2;
+            values[valuesById[0] = "SCInvoke"] = 0;
+            values[valuesById[1] = "SCDeploy"] = 1;
             return values;
-        })();
-
-        SmartContract.CallValueData = (function() {
-
-            /**
-             * Properties of a CallValueData.
-             * @memberof proto.SmartContract
-             * @interface ICallValueData
-             * @property {Uint8Array|null} [AssetID] CallValueData AssetID
-             * @property {number|null} [Amount] CallValueData Amount
-             */
-
-            /**
-             * Constructs a new CallValueData.
-             * @memberof proto.SmartContract
-             * @classdesc Represents a CallValueData.
-             * @implements ICallValueData
-             * @constructor
-             * @param {proto.SmartContract.ICallValueData=} [properties] Properties to set
-             */
-            function CallValueData(properties) {
-                if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
-                            this[keys[i]] = properties[keys[i]];
-            }
-
-            /**
-             * CallValueData AssetID.
-             * @member {Uint8Array} AssetID
-             * @memberof proto.SmartContract.CallValueData
-             * @instance
-             */
-            CallValueData.prototype.AssetID = $util.newBuffer([]);
-
-            /**
-             * CallValueData Amount.
-             * @member {number} Amount
-             * @memberof proto.SmartContract.CallValueData
-             * @instance
-             */
-            CallValueData.prototype.Amount = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-            /**
-             * Creates a new CallValueData instance using the specified properties.
-             * @function create
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {proto.SmartContract.ICallValueData=} [properties] Properties to set
-             * @returns {proto.SmartContract.CallValueData} CallValueData instance
-             */
-            CallValueData.create = function create(properties) {
-                return new CallValueData(properties);
-            };
-
-            /**
-             * Encodes the specified CallValueData message. Does not implicitly {@link proto.SmartContract.CallValueData.verify|verify} messages.
-             * @function encode
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {proto.SmartContract.ICallValueData} message CallValueData message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CallValueData.encode = function encode(message, writer, q) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.AssetID);
-                if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).int64(message.Amount);
-                return writer;
-            };
-
-            /**
-             * Encodes the specified CallValueData message, length delimited. Does not implicitly {@link proto.SmartContract.CallValueData.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {proto.SmartContract.ICallValueData} message CallValueData message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CallValueData.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
-            };
-
-            /**
-             * Decodes a CallValueData message from the specified reader or buffer.
-             * @function decode
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {proto.SmartContract.CallValueData} CallValueData
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CallValueData.decode = function decode(reader, length, error, long) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end = length === undefined ? reader.len : reader.pos + length, message = new $root.proto.SmartContract.CallValueData();
-                while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.AssetID = reader.bytes();
-                            break;
-                        }
-                    case 2: {
-                            message.Amount = reader.int64();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
-                        break;
-                    }
-                }
-                return message;
-            };
-
-            /**
-             * Decodes a CallValueData message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {proto.SmartContract.CallValueData} CallValueData
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CallValueData.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-
-            /**
-             * Verifies a CallValueData message.
-             * @function verify
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            CallValueData.verify = function verify(message, long) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                    if (!(message.AssetID && typeof message.AssetID.length === "number" || $util.isString(message.AssetID)))
-                        return "AssetID: buffer expected";
-                if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                    if (!$util.isInteger(message.Amount) && !(message.Amount && $util.isInteger(message.Amount.low) && $util.isInteger(message.Amount.high)))
-                        return "Amount: integer|Long expected";
-                return null;
-            };
-
-            /**
-             * Creates a CallValueData message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {proto.SmartContract.CallValueData} CallValueData
-             */
-            CallValueData.fromObject = function fromObject(object, long) {
-                if (object instanceof $root.proto.SmartContract.CallValueData)
-                    return object;
-                if (!$util.isObject(object))
-                    throw TypeError(".proto.SmartContract.CallValueData: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let message = new $root.proto.SmartContract.CallValueData();
-                if (object.AssetID != null)
-                    if (typeof object.AssetID === "string")
-                        $util.base64.decode(object.AssetID, message.AssetID = $util.newBuffer($util.base64.length(object.AssetID)), 0);
-                    else if (object.AssetID.length >= 0)
-                        message.AssetID = object.AssetID;
-                if (object.Amount != null)
-                    if ($util.Long)
-                        message.Amount = $util.Long.fromValue(object.Amount, false);
-                    else if (typeof object.Amount === "string")
-                        message.Amount = parseInt(object.Amount, 10);
-                    else if (typeof object.Amount === "number")
-                        message.Amount = object.Amount;
-                    else if (typeof object.Amount === "object")
-                        message.Amount = new $util.LongBits(object.Amount.low >>> 0, object.Amount.high >>> 0).toNumber();
-                return message;
-            };
-
-            /**
-             * Creates a plain object from a CallValueData message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {proto.SmartContract.CallValueData} message CallValueData
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            CallValueData.toObject = function toObject(message, options, q) {
-                if (!options)
-                    options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                let object = {};
-                if (options.defaults) {
-                    if (options.bytes === String)
-                        object.AssetID = "";
-                    else {
-                        object.AssetID = [];
-                        if (options.bytes !== Array)
-                            object.AssetID = $util.newBuffer(object.AssetID);
-                    }
-                    if ($util.Long) {
-                        let long = new $util.Long(0, 0, false);
-                        object.Amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
-                    } else
-                        object.Amount = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
-                }
-                if (message.AssetID != null && Object.hasOwnProperty.call(message, "AssetID"))
-                    object.AssetID = options.bytes === String ? $util.base64.encode(message.AssetID, 0, message.AssetID.length) : options.bytes === Array ? Array.prototype.slice.call(message.AssetID) : message.AssetID;
-                if (message.Amount != null && Object.hasOwnProperty.call(message, "Amount"))
-                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
-                        object.Amount = typeof message.Amount === "number" ? BigInt(message.Amount) : $util.Long.fromBits(message.Amount.low >>> 0, message.Amount.high >>> 0, false).toBigInt();
-                    else if (typeof message.Amount === "number")
-                        object.Amount = options.longs === String ? String(message.Amount) : message.Amount;
-                    else
-                        object.Amount = options.longs === String ? $util.Long.prototype.toString.call(message.Amount) : options.longs === Number ? new $util.LongBits(message.Amount.low >>> 0, message.Amount.high >>> 0).toNumber() : message.Amount;
-                return object;
-            };
-
-            /**
-             * Converts this CallValueData to JSON.
-             * @function toJSON
-             * @memberof proto.SmartContract.CallValueData
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            CallValueData.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-
-            /**
-             * Gets the default type url for CallValueData
-             * @function getTypeUrl
-             * @memberof proto.SmartContract.CallValueData
-             * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
-             */
-            CallValueData.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/proto.SmartContract.CallValueData";
-            };
-
-            return CallValueData;
         })();
 
         return SmartContract;

@@ -17,6 +17,7 @@ import type {
 } from '@klever/connect-provider'
 import { isValidAddress, isValidContractAddress } from '@klever/connect-core'
 import { Transaction } from './transaction'
+import { encodeContract } from './contract-encoder'
 
 import { bech32Decode, base64Encode } from '@klever/connect-encoding'
 import type { AmountLike } from '@klever/connect-provider'
@@ -46,6 +47,11 @@ export interface BuildCallOptions {
   permissionId?: number
   /** Transaction data (for smart contract calls) */
   data?: string[]
+  /**
+   * Transaction version for offline building. Defaults to 1, the minimum
+   * transaction version the node sets on transactions it builds.
+   */
+  version?: number
 }
 
 /**
@@ -80,7 +86,8 @@ export interface BuildCallOptions {
  *   .buildProto({
  *     sender: 'klv1...',
  *     nonce: 123,
- *     fees: { kAppFee: 500000, bandwidthFee: 100000 }
+ *     chainId: '108',
+ *     fees: { kAppFee: 1000000, bandwidthFee: 2000000 }
  *   })
  * ```
  */
@@ -139,10 +146,10 @@ export class TransactionBuilder {
    * @example
    * ```typescript
    * const tx = TransactionBuilder.create()
-   *   .setChainId('100')
+   *   .setChainId('108')
    *   .sender('klv1...')
    *   .transfer({ receiver: 'klv1...', amount: '1000000' })
-   *   .buildProto({ nonce: 1, fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   *   .buildProto({ nonce: 1, fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
    * ```
    */
   setChainId(chainId: string): this {
@@ -198,8 +205,8 @@ export class TransactionBuilder {
    *   .nonce(123)
    *   .transfer({ receiver: 'klv1...', amount: '1000000' })
    *   .buildProto({
-   *     chainId: '100',
-   *     fees: { kAppFee: 500000, bandwidthFee: 100000 }
+   *     chainId: '108',
+   *     fees: { kAppFee: 1000000, bandwidthFee: 2000000 }
    *   })
    *
    * // Get nonce from provider first
@@ -208,7 +215,7 @@ export class TransactionBuilder {
    *   .sender('klv1...')
    *   .nonce(account.nonce)
    *   .transfer({ receiver: 'klv1...', amount: '1000000' })
-   *   .buildProto({ chainId: '100', fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   *   .buildProto({ chainId: '108', fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
    * ```
    */
   nonce(nonce: number): this {
@@ -243,7 +250,7 @@ export class TransactionBuilder {
    *   .transfer({ receiver: 'klv1...', amount: '1000000' })
    *   .buildProto({
    *     nonce: 1,
-   *     chainId: '100',
+   *     chainId: '108',
    *   })
    * ```
    */
@@ -258,7 +265,7 @@ export class TransactionBuilder {
       })
     }
 
-    const amount = typeof fee.amount === 'bigint' ? fee.amount : BigInt(fee.amount)
+    const amount = toAmount(fee.amount, 'kdaFee.amount')
     if (amount < 0n) {
       throw new ValidationError('KDA fee amount must be non-negative', { amount })
     }
@@ -320,7 +327,7 @@ export class TransactionBuilder {
    *   .sender('klv1...')
    *   .smartContract({ address: 'klv1contract...', scType: 0 })
    *   .data(['functionName', 'arg1', 'arg2', 'arg3'])
-   *   .buildProto({ nonce: 1, chainId: '100', fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   *   .buildProto({ nonce: 1, chainId: '108', fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
    * ```
    */
   data(data: string[]): this {
@@ -353,10 +360,10 @@ export class TransactionBuilder {
    *   .callOptions({
    *     sender: 'klv1...',
    *     nonce: 123,
-   *     chainId: '100',
+   *     chainId: '108',
    *     permissionId: 1
    *   })
-   *   .buildProto({ fees: { kAppFee: 500000, bandwidthFee: 100000 } })
+   *   .buildProto({ fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
    * ```
    */
   callOptions(options: BuildCallOptions): this {
@@ -507,7 +514,7 @@ export class TransactionBuilder {
       })
     }
 
-    const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
+    const amount = toAmount(params.amount, 'amount')
 
     if (amount <= 0n) {
       throw new ValidationError('Transfer amount must be positive', { amount: params.amount })
@@ -556,7 +563,7 @@ export class TransactionBuilder {
    * ```
    */
   freeze(params: FreezeRequest): this {
-    const amount = typeof params.amount === 'bigint' ? params.amount : BigInt(params.amount)
+    const amount = toAmount(params.amount, 'amount')
 
     if (amount <= 0n) {
       throw new ValidationError('Freeze amount must be positive', { amount: params.amount })
@@ -880,8 +887,8 @@ export class TransactionBuilder {
    *
    * @param params - Vote parameters
    * @param params.proposalId - ID of the proposal to vote on
-   * @param params.type - Vote type (0 = abstain, 1 = yes, 2 = no)
-   * @param params.amount - Optional stake amount to use for voting weight
+   * @param params.type - Vote type (0 = yes, 1 = no), as klever-go's `VoteContract.EnumVoteType`
+   * @param params.amount - Voting weight; the node rejects a vote without it
    * @returns This builder instance for chaining
    *
    * @example
@@ -891,8 +898,8 @@ export class TransactionBuilder {
    *   .sender('klv1...')
    *   .vote({
    *     proposalId: 5,
-   *     type: 1, // Yes
-   *     amount: '1000000' // Optional voting weight
+   *     type: 0, // Yes
+   *     amount: '1000000' // Voting weight
    *   })
    *   .build()
    *
@@ -901,7 +908,8 @@ export class TransactionBuilder {
    *   .sender('klv1...')
    *   .vote({
    *     proposalId: 5,
-   *     type: 2 // No
+   *     type: 1, // No
+   *     amount: '1000000'
    *   })
    *   .build()
    * ```
@@ -1093,11 +1101,21 @@ export class TransactionBuilder {
    * - Full control over transaction parameters
    * - Ideal for hardware wallets and air-gapped signing
    *
+   * **Contracts:** Transfer (0), Freeze (4), Unfreeze (5), Delegate (6),
+   * Undelegate (7), Withdraw (8), Claim (9), Vote (14) and SmartContract (63)
+   * are encoded the way the node's `/transaction/send` encodes them, so the
+   * signed bytes match a node-built transaction. Other types throw; use
+   * `build()` for them. Royalties the node would read from chain state are
+   * not looked up: pass `kdaRoyalties`/`klvRoyalties` to `transfer()`. A
+   * `callValue` in an asset with transfer royalties fails on chain; build that
+   * call with `build()`.
+   *
    * **Fee Calculation:**
    * When building offline, fees must be provided manually or estimated:
-   * - KAppFee: Base fee for the contract type (typically 500000-1000000)
-   * - BandwidthFee: Fee based on transaction size (typically 100000-500000)
+   * - KAppFee: Base fee for the contract type (1000000 for a mainnet KLV transfer)
+   * - BandwidthFee: Fee based on transaction size (2000000 for a mainnet KLV transfer)
    * - KDAFee: Optional - pay fees in custom KDA instead of KLV
+   * Building the transaction once with `build()` shows the node's exact fees.
    *
    * @param options - Build options (sender, nonce, fees, etc.)
    * @param options.sender - Sender's bech32 address (required if not set via builder)
@@ -1107,8 +1125,11 @@ export class TransactionBuilder {
    * @param options.kdaFee - Optional KDA fee (pay fees in custom asset)
    * @param options.permissionId - Optional permission ID for multi-sig
    * @param options.data - Optional transaction data
+   * @param options.version - Transaction version (defaults to 1)
    * @returns Transaction object with proto bytes ready to sign
-   * @throws {ValidationError} If required parameters are missing or invalid
+   * @throws {ValidationError} If required parameters are missing or invalid, an
+   *   amount or fee is not a non-negative safe integer, or a contract type
+   *   cannot be built offline
    *
    * @example
    * ```typescript
@@ -1118,10 +1139,10 @@ export class TransactionBuilder {
    *   .buildProto({
    *     sender: 'klv1xyz...',
    *     nonce: 123,
-   *     chainId: '100',
+   *     chainId: '108',
    *     fees: {
-   *       kAppFee: 500000,
-   *       bandwidthFee: 100000
+   *       kAppFee: 1000000,
+   *       bandwidthFee: 2000000
    *     }
    *   })
    *
@@ -1132,10 +1153,10 @@ export class TransactionBuilder {
    * const tx = TransactionBuilder.create()
    *   .sender('klv1xyz...')
    *   .nonce(123)
-   *   .setChainId('100')
+   *   .setChainId('108')
    *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
    *   .buildProto({
-   *     fees: { kAppFee: 500000, bandwidthFee: 100000 }
+   *     fees: { kAppFee: 1000000, bandwidthFee: 2000000 }
    *   })
    *
    * // Offline build with KDA fee (pay fees in custom token)
@@ -1144,7 +1165,7 @@ export class TransactionBuilder {
    *   .nonce(123)
    *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
    *   .buildProto({
-   *     chainId: '100',
+   *     chainId: '108',
    *     fees: { kAppFee: 0, bandwidthFee: 0 },
    *     kdaFee: { kda: 'MYTOKEN-ABCD', amount: '1000000' }
    *   })
@@ -1176,6 +1197,13 @@ export class TransactionBuilder {
     const nonce = options.nonce ?? this._nonce
     const kdaFee = options.kdaFee ?? this._kdaFee
     const permissionId = options.permissionId ?? this._permissionId ?? null
+    // PermissionID is an int32; protobuf.js would truncate 1.5 or wrap 2^31
+    if (
+      permissionId !== null &&
+      (!Number.isInteger(permissionId) || permissionId < 0 || permissionId > 0x7fffffff)
+    ) {
+      throw new ValidationError('permissionId must be a non-negative int32', { permissionId })
+    }
     const data = options.data ?? this._data
 
     if (options.value) {
@@ -1196,46 +1224,43 @@ export class TransactionBuilder {
       throw new ValidationError('Nonce is required. Set via .nonce() or options.nonce')
     }
 
-    // convert data to Uint8Array[]
+    // Each string is sent as its UTF-8 bytes
     const dataBytes = data ? data.map((d) => encoder.encode(d)) : null
 
-    // TODO: compute kappFess and bandwidthFees if not provided
-    const kappFess = options.fees?.kAppFee ?? 0
-    const bandwidthFees = options.fees?.bandwidthFee ?? 0
+    // TODO: compute kAppFee and bandwidthFee if not provided (KLC-1867)
+    const kAppFee = nonNegativeInt(options.fees?.kAppFee ?? 0, 'fees.kAppFee')
+    const bandwidthFee = nonNegativeInt(options.fees?.bandwidthFee ?? 0, 'fees.bandwidthFee')
+    const version = nonNegativeInt(options.version ?? 1, 'version')
+    // Version is a uint32; 2^32 would be written as 0 and change the hash
+    if (version > 0xffffffff) {
+      throw new ValidationError('version must be a uint32', { version })
+    }
 
-    // encode KDA fee buffer
     const kdaFeeProto: IKDAFee | null =
       kdaFee && kdaFee.kda
-        ? {
+        ? withoutZero({
             KDA: encoder.encode(kdaFee.kda),
-            Amount:
-              typeof kdaFee.amount === 'bigint'
-                ? Number(kdaFee.amount)
-                : typeof kdaFee.amount === 'string'
-                  ? Number(kdaFee.amount)
-                  : kdaFee.amount,
-          }
+            Amount: nonNegativeInt(kdaFee.amount, 'kdaFee.amount'),
+          })
         : null
 
-    // TODO: Implement contract encoding to proto
+    // The node re-encodes RawData before checking the signature, and Go's
+    // proto3 encoding leaves out fields with their default value. protobuf.js
+    // writes any field that is set, so set only the non-default ones; a 0
+    // here would make the signed bytes differ from the node's.
     return new Transaction({
-      RawData: {
-        ChainID: chainIdBytes,
-        Nonce: nonce,
+      RawData: withoutZero({
+        Nonce: nonNegativeInt(nonce, 'nonce'),
         Sender: senderBytes.data,
-        /** Raw Contract */
-        Contract: null,
-        /** Raw PermissionID */
+        Contract: this.contracts.map((contract) => encodeContract(contract)),
         PermissionID: permissionId,
-
-        /** Raw Data */
         Data: dataBytes,
-
-        /** TX Fees */
-        KAppFee: kappFess,
-        BandwidthFee: bandwidthFees,
+        KAppFee: kAppFee,
+        BandwidthFee: bandwidthFee,
+        Version: version,
+        ChainID: chainIdBytes,
         KDAFee: kdaFeeProto,
-      },
+      }),
     })
   }
 
@@ -1365,4 +1390,50 @@ export class TransactionBuilder {
     delete this._data
     return this
   }
+}
+
+/** A non-negative safe integer from a number, bigint or decimal string. */
+/**
+ * Read an amount as a bigint. Strings must be plain decimal digits: `BigInt()`
+ * alone would also read '0x10', '0b1' or ' 10 ', and throw a RangeError for 1.5.
+ */
+function toAmount(value: AmountLike, field: string): bigint {
+  if (typeof value === 'bigint') return value
+  if (typeof value === 'number') {
+    if (Number.isSafeInteger(value)) return BigInt(value)
+    throw new ValidationError(
+      `${field}: a number amount must be a safe integer; pass a bigint or a decimal string`,
+      { field },
+    )
+  }
+  if (typeof value === 'string' && /^-?[0-9]+$/.test(value)) return BigInt(value)
+  throw new ValidationError(`${field} must be a bigint, a safe integer or a decimal string`, {
+    field,
+  })
+}
+
+function nonNegativeInt(value: AmountLike, field: string): number {
+  const n =
+    typeof value === 'bigint'
+      ? value >= 0n && value <= BigInt(Number.MAX_SAFE_INTEGER)
+        ? Number(value)
+        : NaN
+      : typeof value === 'string'
+        ? /^[0-9]+$/.test(value)
+          ? Number(value)
+          : NaN
+        : value
+  if (!Number.isSafeInteger(n) || n < 0) {
+    throw new ValidationError(`${field} must be a non-negative safe integer`)
+  }
+  return n
+}
+
+/** Copy an object without the fields that are null, undefined or 0. */
+function withoutZero<T extends object>(fields: T): T {
+  const out: { [k: string]: unknown } = {}
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined && value !== null && value !== 0) out[key] = value
+  }
+  return out as T
 }

@@ -86,21 +86,28 @@ const browserWallet = await BrowserWallet.connect()
 Build transactions without network access:
 
 ```typescript
-import { TransactionBuilder } from '@klever/connect'
+import { TransactionBuilder, parseKLV } from '@klever/connect'
 
-const tx = TransactionBuilder.transfer({
-  from: 'klv1...',
-  to: 'klv1...',
-  amount: parseKLV('100'),
-  nonce: 5,
-})
+// Everything the node would fill in is given here: sender, nonce, chain ID and fees
+const tx = TransactionBuilder.create()
+  .sender('klv1...')
+  .nonce(5)
+  .transfer({ receiver: 'klv1...', amount: parseKLV('100') })
+  .buildProto({
+    chainId: '108', // Mainnet (testnet is '109')
+    fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
+  })
 
 // Sign offline
-const signedTx = await wallet.signTransaction(tx)
+await tx.sign(privateKey)
 
-// Broadcast later
-const receipt = await provider.sendRawTransaction(signedTx)
+// Broadcast later, from a connected machine
+const hash = await provider.sendRawTransaction(tx.toHex())
 ```
+
+`buildProto()` encodes transfers, staking (freeze, unfreeze, delegate,
+undelegate, withdraw, claim), votes and smart-contract invokes and deploys.
+Other contract types throw; build them with `build()`.
 
 ### Smart Contracts
 

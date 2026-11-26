@@ -343,8 +343,9 @@ export class Contract {
       // Node-assisted build (fetches nonce, fees, etc.)
       return await builder.build()
     } else {
-      // Offline build (requires manual nonce/fees via options)
-      if (!options.nonce) {
+      // Offline build (requires manual nonce/fees via options). 0 is a valid
+      // nonce: a new account's first transaction uses it.
+      if (options.nonce === undefined) {
         throw new Error('Nonce is required for offline transaction building')
       }
       return builder.buildProto({
