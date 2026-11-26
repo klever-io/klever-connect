@@ -282,7 +282,7 @@ if (!confirmed) throw new Error('Transaction cancelled')
 
 // Sign and broadcast
 await wallet.signTransaction(tx)
-const hash = await provider.sendRawTransaction(tx.toHex())
+const hash = await provider.sendRawTransaction(tx)
 ```
 
 ### 3. Simulate Transactions (Queries First)

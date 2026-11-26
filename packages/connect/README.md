@@ -398,13 +398,13 @@ async function sendKLV(to: KleverAddress, amount: bigint) {
 
     // Sign and broadcast
     await tx.sign(wallet.privateKey)
-    const result = await provider.sendRawTransaction(tx.toHex())
+    const hash = await provider.sendRawTransaction(tx)
 
-    logger.info(`Transaction sent: ${result.hash}`)
+    logger.info(`Transaction sent: ${hash}`)
 
     // Wait for confirmation
-    const receipt = await result.wait()
-    logger.info(`Transaction confirmed in block ${receipt.block}`)
+    const receipt = await provider.waitForTransaction(hash)
+    logger.info(`Transaction confirmed in block ${receipt?.blockNum}`)
 
     return receipt
   } catch (error) {
@@ -468,9 +468,9 @@ async function complexTransaction() {
     .build()
 
   await tx.sign(wallet.privateKey)
-  const result = await provider.sendRawTransaction(tx.toHex())
+  const hash = await provider.sendRawTransaction(tx)
 
-  return result.wait()
+  return provider.waitForTransaction(hash)
 }
 
 // 8. Error handling
@@ -680,13 +680,13 @@ const tx = await wallet.sendTransaction({
 
 ### Coming from @solana/web3.js?
 
-| @solana/web3.js                 | @klever/connect                        | Notes              |
-| ------------------------------- | -------------------------------------- | ------------------ |
-| `new Connection(endpoint)`      | `new KleverProvider({ network })`      | Network connection |
-| `Keypair.generate()`            | `generateKeyPair()`                    | Generate key pair  |
-| `connection.getBalance(pubkey)` | `provider.getBalance(address)`         | Get balance        |
-| `transaction.add(instruction)`  | `builder.transfer().freeze()`          | Multi-operation tx |
-| `sendAndConfirmTransaction()`   | `provider.sendRawTransaction().wait()` | Send and wait      |
+| @solana/web3.js                 | @klever/connect                                                      | Notes              |
+| ------------------------------- | -------------------------------------------------------------------- | ------------------ |
+| `new Connection(endpoint)`      | `new KleverProvider({ network })`                                    | Network connection |
+| `Keypair.generate()`            | `generateKeyPair()`                                                  | Generate key pair  |
+| `connection.getBalance(pubkey)` | `provider.getBalance(address)`                                       | Get balance        |
+| `transaction.add(instruction)`  | `builder.transfer().freeze()`                                        | Multi-operation tx |
+| `sendAndConfirmTransaction()`   | `provider.waitForTransaction(await provider.sendRawTransaction(tx))` | Send and wait      |
 
 ### Coming from CosmJS?
 

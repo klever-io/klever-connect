@@ -15,3 +15,10 @@ export * from './utils'
 export * from './proto'
 
 export * from './encoding'
+
+// Node broadcast format for transactions
+export {
+  normalizeTransactionJSON,
+  transactionBytesToJSON,
+  transactionObjectToJSON,
+} from './transaction-json'

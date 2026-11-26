@@ -100,7 +100,8 @@ Create a new provider instance.
 
 #### Transaction Operations
 
-- `sendRawTransaction(txHex: string): Promise<TransactionHash>` - Broadcast transaction
+- `sendRawTransaction(signedTx): Promise<TransactionHash>` - Broadcast a signed transaction. Pass it in any form you have: a `Transaction` (recommended), `tx.toHex()` (with or without `0x`), `tx.toBytes()`, `tx.toJSON()`, a JSON string, or a proto-shaped `ITransaction` object. All of them reach the node as the same JSON body.
+- `sendRawTransactions(signedTxs): Promise<TransactionHash[]>` - Broadcast several signed transactions in one request, each in any of the forms above
 - `sendTransaction(tx: unknown): Promise<BroadcastResult>` - Alias for `broadcastTransaction()` (Web3-style naming)
 - `getTransactionReceipt(hash: TransactionHash): Promise<Receipt[]>` - Get transaction receipts
 - `waitForTransaction(hash, confirmations?, onProgress?): Promise<Transaction>` - Wait for transaction confirmation
