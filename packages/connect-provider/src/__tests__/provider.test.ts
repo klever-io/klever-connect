@@ -5,6 +5,7 @@ import { TransactionStatus, type IAccount, type ITransactionResponse } from '../
 import type { BlockHash, KleverAddress, TransactionHash } from '@klever/connect-core'
 import type { BuildTransactionRequest } from '../types/types'
 import { Transaction as ProtoTransaction } from '@klever/connect-encoding'
+import { runInNewContext } from 'node:vm'
 
 // Mock the HttpClient
 vi.mock('../http-client', () => ({
@@ -551,7 +552,7 @@ describe('KleverProvider', () => {
   })
 
   describe('broadcastTransaction', () => {
-    const mockTxData = { tx: '0xaabbcc' }
+    const mockTxData = { RawData: { Nonce: 1 } }
     const mockResponse = {
       error: null,
       code: 0,
@@ -621,7 +622,11 @@ describe('KleverProvider', () => {
   })
 
   describe('broadcastTransactions', () => {
-    const mockTxs = [{ tx: '0xaabbcc' }, { tx: '0xddeeff' }, { tx: '0x112233' }]
+    const mockTxs = [
+      { RawData: { Nonce: 1 } },
+      { RawData: { Nonce: 2 } },
+      { RawData: { Nonce: 3 } },
+    ]
     const mockResponse = {
       error: null,
       code: 0,
@@ -891,6 +896,91 @@ describe('KleverProvider', () => {
       await provider.sendRawTransaction(input)
       expect(input.RawData.Nonce).toBe('42')
       expect(sentTxs()).toEqual([{ RawData: { Nonce: 42 } }])
+    })
+
+    it('should decode bytes from another realm', async () => {
+      // instanceof Uint8Array is false for these (iframe, vm, jsdom)
+      const foreign = runInNewContext('new Uint8Array(src)', { src: Array.from(fixtureBytes) })
+      expect(foreign instanceof Uint8Array).toBe(false)
+
+      await provider.sendRawTransaction(foreign)
+      expect(sentTxs()).toEqual([expectedBody])
+    })
+
+    it('should convert a proto-shaped object holding bytes from another realm', async () => {
+      const foreign = runInNewContext('new Uint8Array(32).fill(1)')
+      // Every other byte field is base64, so the foreign Sender is the only bytes value.
+      const json = JSON.parse(JSON.stringify(expectedBody)) as { RawData: { [k: string]: unknown } }
+      const tx = { ...json, RawData: { ...json.RawData, Sender: foreign } }
+
+      await provider.sendRawTransaction(tx)
+      expect(sentTxs()).toEqual([expectedBody])
+    })
+
+    it('should send a Buffer as bytes', async () => {
+      await provider.sendRawTransaction(Buffer.from(fixtureBytes))
+      expect(sentTxs()).toEqual([expectedBody])
+    })
+
+    it.each([
+      ['a number', 5],
+      ['null', null],
+      ['undefined', undefined],
+      ['a boolean', true],
+      ['an object without RawData', { tx: 'data' }],
+      ['a JSON string without RawData', JSON.stringify({ tx: 'data' })],
+      ['a JSON array string', '[1,2]'],
+      ['a number array', [10, 32, 1]],
+      ['an ArrayBuffer', new ArrayBuffer(4)],
+      ['an object whose RawData is not an object', { RawData: 'x' }],
+      ['an object whose toJSON() has no RawData', { toJSON: () => ({ tx: 'data' }) }],
+    ])('should reject %s before posting', async (_, input) => {
+      await expect(provider.sendRawTransaction(input)).rejects.toThrow(/Invalid transaction data/)
+      expect(mockPost).not.toHaveBeenCalled()
+    })
+
+    it('should reject a malformed int64 field before posting', async () => {
+      await expect(provider.sendRawTransaction({ RawData: { Nonce: '0x10' } })).rejects.toThrow(
+        'Invalid transaction data: Invalid Nonce value',
+      )
+      expect(mockPost).not.toHaveBeenCalled()
+    })
+
+    it('should leave every nested part of the caller object unchanged', async () => {
+      const input = {
+        RawData: {
+          Nonce: '42',
+          KDAFee: { KDA: 'S0ZJ', Amount: '7' },
+          Contract: [{ Type: 'TransferContractType', Parameter: { type_url: 't', value: 'AQ==' } }],
+        },
+        // A value structuredClone cannot copy: it must not break or leak into errors.
+        onDone: () => undefined,
+      }
+      const before = JSON.stringify(input)
+
+      await provider.sendRawTransaction(input)
+
+      expect(JSON.stringify(input)).toBe(before)
+      expect(sentTxs()).toEqual([
+        {
+          RawData: {
+            Nonce: 42,
+            KDAFee: { KDA: 'S0ZJ', Amount: 7 },
+            Contract: [{ Type: 0, Parameter: { type_url: 't', value: 'AQ==' } }],
+          },
+        },
+      ])
+    })
+
+    it('should not put the message thrown by toJSON() into the error', async () => {
+      const tx = {
+        toJSON: () => {
+          throw new Error('leaked-detail')
+        },
+      }
+      const error = await provider.sendRawTransaction(tx).catch((e: unknown) => e)
+      expect(String(error)).toContain('toJSON() failed')
+      expect(JSON.stringify(error) + String(error)).not.toContain('leaked-detail')
     })
 
     it('should not copy rejected input into the error', async () => {

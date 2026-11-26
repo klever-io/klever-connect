@@ -14,33 +14,29 @@ import * as protoTypes from './proto/compiled'
 const ProtoTransaction = protoTypes.proto.Transaction
 const ContractType = protoTypes.proto.TXContract.ContractType
 
-/** RawData int64 fields that protobuf.js writes as strings. Dot notation for nested fields. */
-const RAW_DATA_INT64_FIELDS = [
-  'Nonce',
-  'KAppFee',
-  'BandwidthFee',
-  'PermissionID',
-  'KDAFee.Amount',
-] as const
+/** Top-level 64-bit integer fields that protobuf.js writes as strings. */
+const TOP_LEVEL_INT64_FIELDS = ['GasLimit', 'GasMultiplier', 'Block'] as const
+
+/** RawData 64-bit integer fields that protobuf.js writes as strings. Dot notation for nested fields. */
+const RAW_DATA_INT64_FIELDS = ['Nonce', 'KAppFee', 'BandwidthFee', 'KDAFee.Amount'] as const
 
 /**
  * Normalize protobuf.js `toJSON` output of a transaction into the node's
  * broadcast format. Mutates and returns `json`.
  *
+ * Every 64-bit integer field given as a string must be a plain decimal that
+ * fits a safe integer. Anything else would change the signed data: `Number()`
+ * reads `'abc'` as `NaN` (sent as `null`), `'0x10'` as 16, and rounds values
+ * above 2^53.
+ *
  * @param json - The result of `Transaction.toJSON()` from the proto classes
  * @returns The same object, normalized
- * @throws {Error} If `GasLimit` is not a non-negative safe integer
+ * @throws {Error} If a 64-bit integer field is not a non-negative safe integer
  */
 export function normalizeTransactionJSON(json: { [k: string]: unknown }): {
   [k: string]: unknown
 } {
-  if (typeof json['GasLimit'] === 'string') {
-    const gasLimit = Number(json['GasLimit'])
-    if (!Number.isSafeInteger(gasLimit) || gasLimit < 0) {
-      throw new Error('Invalid GasLimit value')
-    }
-    json['GasLimit'] = gasLimit
-  }
+  numericStringFieldsToNumbers(json, TOP_LEVEL_INT64_FIELDS)
 
   const rawData = json['RawData']
   if (rawData && typeof rawData === 'object') {
@@ -121,8 +117,14 @@ function numericStringFieldsToNumbers(
       target = next && typeof next === 'object' ? (next as { [k: string]: unknown }) : undefined
     }
 
-    if (target && typeof target[leafKey] === 'string') {
-      target[leafKey] = Number(target[leafKey])
+    const value = target?.[leafKey]
+    if (target && typeof value === 'string') {
+      const n = Number(value)
+      if (!/^[0-9]+$/.test(value) || !Number.isSafeInteger(n)) {
+        // The field name only, never the value.
+        throw new Error(`Invalid ${path} value`)
+      }
+      target[leafKey] = n
     }
   }
 }

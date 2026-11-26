@@ -49,8 +49,43 @@ describe('normalizeTransactionJSON', () => {
     )
   })
 
-  it.each(['-1', '1.5', 'abc', '9007199254740993'])('should reject GasLimit %s', (gasLimit) => {
-    expect(() => normalizeTransactionJSON({ GasLimit: gasLimit })).toThrow('Invalid GasLimit value')
+  it('should convert top-level GasMultiplier and Block to numbers', () => {
+    expect(normalizeTransactionJSON({ GasMultiplier: '2', Block: '1000' })).toEqual({
+      GasMultiplier: 2,
+      Block: 1000,
+    })
+  })
+
+  // Number() would send 'abc' as null, '' as 0, '0x10' as 16, and round the last.
+  const malformed = ['-1', '1.5', 'abc', '', '0x10', ' 7', '1e3', '9007199254740993']
+  const fields: [string, (v: string) => { [k: string]: unknown }][] = [
+    ['GasLimit', (v) => ({ GasLimit: v })],
+    ['GasMultiplier', (v) => ({ GasMultiplier: v })],
+    ['Block', (v) => ({ Block: v })],
+    ['Nonce', (v) => ({ RawData: { Nonce: v } })],
+    ['KAppFee', (v) => ({ RawData: { KAppFee: v } })],
+    ['BandwidthFee', (v) => ({ RawData: { BandwidthFee: v } })],
+    ['KDAFee.Amount', (v) => ({ RawData: { KDAFee: { Amount: v } } })],
+  ]
+
+  it.each(fields.flatMap(([name, build]) => malformed.map((v) => [name, v, build] as const)))(
+    'should reject %s %j',
+    (name, value, build) => {
+      expect(() => normalizeTransactionJSON(build(value))).toThrow(`Invalid ${name} value`)
+    },
+  )
+
+  it('should not put the rejected value in the error', () => {
+    expect(() => normalizeTransactionJSON({ RawData: { Nonce: 'secret-ish' } })).toThrow(
+      /^Invalid Nonce value$/,
+    )
+  })
+
+  it('should accept the largest safe integer', () => {
+    const max = String(Number.MAX_SAFE_INTEGER)
+    expect(normalizeTransactionJSON({ RawData: { Nonce: max } })).toEqual({
+      RawData: { Nonce: Number.MAX_SAFE_INTEGER },
+    })
   })
 })
 

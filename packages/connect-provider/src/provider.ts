@@ -966,10 +966,13 @@ export class KleverProvider implements IProvider {
    * - a plain JSON transaction object (bytes as base64): normalized, which also
    *   fixes protobuf.js-style int64 strings and enum names
    * - a proto-shaped object with `Uint8Array` fields (`ITransaction`): converted
-   * - a JSON string of a transaction object: parsed and normalized; a JSON
-   *   array is sent as parsed
+   * - a JSON string of a transaction object: parsed and normalized
    * - a hex string, with or without one `0x`/`0X` prefix: decoded
-   * - a `Uint8Array` of protobuf bytes: decoded
+   * - a `Uint8Array` (or `Buffer`) of protobuf bytes: decoded, including bytes
+   *   from another realm (an iframe, `vm`, jsdom)
+   *
+   * Anything else, and any object without `RawData`, is rejected: the node
+   * would refuse it anyway.
    *
    * @private
    * @throws {ValidationError} If the data is empty, malformed, or not a transaction
@@ -986,7 +989,8 @@ export class KleverProvider implements IProvider {
         parsed = undefined
       }
       if (typeof parsed === 'object' && parsed !== null) {
-        return this.normalizeTransactionObject(parsed)
+        // JSON.parse built this object, so it can be normalized in place.
+        return this.normalizeTransactionObject(parsed, true)
       }
 
       // Otherwise parse from hex to bytes, stripping one 0x/0X prefix as hexDecode does
@@ -1008,15 +1012,20 @@ export class KleverProvider implements IProvider {
       }
 
       return this.decodeTransactionBytes(hexDecode(hex))
-    } else if (tx instanceof Uint8Array) {
+    } else if (isBytes(tx)) {
       if (tx.length === 0) {
         throw new ValidationError('Invalid transaction data: empty Uint8Array')
       }
-      return this.decodeTransactionBytes(tx)
+      // A local view over the same memory: covers Buffer and a Uint8Array from
+      // another realm, which protobuf.js would not treat as bytes.
+      const bytes = new Uint8Array(tx.buffer, tx.byteOffset, tx.byteLength)
+      return this.decodeTransactionBytes(bytes)
     } else if (tx !== null && typeof tx === 'object') {
-      return this.normalizeTransactionObject(tx)
+      return this.normalizeTransactionObject(tx, false)
     } else {
-      return tx
+      throw new ValidationError(
+        'Invalid transaction data: expected a transaction object, JSON string, hex string or bytes',
+      )
     }
   }
 
@@ -1026,24 +1035,46 @@ export class KleverProvider implements IProvider {
    * @private
    * @throws {ValidationError} If the object is not a valid transaction
    */
-  private normalizeTransactionObject(tx: object): unknown {
-    try {
-      if (typeof (tx as { toJSON?: unknown }).toJSON === 'function') {
-        // A Transaction instance (connect-transactions or connect-encoding).
-        // protobuf.js toJSON writes int64s as strings and enums as names.
-        const json: unknown = (tx as { toJSON: () => unknown }).toJSON()
-        return isTransactionJSON(json) ? normalizeTransactionJSON(json) : json
+  private normalizeTransactionObject(tx: object, owned: boolean): { [k: string]: unknown } {
+    if (typeof (tx as { toJSON?: unknown }).toJSON === 'function') {
+      // A Transaction instance (connect-transactions or connect-encoding).
+      // protobuf.js toJSON writes int64s as strings and enums as names.
+      let json: unknown
+      try {
+        json = (tx as { toJSON: () => unknown }).toJSON()
+      } catch {
+        // Omit the thrown message: it may quote the transaction.
+        throw new ValidationError('Invalid transaction data: toJSON() failed')
       }
-      if (containsBytes(tx)) {
-        // A proto-shaped object (ITransaction): its Uint8Array fields would
-        // serialize as index-keyed objects, so convert it to the node format.
+      return this.normalizeTransactionJSONOrThrow(json, false)
+    }
+    if (containsBytes(tx)) {
+      // A proto-shaped object (ITransaction): its Uint8Array fields would
+      // serialize as index-keyed objects, so convert it to the node format.
+      try {
         return transactionObjectToJSON(tx)
+      } catch (error) {
+        throw new ValidationError(
+          `Invalid transaction data: ${error instanceof Error ? error.message : String(error)}`,
+        )
       }
-      if (isTransactionJSON(tx)) {
-        // Copy first: normalization mutates, and this object is the caller's.
-        return normalizeTransactionJSON(structuredClone(tx))
-      }
-      return tx
+    }
+    return this.normalizeTransactionJSONOrThrow(tx, owned)
+  }
+
+  /**
+   * Normalize a transaction JSON object, copying it first unless it is ours.
+   * @private
+   * @throws {ValidationError} If it is not a transaction object with `RawData`,
+   *   or a 64-bit integer field is malformed
+   */
+  private normalizeTransactionJSONOrThrow(json: unknown, owned: boolean): { [k: string]: unknown } {
+    if (!isTransactionJSON(json)) {
+      throw new ValidationError('Invalid transaction data: expected a transaction with RawData')
+    }
+    try {
+      // normalizeTransactionJSON mutates; the caller's object must not change.
+      return normalizeTransactionJSON(owned ? json : copyForNormalize(json))
     } catch (error) {
       throw new ValidationError(
         `Invalid transaction data: ${error instanceof Error ? error.message : String(error)}`,
@@ -1604,18 +1635,52 @@ export class KleverProvider implements IProvider {
 }
 
 /**
+ * Whether a value is a Uint8Array (or Buffer), including one from another realm
+ * (an iframe, `vm`, jsdom), where `instanceof Uint8Array` is false.
+ */
+function isBytes(value: unknown): value is Uint8Array {
+  return (
+    value instanceof Uint8Array ||
+    (ArrayBuffer.isView(value) && Object.prototype.toString.call(value) === '[object Uint8Array]')
+  )
+}
+
+/**
  * Whether a value holds a Uint8Array anywhere (itself, or nested in objects or
  * arrays). Such a value would serialize its bytes as index-keyed objects.
  */
 function containsBytes(value: unknown, depth = 0): boolean {
-  if (value instanceof Uint8Array) return true
+  if (isBytes(value)) return true
   // Transactions nest a few levels deep; the cap guards against cycles.
   if (depth > 8 || value === null || typeof value !== 'object') return false
   const children = Array.isArray(value) ? value : Object.values(value)
   return children.some((child) => containsBytes(child, depth + 1))
 }
 
-/** Whether a value looks like a single transaction JSON object (not an array). */
+/** Whether a value is a single transaction JSON object: not an array, with a RawData object. */
 function isTransactionJSON(value: unknown): value is { [k: string]: unknown } {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) && 'RawData' in value
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
+  const rawData = (value as { RawData?: unknown }).RawData
+  return rawData !== null && typeof rawData === 'object' && !Array.isArray(rawData)
+}
+
+/**
+ * Copy the parts of a transaction JSON object that `normalizeTransactionJSON`
+ * changes (the top level, RawData, KDAFee and each Contract item), so the
+ * caller's object stays as it was. Other values are shared, not cloned.
+ */
+function copyForNormalize(json: { [k: string]: unknown }): { [k: string]: unknown } {
+  const copy = { ...json }
+  const rawData = { ...(json['RawData'] as { [k: string]: unknown }) }
+  const kdaFee = rawData['KDAFee']
+  if (kdaFee && typeof kdaFee === 'object') {
+    rawData['KDAFee'] = { ...(kdaFee as { [k: string]: unknown }) }
+  }
+  if (Array.isArray(rawData['Contract'])) {
+    rawData['Contract'] = (rawData['Contract'] as unknown[]).map((contract) =>
+      contract && typeof contract === 'object' ? { ...contract } : contract,
+    )
+  }
+  copy['RawData'] = rawData
+  return copy
 }
