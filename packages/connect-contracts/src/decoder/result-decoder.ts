@@ -44,6 +44,7 @@
 
 import {
   bech32Encode,
+  hexDecode,
   base64Encode as base64EncodeUtil,
   base64Decode as base64DecodeUtil,
 } from '@klever/connect-encoding'
@@ -455,18 +456,8 @@ function encodeBech32(data: Uint8Array): string {
  * Useful for converting event data (hex) to decoder format (base64)
  */
 export function hexToBase64(hex: string): string {
-  // Remove 0x prefix if present
-  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
-
-  // Convert hex to bytes
-  const bytes = new Uint8Array(cleanHex.length / 2)
-  for (let i = 0; i < cleanHex.length; i += 2) {
-    const byte = parseInt(cleanHex.slice(i, i + 2), 16)
-    bytes[i / 2] = byte
-  }
-
-  // Convert bytes to base64
-  return encodeBase64(bytes)
+  // hexDecode strips a 0x/0X prefix and rejects malformed hex
+  return encodeBase64(hexDecode(hex))
 }
 
 /**

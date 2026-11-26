@@ -429,7 +429,8 @@ function encodeFixedArray(
 ): Uint8Array {
   // Handle hex string input for u8 arrays (common for hashes, etc.)
   if (innerType === 'u8' && typeof values === 'string') {
-    const hex = values.startsWith('0x') ? values.slice(2) : values
+    // Strip one 0x/0X prefix, as hexDecode does
+    const hex = values.replace(/^0x/i, '')
     if (hex.length !== size * 2) {
       throw new Error(
         `Expected hex string of ${size * 2} characters (${size} bytes), got ${hex.length}`,

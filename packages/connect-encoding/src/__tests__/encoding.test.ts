@@ -53,6 +53,32 @@ describe('encoding', () => {
       expect(() => hexDecode('zz')).toThrow('Hex string contains non-hex characters')
     })
 
+    it.each([
+      ['a non-hex second digit', '7z'],
+      ['a sign character', '-1'],
+      ['a plus sign', '+1'],
+      ['leading whitespace', ' 7'],
+      ['trailing whitespace', '7 '],
+      ['a non-hex pair after valid ones', 'ff007z'],
+      ['a non-hex digit after the 0x prefix', '0x7z'],
+      ['a tab inside a pair', '00\t7'],
+      ['a newline inside a pair after the 0x prefix', '0x\n7'],
+    ])('should reject %s instead of decoding a valid prefix', (_, input) => {
+      expect(() => hexDecode(input)).toThrow('Hex string contains non-hex characters')
+    })
+
+    it('should still reject a second 0x prefix', () => {
+      expect(() => hexDecode('0x0x00')).toThrow('Hex string contains non-hex characters')
+    })
+
+    it('should report the position of the first invalid pair', () => {
+      expect(() => hexDecode('ff007z')).toThrow('at position 4')
+    })
+
+    it('should decode uppercase and mixed-case hex', () => {
+      expect(hexDecode('FFaB')).toEqual(new Uint8Array([255, 171]))
+    })
+
     it('should not echo the invalid input in the error', () => {
       expect(() => hexDecode('abz7')).toThrow(
         expect.objectContaining({ message: expect.not.stringContaining('z7') }),

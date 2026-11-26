@@ -181,6 +181,18 @@ describe('Parameter Encoder', () => {
     it('should throw on odd-length hex', () => {
       expect(() => hexToBytes('123')).toThrow('Hex string must have even length')
     })
+
+    it('should handle 0X prefix', () => {
+      expect(Array.from(hexToBytes('0X010203'))).toEqual([1, 2, 3])
+    })
+
+    it.each([
+      ['unparseable', 'zz'],
+      ['a valid prefix', '7z'],
+      ['whitespace', '01 2'],
+    ])('should reject %s hex instead of encoding wrong bytes', (_, input) => {
+      expect(() => hexToBytes(input)).toThrow('Hex string contains non-hex characters')
+    })
   })
 
   describe('bytesToHex', () => {
@@ -931,6 +943,21 @@ describe('ABI-Aware Encoder', () => {
       expect(bytesToHex(result)).toBe(
         '6b26e4992694fd5312b6652751c6460f7b656f7e15c8dcd3be8bd05db1cc1e22',
       )
+    })
+
+    it('should encode array32<u8> from hex string with 0X prefix', async () => {
+      const { ABIEncoder } = await import('../encoder/abi-encoder')
+      const mockABI: ContractABI = {
+        name: 'Test',
+        constructor: { name: 'init', inputs: [], outputs: [] },
+        endpoints: [],
+        types: {},
+      }
+
+      const encoder = new ABIEncoder(mockABI)
+      const hex = '6b26e4992694fd5312b6652751c6460f7b656f7e15c8dcd3be8bd05db1cc1e22'
+      // Same prefix rule as hexDecode: 0X used to be counted as two of the 64 characters.
+      expect(bytesToHex(encoder.encodeValue('0X' + hex, 'array32<u8>'))).toBe(hex)
     })
 
     it('should encode array16<u8> from hex string', async () => {

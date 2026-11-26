@@ -7,7 +7,7 @@
 import type { ContractABI, ABIParameter, ABITypeDefinition } from '../types/abi'
 import { ABIParser } from '../abi/parser'
 import { decodeAddress, decodeString, decodeBytes, decodeBase64 } from './result-decoder'
-import { hexEncode } from '@klever/connect-encoding'
+import { hexDecode, hexEncode } from '@klever/connect-encoding'
 
 /**
  * Decoded value with metadata
@@ -580,26 +580,16 @@ export function decodeResultsWithMetadata(
       throw new Error(`Parameter at index ${index} not found`)
     }
 
-    try {
-      // Convert to bytes based on encoding
-      let bytes: Uint8Array
-      if (typeof item === 'string') {
-        if (encoding === 'hex') {
-          // Decode from hex
-          const cleanHex = item.startsWith('0x') ? item.slice(2) : item
-          bytes = new Uint8Array(cleanHex.length / 2)
-          for (let i = 0; i < cleanHex.length; i += 2) {
-            const byte = parseInt(cleanHex.slice(i, i + 2), 16)
-            bytes[i / 2] = byte
-          }
-        } else {
-          // Decode from base64
-          bytes = decodeBase64(item)
-        }
-      } else {
-        bytes = item
-      }
+    // Convert to bytes first: malformed input (hex or base64) throws here,
+    // rather than being decoded into wrong bytes.
+    let bytes: Uint8Array
+    if (typeof item === 'string') {
+      bytes = encoding === 'hex' ? hexDecode(item) : decodeBase64(item)
+    } else {
+      bytes = item
+    }
 
+    try {
       // Decode based on type (top-level: nested = false)
       const decoded = decodeByType(bytes, param.type, abi, 0, false)
 
@@ -611,25 +601,9 @@ export function decodeResultsWithMetadata(
     } catch (err) {
       console.error('Error decoding results with metadata:', err)
       // On error, return hex-encoded raw data
-      let valueBytes: Uint8Array
-      if (typeof item === 'string') {
-        if (encoding === 'hex') {
-          const cleanHex = item.startsWith('0x') ? item.slice(2) : item
-          valueBytes = new Uint8Array(cleanHex.length / 2)
-          for (let i = 0; i < cleanHex.length; i += 2) {
-            const byte = parseInt(cleanHex.slice(i, i + 2), 16)
-            valueBytes[i / 2] = byte
-          }
-        } else {
-          valueBytes = decodeBase64(item)
-        }
-      } else {
-        valueBytes = item
-      }
-
       return {
         type: param.type,
-        value: hexEncode(valueBytes),
+        value: hexEncode(bytes),
         raw: item, // Keep original format
       }
     }

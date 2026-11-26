@@ -52,6 +52,7 @@ import { Contract, type Signer, type Provider } from './contract'
 import { ABIEncoder } from './encoder/abi-encoder'
 import { TransactionBuilder } from '@klever/connect-transactions'
 import type { Transaction } from '@klever/connect-transactions'
+import { hexDecode } from '@klever/connect-encoding'
 import { parseDeployReceipt, type TransactionReceipt } from './receipt-parser'
 
 /**
@@ -140,13 +141,9 @@ export class ContractFactory {
 
     // Handle bytecode as hex string or Uint8Array
     if (typeof bytecode === 'string') {
-      // Remove 0x prefix if present
-      const hex = bytecode.startsWith('0x') ? bytecode.slice(2) : bytecode
-      const bytes = new Uint8Array(hex.length / 2)
-      for (let i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16)
-      }
-      this.bytecode = bytes
+      // hexDecode strips a 0x/0X prefix and rejects odd-length or malformed
+      // hex, so a corrupted bytecode string can't deploy different bytes
+      this.bytecode = hexDecode(bytecode)
     } else {
       this.bytecode = bytecode
     }
