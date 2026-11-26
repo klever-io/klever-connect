@@ -1037,7 +1037,7 @@ export class KleverProvider implements IProvider {
       if (containsBytes(tx)) {
         // A proto-shaped object (ITransaction): its Uint8Array fields would
         // serialize as index-keyed objects, so convert it to the node format.
-        return transactionObjectToJSON(tx as { [k: string]: unknown })
+        return transactionObjectToJSON(tx)
       }
       if (isTransactionJSON(tx)) {
         // Copy first: normalization mutates, and this object is the caller's.

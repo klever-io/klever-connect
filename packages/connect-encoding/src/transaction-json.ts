@@ -92,9 +92,7 @@ export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknow
  * @returns The transaction as the JSON object `/transaction/broadcast` accepts
  * @throws {Error} If the object is not a transaction, or has no `RawData`
  */
-export function transactionObjectToJSON(tx: { [k: string]: unknown }): {
-  [k: string]: unknown
-} {
+export function transactionObjectToJSON(tx: object): { [k: string]: unknown } {
   let message: protoTypes.proto.Transaction
   try {
     message = ProtoTransaction.fromObject(tx)
