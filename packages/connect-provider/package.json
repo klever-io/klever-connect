@@ -39,7 +39,8 @@
   "sideEffects": false,
   "dependencies": {
     "@klever/connect-core": "workspace:*",
-    "@klever/connect-crypto": "workspace:*"
+    "@klever/connect-crypto": "workspace:*",
+    "@klever/connect-encoding": "workspace:*"
   },
   "repository": {
     "type": "git",

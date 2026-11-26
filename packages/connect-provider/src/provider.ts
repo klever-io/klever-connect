@@ -5,6 +5,12 @@ import {
   NetworkError,
   TransactionError,
 } from '@klever/connect-core'
+import {
+  hexDecode,
+  normalizeTransactionJSON,
+  transactionBytesToJSON,
+  transactionObjectToJSON,
+} from '@klever/connect-encoding'
 import type { ProviderConfig, ProviderConfigObject } from './types/provider'
 import type { Network, NetworkName } from './types'
 import type {
@@ -593,8 +599,10 @@ export class KleverProvider implements IProvider {
   /**
    * Broadcasts a single signed transaction to the network
    *
-   * @param tx - The signed transaction data
+   * @param tx - The signed transaction, in any format `sendRawTransaction` accepts
    * @returns Broadcast result with transaction hash
+   * @throws {ValidationError} If the transaction data is empty, malformed, or not a transaction
+   * @throws {TransactionError} If the broadcast fails or no hash is returned
    *
    * @example
    * ```typescript
@@ -604,7 +612,7 @@ export class KleverProvider implements IProvider {
    */
   async broadcastTransaction(tx: unknown): Promise<IBroadcastResult> {
     const response = await this.nodeClient.post<IBroadcastResponse>('/transaction/broadcast', {
-      txs: [tx],
+      txs: [this.parseRawTransaction(tx)],
     })
 
     if (response.error) {
@@ -635,8 +643,9 @@ export class KleverProvider implements IProvider {
   /**
    * Broadcasts multiple signed transactions to the network in a single batch
    *
-   * @param txs - Array of signed transaction data
+   * @param txs - Signed transactions, each in any format `sendRawTransaction` accepts
    * @returns Broadcast result with array of transaction hashes
+   * @throws {ValidationError} If the list is empty, or any transaction data is malformed
    *
    * @example
    * ```typescript
@@ -650,7 +659,7 @@ export class KleverProvider implements IProvider {
     }
 
     const response = await this.nodeClient.post<IBroadcastResponse>('/transaction/broadcast', {
-      txs,
+      txs: txs.map((tx) => this.parseRawTransaction(tx)),
     })
 
     if (response.error) {
@@ -946,10 +955,27 @@ export class KleverProvider implements IProvider {
   }
 
   /**
-   * Parse raw transaction data to a format suitable for broadcasting
-   * Supports hex strings, JSON strings, Uint8Arrays, and transaction objects
+   * Convert signed transaction data, in any supported format, into the JSON
+   * object the node's `/transaction/broadcast` endpoint accepts. The node takes
+   * only that JSON (it has no raw-bytes field), so hex and bytes are decoded
+   * here; posting a `Uint8Array` as-is would serialize it as `{"0":..,"1":..}`.
+   *
+   * Accepted formats:
+   * - a `Transaction` instance (from connect-transactions or connect-encoding),
+   *   or any object with `toJSON()`: its `toJSON()` output, normalized
+   * - a plain JSON transaction object (bytes as base64): normalized, which also
+   *   fixes protobuf.js-style int64 strings and enum names
+   * - a proto-shaped object with `Uint8Array` fields (`ITransaction`): converted
+   * - a JSON string of a transaction object: parsed and normalized
+   * - a hex string, with or without one `0x`/`0X` prefix: decoded
+   * - a `Uint8Array` (or `Buffer`) of protobuf bytes: decoded, including bytes
+   *   from another realm (an iframe, `vm`, jsdom)
+   *
+   * Anything else, and any object without `RawData`, is rejected: the node
+   * would refuse it anyway.
+   *
    * @private
-   * @throws {Error} If the transaction data is invalid
+   * @throws {ValidationError} If the data is empty, malformed, or not a transaction
    */
   private parseRawTransaction(tx: string | Uint8Array | unknown): unknown {
     if (typeof tx === 'string') {
@@ -963,7 +989,8 @@ export class KleverProvider implements IProvider {
         parsed = undefined
       }
       if (typeof parsed === 'object' && parsed !== null) {
-        return parsed
+        // JSON.parse built this object, so it can be normalized in place.
+        return this.normalizeTransactionObject(parsed, true)
       }
 
       // Otherwise parse from hex to bytes, stripping one 0x/0X prefix as hexDecode does
@@ -971,9 +998,8 @@ export class KleverProvider implements IProvider {
 
       // Validate hex string
       if (!/^[0-9a-fA-F]*$/.test(hex)) {
-        throw new ValidationError('Invalid transaction data: not valid JSON or hex string', {
-          tx,
-        })
+        // No context: the input may be a signed transaction or key material.
+        throw new ValidationError('Invalid transaction data: not valid JSON or hex string')
       }
 
       // Without this, the last single digit of an odd-length string became its own byte
@@ -981,33 +1007,113 @@ export class KleverProvider implements IProvider {
         throw new ValidationError('Invalid transaction data: hex string must have even length')
       }
 
-      const bytes = hex.match(/.{2}/g)?.map((byte) => parseInt(byte, 16))
-      if (!bytes || bytes.length === 0) {
+      if (hex.length === 0) {
         throw new ValidationError('Invalid transaction data: empty hex string')
       }
 
-      return new Uint8Array(bytes)
-    } else if (tx instanceof Uint8Array) {
+      return this.decodeTransactionBytes(hexDecode(hex))
+    } else if (isBytes(tx)) {
       if (tx.length === 0) {
         throw new ValidationError('Invalid transaction data: empty Uint8Array')
       }
-      return tx
+      // A local view over the same memory: covers Buffer and a Uint8Array from
+      // another realm, which protobuf.js would not treat as bytes.
+      const bytes = new Uint8Array(tx.buffer, tx.byteOffset, tx.byteLength)
+      return this.decodeTransactionBytes(bytes)
+    } else if (tx !== null && typeof tx === 'object') {
+      return this.normalizeTransactionObject(tx, false)
     } else {
-      // Assume it's already a transaction object
-      return tx
+      throw new ValidationError(
+        'Invalid transaction data: expected a transaction object, JSON string, hex string or bytes',
+      )
     }
   }
 
   /**
-   * Sends a single raw transaction to the network
-   * @param signedTx - Signed transaction data (hex string, JSON string, Uint8Array, or Transaction object)
+   * Bring a transaction object into the node's JSON format. Running the
+   * normalization on output that is already in that format changes nothing.
+   * @private
+   * @throws {ValidationError} If the object is not a valid transaction
+   */
+  private normalizeTransactionObject(tx: object, owned: boolean): { [k: string]: unknown } {
+    if (typeof (tx as { toJSON?: unknown }).toJSON === 'function') {
+      // A Transaction instance (connect-transactions or connect-encoding).
+      // protobuf.js toJSON writes int64s as strings and enums as names.
+      let json: unknown
+      try {
+        json = (tx as { toJSON: () => unknown }).toJSON()
+      } catch {
+        // Omit the thrown message: it may quote the transaction.
+        throw new ValidationError('Invalid transaction data: toJSON() failed')
+      }
+      return this.normalizeTransactionJSONOrThrow(json, false)
+    }
+    if (containsBytes(tx)) {
+      // A proto-shaped object (ITransaction): its Uint8Array fields would
+      // serialize as index-keyed objects, so convert it to the node format.
+      try {
+        return transactionObjectToJSON(tx)
+      } catch (error) {
+        throw new ValidationError(
+          `Invalid transaction data: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
+    }
+    return this.normalizeTransactionJSONOrThrow(tx, owned)
+  }
+
+  /**
+   * Normalize a transaction JSON object, copying it first unless it is ours.
+   * @private
+   * @throws {ValidationError} If it is not a transaction object with `RawData`,
+   *   or a 64-bit integer field is malformed
+   */
+  private normalizeTransactionJSONOrThrow(json: unknown, owned: boolean): { [k: string]: unknown } {
+    if (!isTransactionJSON(json)) {
+      throw new ValidationError('Invalid transaction data: expected a transaction with RawData')
+    }
+    try {
+      // normalizeTransactionJSON mutates; the caller's object must not change.
+      return normalizeTransactionJSON(owned ? json : copyForNormalize(json))
+    } catch (error) {
+      throw new ValidationError(
+        `Invalid transaction data: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  /**
+   * Decode protobuf transaction bytes into the node's JSON format.
+   * @private
+   * @throws {ValidationError} If the bytes are not an encoded transaction
+   */
+  private decodeTransactionBytes(bytes: Uint8Array): { [k: string]: unknown } {
+    try {
+      return transactionBytesToJSON(bytes)
+    } catch (error) {
+      throw new ValidationError(
+        `Invalid transaction data: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  /**
+   * Sends a single signed transaction to the network
+   *
+   * Accepts the transaction in any form you have it: a `Transaction` instance,
+   * its `toHex()` string (with or without `0x`), its `toBytes()` bytes, its
+   * `toJSON()` object or a JSON string of it, or a proto-shaped `ITransaction`
+   * object. Every form reaches the node as the same JSON body.
+   *
+   * @param signedTx - The signed transaction, in any of the formats above
    * @returns The transaction hash
-   * @throws {Error} If the transaction data is invalid, broadcast fails, or no hash is returned
+   * @throws {ValidationError} If the transaction data is empty, malformed, or not a transaction
+   * @throws {TransactionError} If the broadcast fails or no hash is returned
    *
    * @example
    * ```typescript
    * try {
-   *   const hash = await provider.sendRawTransaction(signedTxHex)
+   *   const hash = await provider.sendRawTransaction(signedTx) // or signedTx.toHex()
    *   console.log(hash) // '0x123...'
    * } catch (error) {
    *   console.error('Broadcast failed:', error.message)
@@ -1015,8 +1121,7 @@ export class KleverProvider implements IProvider {
    * ```
    */
   async sendRawTransaction(signedTx: string | Uint8Array | unknown): Promise<TransactionHash> {
-    const txData = this.parseRawTransaction(signedTx)
-    const result = await this.broadcastTransaction(txData)
+    const result = await this.broadcastTransaction(signedTx)
 
     // Check for error codes even if we got a hash
     // Some APIs may return partial success with warnings
@@ -1031,15 +1136,16 @@ export class KleverProvider implements IProvider {
   }
 
   /**
-   * Sends multiple raw transactions to the network in a single batch
-   * @param signedTxs - Array of signed transaction data (hex strings, JSON strings, Uint8Arrays, or Transaction objects)
+   * Sends multiple signed transactions to the network in a single batch
+   * @param signedTxs - Signed transactions, each in any format `sendRawTransaction` accepts (formats may be mixed)
    * @returns Array of transaction hashes
-   * @throws {Error} If any transaction data is invalid, broadcast fails, or no hashes are returned
+   * @throws {ValidationError} If any transaction data is empty, malformed, or not a transaction
+   * @throws {TransactionError} If the broadcast fails or no hashes are returned
    *
    * @example
    * ```typescript
    * try {
-   *   const hashes = await provider.sendRawTransactions([tx1Hex, tx2Hex, tx3Hex])
+   *   const hashes = await provider.sendRawTransactions([tx1, tx2.toHex(), tx3.toBytes()])
    *   console.log(hashes) // ['0x123...', '0x456...', '0x789...']
    * } catch (error) {
    *   console.error('Broadcast failed:', error.message)
@@ -1049,8 +1155,7 @@ export class KleverProvider implements IProvider {
   async sendRawTransactions(
     signedTxs: (string | Uint8Array | unknown)[],
   ): Promise<TransactionHash[]> {
-    const txsData = signedTxs.map((tx) => this.parseRawTransaction(tx))
-    const result = await this.broadcastTransactions(txsData)
+    const result = await this.broadcastTransactions(signedTxs)
 
     // Check for error codes even if we got hashes
     // Some APIs may return partial success with warnings
@@ -1527,4 +1632,55 @@ export class KleverProvider implements IProvider {
   async sendTransaction(tx: unknown): Promise<IBroadcastResult> {
     return this.broadcastTransaction(tx)
   }
+}
+
+/**
+ * Whether a value is a Uint8Array (or Buffer), including one from another realm
+ * (an iframe, `vm`, jsdom), where `instanceof Uint8Array` is false.
+ */
+function isBytes(value: unknown): value is Uint8Array {
+  return (
+    value instanceof Uint8Array ||
+    (ArrayBuffer.isView(value) && Object.prototype.toString.call(value) === '[object Uint8Array]')
+  )
+}
+
+/**
+ * Whether a value holds a Uint8Array anywhere (itself, or nested in objects or
+ * arrays). Such a value would serialize its bytes as index-keyed objects.
+ */
+function containsBytes(value: unknown, depth = 0): boolean {
+  if (isBytes(value)) return true
+  // Transactions nest a few levels deep; the cap guards against cycles.
+  if (depth > 8 || value === null || typeof value !== 'object') return false
+  const children = Array.isArray(value) ? value : Object.values(value)
+  return children.some((child) => containsBytes(child, depth + 1))
+}
+
+/** Whether a value is a single transaction JSON object: not an array, with a RawData object. */
+function isTransactionJSON(value: unknown): value is { [k: string]: unknown } {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
+  const rawData = (value as { RawData?: unknown }).RawData
+  return rawData !== null && typeof rawData === 'object' && !Array.isArray(rawData)
+}
+
+/**
+ * Copy the parts of a transaction JSON object that `normalizeTransactionJSON`
+ * changes (the top level, RawData, KDAFee and each Contract item), so the
+ * caller's object stays as it was. Other values are shared, not cloned.
+ */
+function copyForNormalize(json: { [k: string]: unknown }): { [k: string]: unknown } {
+  const copy = { ...json }
+  const rawData = { ...(json['RawData'] as { [k: string]: unknown }) }
+  const kdaFee = rawData['KDAFee']
+  if (kdaFee && typeof kdaFee === 'object') {
+    rawData['KDAFee'] = { ...(kdaFee as { [k: string]: unknown }) }
+  }
+  if (Array.isArray(rawData['Contract'])) {
+    rawData['Contract'] = (rawData['Contract'] as unknown[]).map((contract) =>
+      contract && typeof contract === 'object' ? { ...contract } : contract,
+    )
+  }
+  copy['RawData'] = rawData
+  return copy
 }

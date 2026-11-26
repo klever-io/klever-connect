@@ -65,7 +65,7 @@ export interface BuildCallOptions {
  *   .build()
  *
  * await tx.sign(privateKey)
- * const hash = await provider.sendRawTransaction(tx.toHex())
+ * const hash = await provider.sendRawTransaction(tx)
  *
  * // Node-assisted building
  * const provider = new KleverProvider({ network: 'mainnet' })
@@ -107,7 +107,7 @@ export class TransactionBuilder {
    *   .build()
    *
    * await tx.sign(privateKey)
-   * const hash = await provider.sendRawTransaction(tx.toHex())
+   * const hash = await provider.sendRawTransaction(tx)
    * ```
    */
   static create(provider?: IProvider): TransactionBuilder {
@@ -1275,7 +1275,7 @@ export class TransactionBuilder {
    *
    * // Node automatically fetches nonce and calculates fees
    * await tx.sign(privateKey)
-   * const hash = await provider.sendRawTransaction(tx.toHex())
+   * const hash = await provider.sendRawTransaction(tx)
    *
    * // Build with multiple contracts
    * const tx = await TransactionBuilder.create(provider)

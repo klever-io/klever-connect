@@ -60,7 +60,7 @@ const privateKey = new Uint8Array(32) // Your private key bytes
 await tx.sign(privateKey)
 
 // Broadcast to network
-const txHash = await provider.sendRawTransaction(tx.toHex())
+const txHash = await provider.sendRawTransaction(tx)
 console.log(`Transaction hash: ${txHash}`)
 ```
 
@@ -87,7 +87,7 @@ async function sendKLV() {
   await tx.sign(privateKey)
 
   // 4. Broadcast
-  const txHash = await provider.sendRawTransaction(tx.toHex())
+  const txHash = await provider.sendRawTransaction(tx)
   console.log(`Success! Transaction: ${txHash}`)
 }
 
@@ -99,7 +99,7 @@ sendKLV().catch(console.error)
 ### Wait for Transaction Confirmation
 
 ```typescript
-const txHash = await provider.sendRawTransaction(tx.toHex())
+const txHash = await provider.sendRawTransaction(tx)
 
 // Wait for confirmation (default: 1 confirmation, 2 minute timeout)
 const confirmedTx = await provider.waitForTransaction(txHash)

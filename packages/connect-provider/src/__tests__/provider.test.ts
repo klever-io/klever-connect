@@ -4,6 +4,8 @@ import { NETWORKS } from '../networks'
 import { TransactionStatus, type IAccount, type ITransactionResponse } from '../types/api-types'
 import type { BlockHash, KleverAddress, TransactionHash } from '@klever/connect-core'
 import type { BuildTransactionRequest } from '../types/types'
+import { Transaction as ProtoTransaction } from '@klever/connect-encoding'
+import { runInNewContext } from 'node:vm'
 
 // Mock the HttpClient
 vi.mock('../http-client', () => ({
@@ -550,7 +552,7 @@ describe('KleverProvider', () => {
   })
 
   describe('broadcastTransaction', () => {
-    const mockTxData = { tx: '0xaabbcc' }
+    const mockTxData = { RawData: { Nonce: 1 } }
     const mockResponse = {
       error: null,
       code: 0,
@@ -620,7 +622,11 @@ describe('KleverProvider', () => {
   })
 
   describe('broadcastTransactions', () => {
-    const mockTxs = [{ tx: '0xaabbcc' }, { tx: '0xddeeff' }, { tx: '0x112233' }]
+    const mockTxs = [
+      { RawData: { Nonce: 1 } },
+      { RawData: { Nonce: 2 } },
+      { RawData: { Nonce: 3 } },
+    ]
     const mockResponse = {
       error: null,
       code: 0,
@@ -776,44 +782,216 @@ describe('KleverProvider', () => {
   })
 
   describe('sendRawTransaction', () => {
-    it('should send raw transaction as hex string', async () => {
-      const mockHash = '0x123abc' as TransactionHash
-      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
-        hash: mockHash,
-      })
+    // A real signed transaction with every converted field set: int64 fields,
+    // a nested KDAFee.Amount, contracts (including Type 0) and a signature.
+    const fixture = ProtoTransaction.fromObject({
+      RawData: {
+        Nonce: 42,
+        Sender: new Uint8Array(32).fill(1),
+        Contract: [
+          {
+            Type: 0,
+            Parameter: {
+              type_url: 'type.googleapis.com/proto.TransferContract',
+              value: new Uint8Array([10, 3, 75, 76, 86]),
+            },
+          },
+          {
+            Type: 63,
+            Parameter: {
+              type_url: 'type.googleapis.com/proto.SmartContract',
+              value: new Uint8Array([9, 8, 7]),
+            },
+          },
+        ],
+        PermissionID: 2,
+        Data: [new Uint8Array([1, 2])],
+        KAppFee: 500000,
+        BandwidthFee: 100000,
+        ChainID: new Uint8Array([49, 48, 57]),
+        KDAFee: { KDA: new Uint8Array([75, 70, 73]), Amount: 1234567 },
+      },
+      Signature: [new Uint8Array(64).fill(7)],
+    })
+    const fixtureBytes = ProtoTransaction.encode(fixture).finish()
+    const fixtureHex = Array.from(fixtureBytes, (b) => b.toString(16).padStart(2, '0')).join('')
+    // What the node expects: bytes as base64, int64s and contract types as numbers.
+    const expectedBody = {
+      RawData: {
+        Nonce: 42,
+        Sender: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+        Contract: [
+          {
+            Type: 0,
+            Parameter: {
+              type_url: 'type.googleapis.com/proto.TransferContract',
+              value: 'CgNLTFY=',
+            },
+          },
+          {
+            Type: 63,
+            Parameter: { type_url: 'type.googleapis.com/proto.SmartContract', value: 'CQgH' },
+          },
+        ],
+        PermissionID: 2,
+        Data: ['AQI='],
+        KAppFee: 500000,
+        BandwidthFee: 100000,
+        ChainID: 'MTA5',
+        KDAFee: { KDA: 'S0ZJ', Amount: 1234567 },
+      },
+      Signature: [
+        'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBw==',
+      ],
+    }
 
-      const txData = '0xaabbcc'
-      const hash = await provider.sendRawTransaction(txData)
-
-      expect(hash).toBe(mockHash)
-      // sendRawTransaction converts hex to Uint8Array before calling broadcastTransaction
-      expect(mockBroadcast).toHaveBeenCalledWith(expect.any(Uint8Array))
+    let mockPost: ReturnType<typeof vi.fn>
+    beforeEach(() => {
+      mockPost = vi.fn().mockResolvedValue({ data: { txsHashes: ['hash'] } })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
     })
 
-    it('should send raw transaction as Uint8Array', async () => {
-      const mockHash = '0x123abc' as TransactionHash
-      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
-        hash: mockHash,
-      })
+    /** The transactions as the HTTP client will serialize them. */
+    const sentTxs = (): unknown[] =>
+      JSON.parse(JSON.stringify(mockPost.mock.calls[0]?.[1])).txs as unknown[]
 
-      const txData = new Uint8Array([0xaa, 0xbb, 0xcc])
-      const hash = await provider.sendRawTransaction(txData)
+    it.each([
+      ['a hex string', () => fixtureHex],
+      ['a 0x hex string', () => '0x' + fixtureHex],
+      ['a 0X hex string', () => '0X' + fixtureHex],
+      ['bytes', () => fixtureBytes],
+      ['a proto-shaped object', () => ProtoTransaction.toObject(fixture)],
+      // protobuf.js JSON: int64s as strings and contract types as enum names
+      ['a proto Transaction instance', () => fixture],
+      ['a JSON string of a proto instance', () => JSON.stringify(fixture)],
+      ['a JSON object', () => JSON.parse(JSON.stringify(expectedBody))],
+      ['a JSON string', () => JSON.stringify(expectedBody)],
+    ])('should send %s to the node as the transaction JSON', async (_, input) => {
+      const hash = await provider.sendRawTransaction(input())
 
-      expect(hash).toBe(mockHash)
-      expect(mockBroadcast).toHaveBeenCalledWith(txData)
+      expect(hash).toBe('hash')
+      expect(mockPost).toHaveBeenCalledWith('/transaction/broadcast', expect.anything())
+      // Regression: bytes used to reach the node as {"0":10,"1":32,...}
+      expect(sentTxs()).toEqual([expectedBody])
     })
 
-    it('should send raw transaction as JSON string', async () => {
-      const mockHash = '0x123abc' as TransactionHash
-      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
-        hash: mockHash,
-      })
+    it.each([
+      ['broadcastTransaction', (p: KleverProvider, tx: unknown) => p.broadcastTransaction(tx)],
+      ['sendTransaction', (p: KleverProvider, tx: unknown) => p.sendTransaction(tx)],
+      ['broadcastTransactions', (p: KleverProvider, tx: unknown) => p.broadcastTransactions([tx])],
+    ])('should normalize hex and bytes passed to %s directly', async (_, send) => {
+      await send(provider, fixtureHex)
+      await send(provider, fixtureBytes)
 
-      const txData = JSON.stringify({ tx: 'data' })
-      const hash = await provider.sendRawTransaction(txData)
+      for (const call of mockPost.mock.calls) {
+        const body = JSON.parse(JSON.stringify(call[1])) as { txs: unknown[] }
+        expect(body.txs).toEqual([expectedBody])
+      }
+      expect(mockPost).toHaveBeenCalledTimes(2)
+    })
 
-      expect(hash).toBe(mockHash)
-      expect(mockBroadcast).toHaveBeenCalledWith({ tx: 'data' })
+    it('should not mutate a JSON object the caller passed in', async () => {
+      const input = { RawData: { Nonce: '42' } }
+      await provider.sendRawTransaction(input)
+      expect(input.RawData.Nonce).toBe('42')
+      expect(sentTxs()).toEqual([{ RawData: { Nonce: 42 } }])
+    })
+
+    it('should decode bytes from another realm', async () => {
+      // instanceof Uint8Array is false for these (iframe, vm, jsdom)
+      const foreign = runInNewContext('new Uint8Array(src)', { src: Array.from(fixtureBytes) })
+      expect(foreign instanceof Uint8Array).toBe(false)
+
+      await provider.sendRawTransaction(foreign)
+      expect(sentTxs()).toEqual([expectedBody])
+    })
+
+    it('should convert a proto-shaped object holding bytes from another realm', async () => {
+      const foreign = runInNewContext('new Uint8Array(32).fill(1)')
+      // Every other byte field is base64, so the foreign Sender is the only bytes value.
+      const json = JSON.parse(JSON.stringify(expectedBody)) as { RawData: { [k: string]: unknown } }
+      const tx = { ...json, RawData: { ...json.RawData, Sender: foreign } }
+
+      await provider.sendRawTransaction(tx)
+      expect(sentTxs()).toEqual([expectedBody])
+    })
+
+    it('should send a Buffer as bytes', async () => {
+      await provider.sendRawTransaction(Buffer.from(fixtureBytes))
+      expect(sentTxs()).toEqual([expectedBody])
+    })
+
+    it.each([
+      ['a number', 5],
+      ['null', null],
+      ['undefined', undefined],
+      ['a boolean', true],
+      ['an object without RawData', { tx: 'data' }],
+      ['a JSON string without RawData', JSON.stringify({ tx: 'data' })],
+      ['a JSON array string', '[1,2]'],
+      ['a number array', [10, 32, 1]],
+      ['an ArrayBuffer', new ArrayBuffer(4)],
+      ['an object whose RawData is not an object', { RawData: 'x' }],
+      ['an object whose toJSON() has no RawData', { toJSON: () => ({ tx: 'data' }) }],
+    ])('should reject %s before posting', async (_, input) => {
+      await expect(provider.sendRawTransaction(input)).rejects.toThrow(/Invalid transaction data/)
+      expect(mockPost).not.toHaveBeenCalled()
+    })
+
+    it('should reject a malformed int64 field before posting', async () => {
+      await expect(provider.sendRawTransaction({ RawData: { Nonce: '0x10' } })).rejects.toThrow(
+        'Invalid transaction data: Invalid Nonce value',
+      )
+      expect(mockPost).not.toHaveBeenCalled()
+    })
+
+    it('should leave every nested part of the caller object unchanged', async () => {
+      const input = {
+        RawData: {
+          Nonce: '42',
+          KDAFee: { KDA: 'S0ZJ', Amount: '7' },
+          Contract: [{ Type: 'TransferContractType', Parameter: { type_url: 't', value: 'AQ==' } }],
+        },
+        // A value structuredClone cannot copy: it must not break or leak into errors.
+        onDone: () => undefined,
+      }
+      const before = JSON.stringify(input)
+
+      await provider.sendRawTransaction(input)
+
+      expect(JSON.stringify(input)).toBe(before)
+      expect(sentTxs()).toEqual([
+        {
+          RawData: {
+            Nonce: 42,
+            KDAFee: { KDA: 'S0ZJ', Amount: 7 },
+            Contract: [{ Type: 0, Parameter: { type_url: 't', value: 'AQ==' } }],
+          },
+        },
+      ])
+    })
+
+    it('should not put the message thrown by toJSON() into the error', async () => {
+      const tx = {
+        toJSON: () => {
+          throw new Error('leaked-detail')
+        },
+      }
+      const error = await provider.sendRawTransaction(tx).catch((e: unknown) => e)
+      expect(String(error)).toContain('toJSON() failed')
+      expect(JSON.stringify(error) + String(error)).not.toContain('leaked-detail')
+    })
+
+    it('should not copy rejected input into the error', async () => {
+      const error = await provider.sendRawTransaction('not-hex').catch((e: unknown) => e)
+      expect(JSON.stringify(error)).not.toContain('not-hex')
+    })
+
+    it('should send an object with toJSON() as its toJSON() output', async () => {
+      const tx = { toJSON: () => expectedBody }
+      await provider.sendRawTransaction(tx)
+      expect(sentTxs()).toEqual([expectedBody])
     })
 
     it('should throw error for invalid hex string', async () => {
@@ -822,33 +1000,29 @@ describe('KleverProvider', () => {
       await expect(provider.sendRawTransaction(invalidHex)).rejects.toThrow(
         'not valid JSON or hex string',
       )
-    })
-
-    it.each([
-      ['an all-digit string', '1234', [0x12, 0x34]],
-      ['a 0X prefix', '0X0a0b', [0x0a, 0x0b]],
-    ])('should decode %s as hex bytes', async (_, hex, bytes) => {
-      // JSON-first parsing used to turn '1234' into the number 1234.
-      const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
-        hash: 'hash',
-      })
-      await provider.sendRawTransaction(hex)
-      expect(mockBroadcast).toHaveBeenCalledWith(new Uint8Array(bytes))
+      expect(mockPost).not.toHaveBeenCalled()
     })
 
     it.each(['0xabc', 'abc12', '123', '1e5'])(
       'should reject odd-length hex %s instead of broadcasting a truncated byte',
       async (oddHex) => {
         // '0xabc' used to decode as [0xab, 0x0c]: the last single digit became a byte.
-        const mockBroadcast = vi.spyOn(provider, 'broadcastTransaction').mockResolvedValue({
-          hash: 'hash',
-        })
         await expect(provider.sendRawTransaction(oddHex)).rejects.toThrow(
           'Invalid transaction data: hex string must have even length',
         )
-        expect(mockBroadcast).not.toHaveBeenCalled()
+        expect(mockPost).not.toHaveBeenCalled()
       },
     )
+
+    it.each([
+      ['hex that is not a transaction', 'ffffffff'],
+      ['bytes that are not a transaction', new Uint8Array([0xff, 0xff, 0xff, 0xff])],
+      // Valid protobuf, but no RawData: an empty Signature-only message.
+      ['a transaction without RawData', new Uint8Array([0x12, 0x00])],
+    ])('should reject %s', async (_, input) => {
+      await expect(provider.sendRawTransaction(input)).rejects.toThrow(/Invalid transaction data/)
+      expect(mockPost).not.toHaveBeenCalled()
+    })
 
     it('should throw error for empty hex string', async () => {
       const emptyHex = '0x'
@@ -907,34 +1081,39 @@ describe('KleverProvider', () => {
   })
 
   describe('sendRawTransactions', () => {
-    it('should send multiple raw transactions', async () => {
-      const mockHashes = ['0x123abc', '0x456def', '0x789ghi'] as TransactionHash[]
-      const mockBroadcast = vi.spyOn(provider, 'broadcastTransactions').mockResolvedValue({
-        hashes: mockHashes,
+    it('should send every transaction to the node as JSON, whatever its format', async () => {
+      const tx = ProtoTransaction.fromObject({
+        RawData: { Nonce: 7, Sender: new Uint8Array(32).fill(2), KAppFee: 1000 },
+        Signature: [new Uint8Array(64).fill(3)],
       })
+      const bytes = ProtoTransaction.encode(tx).finish()
+      const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+      const mockPost = vi.fn().mockResolvedValue({ data: { txsHashes: ['h1', 'h2', 'h3'] } })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
 
-      const txsData = ['0xaabbcc', '0xddeeff', '0x112233']
-      const hashes = await provider.sendRawTransactions(txsData)
+      const hashes = await provider.sendRawTransactions([hex, bytes, ProtoTransaction.toObject(tx)])
 
-      expect(hashes).toEqual(mockHashes)
-      expect(mockBroadcast).toHaveBeenCalledWith([
-        expect.any(Uint8Array),
-        expect.any(Uint8Array),
-        expect.any(Uint8Array),
-      ])
+      expect(hashes).toEqual(['h1', 'h2', 'h3'])
+      const sent = JSON.parse(JSON.stringify(mockPost.mock.calls[0]?.[1])).txs as unknown[]
+      const expected = {
+        RawData: {
+          Nonce: 7,
+          Sender: 'AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI=',
+          KAppFee: 1000,
+        },
+        Signature: [Buffer.from(new Uint8Array(64).fill(3)).toString('base64')],
+      }
+      expect(sent).toEqual([expected, expected, expected])
     })
 
-    it('should send multiple raw transactions as Uint8Array', async () => {
-      const mockHashes = ['0x123abc', '0x456def'] as TransactionHash[]
-      const mockBroadcast = vi.spyOn(provider, 'broadcastTransactions').mockResolvedValue({
-        hashes: mockHashes,
-      })
+    it('should reject the batch when any transaction is malformed', async () => {
+      const mockPost = vi.fn()
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
 
-      const txsData = [new Uint8Array([0xaa, 0xbb]), new Uint8Array([0xcc, 0xdd])]
-      const hashes = await provider.sendRawTransactions(txsData)
-
-      expect(hashes).toEqual(mockHashes)
-      expect(mockBroadcast).toHaveBeenCalledWith(txsData)
+      await expect(provider.sendRawTransactions(['0xabc'])).rejects.toThrow('even length')
+      expect(mockPost).not.toHaveBeenCalled()
     })
   })
 

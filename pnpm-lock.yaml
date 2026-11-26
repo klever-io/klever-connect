@@ -171,6 +171,9 @@ importers:
       '@klever/connect-crypto':
         specifier: workspace:*
         version: link:../connect-crypto
+      '@klever/connect-encoding':
+        specifier: workspace:*
+        version: link:../connect-encoding
 
   packages/connect-react:
     dependencies:

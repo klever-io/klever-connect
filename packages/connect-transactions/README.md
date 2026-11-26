@@ -45,7 +45,7 @@ const tx = await TransactionBuilder.create(provider)
 await tx.sign(privateKey)
 
 // Broadcast
-const txHash = await provider.sendRawTransaction(tx.toHex())
+const txHash = await provider.sendRawTransaction(tx)
 ```
 
 ### Offline Building
@@ -120,7 +120,7 @@ const tx = await TransactionBuilder.create(provider)
 
 // Transaction is ready to sign and broadcast
 await tx.sign(privateKey)
-const hash = await provider.sendRawTransaction(tx.toHex())
+const hash = await provider.sendRawTransaction(tx)
 ```
 
 ### 2. Offline Building (`buildProto()`)
@@ -1116,7 +1116,7 @@ for (let i = 0; i < 10; i++) {
 }
 
 // Broadcast all transactions
-const hashes = await provider.sendRawTransactions(transactions.map((tx) => tx.toHex()))
+const hashes = await provider.sendRawTransactions(transactions)
 console.log('Transaction hashes:', hashes)
 ```
 
@@ -1169,7 +1169,7 @@ const tx2 = TransactionBuilder.create()
 async function sendWithRetry(tx: Transaction, maxRetries = 3): Promise<string> {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await provider.sendRawTransaction(tx.toHex())
+      return await provider.sendRawTransaction(tx)
     } catch (error) {
       if (error.message.includes('nonce')) {
         // Rebuild transaction with fresh nonce
@@ -1198,13 +1198,13 @@ const tx1 = await builder
   .build()
 
 await tx1.sign(privateKey)
-await provider.sendRawTransaction(tx1.toHex())
+await provider.sendRawTransaction(tx1)
 
 // Reset and build second transaction
 const tx2 = await builder.reset().sender(sender).freeze({ amount: '5000000' }).build()
 
 await tx2.sign(privateKey)
-await provider.sendRawTransaction(tx2.toHex())
+await provider.sendRawTransaction(tx2)
 
 // Reuse with different sender
 const tx3 = await builder
@@ -1240,7 +1240,7 @@ const signature = await hardwareWallet.signTransaction(txHashBytes, derivationPa
 tx.Signature = [signature]
 
 // Broadcast
-const hash = await provider.sendRawTransaction(tx.toHex())
+const hash = await provider.sendRawTransaction(tx)
 ```
 
 ### Transaction Inspection and Debugging
@@ -1292,7 +1292,7 @@ try {
     .build()
 
   await tx.sign(privateKey)
-  const hash = await provider.sendRawTransaction(tx.toHex())
+  const hash = await provider.sendRawTransaction(tx)
 } catch (error) {
   // Validation errors (caught during building)
   if (error instanceof ValidationError) {
@@ -1393,7 +1393,7 @@ async function safeTransfer(
     .build()
 
   await tx.sign(privateKey)
-  return await provider.sendRawTransaction(tx.toHex())
+  return await provider.sendRawTransaction(tx)
 }
 ```
 
@@ -1502,7 +1502,7 @@ class WalletService {
     await tx.sign(this.wallet.privateKey)
 
     // Broadcast
-    return await this.provider.sendRawTransaction(tx.toHex())
+    return await this.provider.sendRawTransaction(tx)
   }
 
   async stake(amount: bigint, validatorAddress: string): Promise<string> {
@@ -1514,7 +1514,7 @@ class WalletService {
       .build()
 
     await tx.sign(this.wallet.privateKey)
-    return await this.provider.sendRawTransaction(tx.toHex())
+    return await this.provider.sendRawTransaction(tx)
   }
 
   async unstake(bucketId: string): Promise<string> {
@@ -1525,7 +1525,7 @@ class WalletService {
       .build()
 
     await tx.sign(this.wallet.privateKey)
-    return await this.provider.sendRawTransaction(tx.toHex())
+    return await this.provider.sendRawTransaction(tx)
   }
 
   async getBalance(): Promise<bigint> {
@@ -1578,7 +1578,7 @@ export function useSendTransaction() {
         const signedTx = await sign(tx)
 
         // Broadcast
-        const hash = await provider.sendRawTransaction(signedTx.toHex())
+        const hash = await provider.sendRawTransaction(signedTx)
 
         return hash
       } catch (err) {
@@ -1622,7 +1622,7 @@ async function sendAndMonitor(
   onProgress?: (status: string) => void,
 ): Promise<void> {
   // Broadcast transaction
-  const hash = await provider.sendRawTransaction(tx.toHex())
+  const hash = await provider.sendRawTransaction(tx)
   console.log('Transaction broadcasted:', hash)
 
   onProgress?.('pending')
@@ -1693,7 +1693,7 @@ class BatchTransactionProcessor {
     }
 
     // Broadcast all at once
-    return await this.provider.sendRawTransactions(transactions.map((tx) => tx.toHex()))
+    return await this.provider.sendRawTransactions(transactions)
   }
 
   private async getSenderAddress(): Promise<string> {

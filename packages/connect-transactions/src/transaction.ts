@@ -1,12 +1,13 @@
 import { TransactionError } from '@klever/connect-core'
 import { cryptoProvider } from '@klever/connect-crypto'
 import type { PrivateKey } from '@klever/connect-crypto'
+import { Transaction as ProtoTransaction, type ITransaction } from '@klever/connect-encoding'
 import {
-  Transaction as ProtoTransaction,
-  type ITransaction,
-  ContractType,
+  hexEncode,
+  hexDecode,
+  hashBlake2b,
+  normalizeTransactionJSON,
 } from '@klever/connect-encoding'
-import { hexEncode, hexDecode, hashBlake2b } from '@klever/connect-encoding'
 
 /**
  * Transaction class representing a Klever blockchain transaction
@@ -19,7 +20,7 @@ import { hexEncode, hexDecode, hashBlake2b } from '@klever/connect-encoding'
  * - Transaction state management
  *
  * This is a pure data class - no network dependencies.
- * Use provider.sendRawTransaction(tx.toHex()) to broadcast.
+ * Use provider.sendRawTransaction(tx) to broadcast.
  */
 export class Transaction extends ProtoTransaction {
   private hash?: string // Cached transaction hash
@@ -76,47 +77,13 @@ export class Transaction extends ProtoTransaction {
   }
 
   public override toJSON(): { [k: string]: unknown } {
-    const json = super.toJSON()
-
-    // Convert GasLimit from string to number (top-level field)
-    if (typeof json['GasLimit'] === 'string') {
-      const gasLimit = Number(json['GasLimit'])
-      if (!Number.isSafeInteger(gasLimit) || gasLimit < 0) {
-        throw new TransactionError('Invalid GasLimit value')
-      }
-      json['GasLimit'] = gasLimit
-    }
-
-    // Convert numeric string fields to actual numbers
-    if (json['RawData'] && typeof json['RawData'] === 'object') {
-      const rawData = json['RawData'] as { [k: string]: unknown }
-
-      // proto.js serializes 64-bit integer fields (int64/uint64) as strings;
-      // the extension unmarshals RawData expecting numbers. Nested fields use
-      // dot notation (e.g. "KDAFee.Amount").
-      numericStringFieldsToNumbers(rawData, [
-        'Nonce',
-        'KAppFee',
-        'BandwidthFee',
-        'PermID',
-        'KDAFee.Amount',
-      ])
-
-      // Convert contract types from enum strings to numbers
-      if (Array.isArray(rawData['Contract'])) {
-        rawData['Contract'] = rawData['Contract'].map((contract: unknown) => {
-          if (contract && typeof contract === 'object') {
-            const c = contract as { [k: string]: unknown }
-            // Convert Type enum from string name to numeric value
-            if (typeof c['Type'] === 'string') {
-              // Look up the enum value
-              const enumValue = ContractType[c['Type'] as keyof typeof ContractType]
-              c['Type'] = typeof enumValue === 'number' ? enumValue : c['Type']
-            }
-          }
-          return contract
-        })
-      }
+    // Same normalization the provider applies to hex and bytes, so every
+    // input format reaches the node as the same body.
+    let json: { [k: string]: unknown }
+    try {
+      json = normalizeTransactionJSON(super.toJSON())
+    } catch (error) {
+      throw new TransactionError(error instanceof Error ? error.message : String(error))
     }
 
     // Include additional fields as needed
@@ -169,7 +136,7 @@ export class Transaction extends ProtoTransaction {
    *
    * // Only broadcast if signed
    * if (tx.isSigned()) {
-   *   await provider.sendRawTransaction(tx.toHex())
+   *   await provider.sendRawTransaction(tx)
    * }
    * ```
    */
@@ -316,7 +283,7 @@ export class Transaction extends ProtoTransaction {
    *
    * // Sign and broadcast
    * await tx.sign(privateKey)
-   * await provider.sendRawTransaction(tx.toHex())
+   * await provider.sendRawTransaction(tx)
    * ```
    */
   static override fromObject(obj: { [k: string]: unknown }): Transaction {
@@ -343,36 +310,5 @@ export class Transaction extends ProtoTransaction {
   static fromTransaction(tx: Transaction): Transaction {
     const decoded = ProtoTransaction.fromObject(tx)
     return new Transaction(decoded)
-  }
-}
-
-/**
- * Convert the given fields of an object from string to number, in place.
- *
- * Supports nested fields via dot notation (e.g. "KDAFee.Amount"). Fields that
- * are absent, unreachable, or already numeric are left untouched.
- *
- * @param obj - Object to mutate
- * @param paths - Field paths to convert (dot-separated for nested fields)
- */
-function numericStringFieldsToNumbers(
-  obj: { [k: string]: unknown },
-  paths: readonly string[],
-): void {
-  for (const path of paths) {
-    const keys = path.split('.')
-    const leafKey = keys.pop()
-    if (leafKey === undefined) continue
-
-    let target: { [k: string]: unknown } | undefined = obj
-    for (const key of keys) {
-      if (!target) break
-      const next: unknown = target[key]
-      target = next && typeof next === 'object' ? (next as { [k: string]: unknown }) : undefined
-    }
-
-    if (target && typeof target[leafKey] === 'string') {
-      target[leafKey] = Number(target[leafKey])
-    }
   }
 }

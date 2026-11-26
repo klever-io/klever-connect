@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { Transaction } from '../transaction'
 import { cryptoProvider } from '@klever/connect-crypto'
-import type { ITransaction } from '@klever/connect-encoding'
+import { Transaction as ProtoTransaction, type ITransaction } from '@klever/connect-encoding'
+import { TransactionError } from '@klever/connect-core'
 
 describe('Transaction', () => {
   describe('constructor', () => {
@@ -92,6 +93,15 @@ describe('Transaction', () => {
       const kdaFee = rawData['KDAFee'] as { [k: string]: unknown }
       expect(typeof kdaFee['Amount']).toBe('number')
       expect(kdaFee['Amount']).toBe(1000000)
+    })
+
+    it('should throw TransactionError for a GasLimit beyond the safe integer range', () => {
+      const tx = new Transaction(
+        ProtoTransaction.fromObject({ GasLimit: '9223372036854775807', RawData: { Nonce: 1 } }),
+      )
+
+      expect(() => tx.toJSON()).toThrow(TransactionError)
+      expect(() => tx.toJSON()).toThrow('Invalid GasLimit value')
     })
   })
 
