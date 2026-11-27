@@ -19,11 +19,12 @@ built a different transaction from the one the caller asked for:
   transaction. If you worked around this by passing base64 data to a
   non-smart-contract transaction, pass the plain string instead; it would now
   be encoded twice.
-- **Amounts above 2^53:** a bigint amount that a JSON number can't hold exactly
-  (such as `9007199254740993n`) was rounded by `Number()`, so the node built, and
-  the caller signed, a different amount. `buildRequest()` now throws a
-  `ValidationError` naming the field. A large amount a double holds exactly,
-  such as `10n ** 17n`, is still sent as before.
+- **Amounts above 2^53:** a bigint amount that a JSON number can't carry exactly
+  was changed on the way: `9007199254740993n` was rounded by `Number()`, and
+  `2n ** 60n` was written by `JSON.stringify` as `1152921504606847000`. The node
+  built, and the caller signed, a different amount. `buildRequest()` now throws
+  a `ValidationError` naming the field. A large amount whose JSON digits are
+  exact, such as `10n ** 17n`, is still sent as before.
 - **Call values:** the node reads `callValue` as `map[string]int64` and refused
   a string amount such as `{ KLV: '1000000' }`. `smartContract()` now reads
   each amount like `transfer()` does (bigint, safe integer or decimal string,
@@ -33,7 +34,9 @@ built a different transaction from the one the caller asked for:
   decimal-string amount (such as `maxSupply: '1000000000000'`) as a JSON
   string, which the node refuses. `buildRequest()` now sends every amount field
   of the contract request types as a number, and throws a `ValidationError` for
-  a string amount that isn't a decimal integer.
+  a string amount that isn't a decimal integer or a number amount that isn't a
+  safe integer (`NaN` was sent as `null`, which the node reads as 0). `uris`
+  values are left as they are.
 - **scType 2 (upgrade):** the node defines only invoke (0) and deploy (1) and
   rejects 2 with "invalid smart contract type". `smartContract()` now throws
   for it, and `SmartContractRequest` no longer accepts `scType: 2`.

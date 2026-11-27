@@ -1058,13 +1058,16 @@ export class TransactionBuilder {
    * Recursively convert BigInt values to numbers for JSON serialization.
    * Throws for a value the conversion would change, instead of rounding it:
    * the caller would then sign a transaction with a different amount. A value
-   * above 2^53 that a double holds exactly (such as 10n ** 17n) is kept, since
-   * JSON.stringify writes its exact digits and the node parses them as int64.
+   * above 2^53 is kept only when JSON.stringify writes its exact digits (such as
+   * 10n ** 17n); 2n ** 60n is written as 1152921504606847000, so it throws.
    */
   private convertBigIntToNumber(obj: unknown, path = 'contracts'): unknown {
     if (typeof obj === 'bigint') {
+      // JSON.stringify writes a number's shortest round-trip digits, not its
+      // exact value (2n ** 60n is written as 1152921504606847000), and the
+      // node parses those digits, so the decimal text itself must match
       const n = Number(obj)
-      if (BigInt(n) !== obj || obj > INT64_MAX || obj < INT64_MIN) {
+      if (String(n) !== obj.toString() || obj > INT64_MAX || obj < INT64_MIN) {
         throw new ValidationError(
           `${path} (${obj.toString()}) can't be sent to the node exactly by build(); a JSON number would round it`,
           { path, value: obj.toString() },
@@ -1081,11 +1084,20 @@ export class TransactionBuilder {
       const converted: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(obj)) {
         const fieldPath = `${path}.${key}`
-        // The node reads amount fields as int64 and refuses a JSON string, so a
-        // decimal-string amount (such as maxSupply: '1000000000000') is sent as
-        // a number, the way transfer() and smartContract() already send theirs
+        // uris is a map[string]string keyed by the caller, so its keys and
+        // values are never amounts
+        if (key === 'uris') {
+          converted[key] = value
+          continue
+        }
+        // The node reads amount fields as int64 and refuses a JSON string, and
+        // reads null (from NaN or Infinity) as 0, so every amount field is read
+        // like transfer() reads its amount: a decimal string is sent as a
+        // number, and a number that isn't a safe integer is rejected
         const field =
-          typeof value === 'string' && AMOUNT_FIELDS.has(key) ? toAmount(value, fieldPath) : value
+          (typeof value === 'string' || typeof value === 'number') && AMOUNT_FIELDS.has(key)
+            ? toAmount(value, fieldPath)
+            : value
         converted[key] = this.convertBigIntToNumber(field, fieldPath)
       }
       return converted

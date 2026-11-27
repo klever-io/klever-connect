@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TransactionBuilder } from '../builder'
 import { Transaction } from '../transaction'
 import type { IProvider } from '@klever/connect-provider'
-import { TXType, type KleverAddress } from '@klever/connect-core'
+import { TXType, ValidationError, type KleverAddress } from '@klever/connect-core'
 
 const validAddress =
   'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
@@ -670,6 +670,46 @@ describe('TransactionBuilder', () => {
       expect(() => builder.buildRequest()).toThrow(
         'contracts[0].amount must be a bigint, a safe integer or a decimal string',
       )
+    })
+
+    it('should throw for an amount whose JSON digits differ from its value', () => {
+      // A double holds 2^60 exactly, but JSON.stringify writes 1152921504606847000
+      const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount: 2n ** 60n })
+
+      expect(() => builder.buildRequest()).toThrow(
+        "contracts[0].amount (1152921504606846976) can't be sent to the node exactly",
+      )
+    })
+
+    it('should throw a ValidationError for an amount beyond the double range', () => {
+      const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount: 10n ** 400n })
+
+      expect(() => builder.buildRequest()).toThrow(ValidationError)
+    })
+
+    it('should reject a number amount that is not a safe integer', () => {
+      for (const amount of [NaN, Infinity, 1.5, 2 ** 60]) {
+        const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount })
+        expect(() => builder.buildRequest()).toThrow(
+          'contracts[0].amount: a number amount must be a safe integer',
+        )
+      }
+    })
+
+    it('should leave uris untouched even when a key matches an amount field', () => {
+      const request = new TransactionBuilder()
+        .createAsset({
+          type: 0,
+          name: 'MyToken',
+          ticker: 'MTK',
+          ownerAddress: validAddress,
+          precision: 6,
+          maxSupply: 1000n,
+          uris: { value: '007', amount: 'ipfs://abc' },
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ uris: { value: '007', amount: 'ipfs://abc' } })
     })
 
     it('should reject an invalid permission ID', () => {
