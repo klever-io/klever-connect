@@ -1080,7 +1080,13 @@ export class TransactionBuilder {
     if (obj !== null && typeof obj === 'object') {
       const converted: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(obj)) {
-        converted[key] = this.convertBigIntToNumber(value, `${path}.${key}`)
+        const fieldPath = `${path}.${key}`
+        // The node reads amount fields as int64 and refuses a JSON string, so a
+        // decimal-string amount (such as maxSupply: '1000000000000') is sent as
+        // a number, the way transfer() and smartContract() already send theirs
+        const field =
+          typeof value === 'string' && AMOUNT_FIELDS.has(key) ? toAmount(value, fieldPath) : value
+        converted[key] = this.convertBigIntToNumber(field, fieldPath)
       }
       return converted
     }
@@ -1429,6 +1435,35 @@ export class TransactionBuilder {
  * Read an amount as a bigint. Strings must be plain decimal digits: `BigInt()`
  * alone would also read '0x10', '0b1' or ' 10 ', and throw a RangeError for 1.5.
  */
+// Every AmountLike field of the contract request types. The node reads each as
+// an integer, so buildRequest() sends a decimal-string value as a JSON number.
+const AMOUNT_FIELDS: ReadonlySet<string> = new Set([
+  'amount',
+  'currencyAmount',
+  'defaultLimitPerAddress',
+  'endTime',
+  'fRatioKDA',
+  'fRatioKLV',
+  'initialSupply',
+  'itoFixed',
+  'kdaRoyalties',
+  'klvRoyalties',
+  'limit',
+  'marketFixed',
+  'maxAmount',
+  'maxDelegationAmount',
+  'maxSupply',
+  'price',
+  'reservePrice',
+  'startTime',
+  'threshold',
+  'transferFixed',
+  'value',
+  'weight',
+  'whitelistEndTime',
+  'whitelistStartTime',
+])
+
 const INT64_MAX = 9223372036854775807n
 const INT64_MIN = -9223372036854775808n
 

@@ -627,6 +627,51 @@ describe('TransactionBuilder', () => {
       expect(() => overInt64.buildRequest()).toThrow("can't be sent to the node exactly")
     })
 
+    it('should send decimal-string amounts as numbers on every contract type', () => {
+      const request = new TransactionBuilder()
+        .createAsset({
+          type: 0,
+          name: 'MyToken',
+          ticker: 'MTK',
+          ownerAddress: validAddress,
+          precision: 6,
+          maxSupply: '1000000000000',
+          initialSupply: '100000000000',
+          royalties: {
+            address: validAddress,
+            transferFixed: '5',
+            transferPercentage: [{ amount: '10', percentage: 1 }],
+          },
+        })
+        .vote({ proposalId: 5, type: 0, amount: '1000000' })
+        .withdraw({ withdrawType: 0, amount: '42' })
+        .addContract({
+          contractType: 17,
+          buyType: 0,
+          id: 'ITO-ABCD',
+          currencyId: 'KLV',
+          amount: '7',
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({
+        maxSupply: 1000000000000,
+        initialSupply: 100000000000,
+        royalties: { transferFixed: 5, transferPercentage: [{ amount: 10, percentage: 1 }] },
+      })
+      expect(request.contracts[1]).toMatchObject({ amount: 1000000 })
+      expect(request.contracts[2]).toMatchObject({ amount: 42 })
+      expect(request.contracts[3]).toMatchObject({ id: 'ITO-ABCD', currencyId: 'KLV', amount: 7 })
+    })
+
+    it('should reject a string amount that is not a decimal integer', () => {
+      const builder = new TransactionBuilder().vote({ proposalId: 5, type: 0, amount: '0x10' })
+
+      expect(() => builder.buildRequest()).toThrow(
+        'contracts[0].amount must be a bigint, a safe integer or a decimal string',
+      )
+    })
+
     it('should reject an invalid permission ID', () => {
       const builder = new TransactionBuilder()
         .transfer({ receiver: validAddress, amount: 1n })

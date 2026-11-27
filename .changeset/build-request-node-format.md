@@ -28,6 +28,12 @@ built a different transaction from the one the caller asked for:
   a string amount such as `{ KLV: '1000000' }`. `smartContract()` now reads
   each amount like `transfer()` does (bigint, safe integer or decimal string,
   not negative) and sends it as a number.
+- **String amounts on other contracts:** `createAsset()`, `vote()`, `withdraw()`,
+  `createValidator()` and the contracts `addContract()` passes through sent a
+  decimal-string amount (such as `maxSupply: '1000000000000'`) as a JSON
+  string, which the node refuses. `buildRequest()` now sends every amount field
+  of the contract request types as a number, and throws a `ValidationError` for
+  a string amount that isn't a decimal integer.
 - **scType 2 (upgrade):** the node defines only invoke (0) and deploy (1) and
   rejects 2 with "invalid smart contract type". `smartContract()` now throws
   for it, and `SmartContractRequest` no longer accepts `scType: 2`.
