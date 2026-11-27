@@ -17,7 +17,7 @@ import type {
 } from '@klever/connect-provider'
 import { isValidAddress, isValidContractAddress } from '@klever/connect-core'
 import { Transaction } from './transaction'
-import { encodeContract } from './contract-encoder'
+import { encodeContract, withoutDefaults } from './contract-encoder'
 
 import { bech32Decode, base64Encode } from '@klever/connect-encoding'
 import type { AmountLike } from '@klever/connect-provider'
@@ -254,7 +254,9 @@ export class TransactionBuilder {
    *
    * @example
    * ```typescript
-   * // Pay fees in custom token instead of KLV
+   * // Pay fees in custom token instead of KLV. Offline, pass the KLV fees
+   * // too (the node sets both); kdaFee.amount is what the asset's fee pool
+   * // charges for them.
    * const tx = TransactionBuilder.create()
    *   .sender('klv1...')
    *   .kdaFee({ kda: 'MYTOKEN-ABCD', amount: '1000000' })
@@ -262,6 +264,7 @@ export class TransactionBuilder {
    *   .buildProto({
    *     nonce: 1,
    *     chainId: '108',
+   *     fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
    *   })
    * ```
    */
@@ -1251,7 +1254,7 @@ export class TransactionBuilder {
     // writes any field that is set, so set only the non-default ones; a 0
     // here would make the signed bytes differ from the node's.
     return new Transaction({
-      RawData: withoutZero({
+      RawData: withoutDefaults({
         Nonce: nonNegativeInt(nonce, 'nonce'),
         Sender: senderBytes.data,
         Contract: this.contracts.map((contract) => encodeContract(contract)),
@@ -1358,10 +1361,11 @@ export class TransactionBuilder {
    * - KDA fee
    * - Permission ID
    * - Transaction data
+   * - Fees and version set via `callOptions()`
    *
    * **What persists:**
    * - Provider (if set)
-   * - Chain ID (if set)
+   * - Chain ID (set via `setChainId()` or `callOptions()`)
    *
    * @returns This builder instance for chaining
    *
@@ -1396,7 +1400,6 @@ export class TransactionBuilder {
   }
 }
 
-/** A non-negative safe integer from a number, bigint or decimal string. */
 /**
  * Read an amount as a bigint. Strings must be plain decimal digits: `BigInt()`
  * alone would also read '0x10', '0b1' or ' 10 ', and throw a RangeError for 1.5.
@@ -1416,6 +1419,7 @@ function toAmount(value: AmountLike, field: string): bigint {
   })
 }
 
+/** A non-negative safe integer from a number, bigint or decimal string. */
 function nonNegativeInt(value: AmountLike, field: string): number {
   const n =
     typeof value === 'bigint'
@@ -1479,13 +1483,4 @@ function buildKdaFee(
     })
   }
   return { KDA: encoder.encode(kdaFee.kda), Amount: amount }
-}
-
-/** Copy an object without the fields that are null, undefined or 0. */
-function withoutZero<T extends object>(fields: T): T {
-  const out: { [k: string]: unknown } = {}
-  for (const [key, value] of Object.entries(fields)) {
-    if (value !== undefined && value !== null && value !== 0) out[key] = value
-  }
-  return out as T
 }

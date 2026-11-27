@@ -83,6 +83,8 @@ Breaking for code that builds proto messages directly:
 
 `@klever/connect-contracts`: an offline call with `nonce: 0`, the first
 transaction of a new account, no longer fails with "Nonce is required".
+A trailing options object with only `version` is now read as call options
+instead of an ABI argument.
 
 The vote docs said 0 = abstain, 1 = yes and 2 = no; klever-go defines
 0 = yes and 1 = no.

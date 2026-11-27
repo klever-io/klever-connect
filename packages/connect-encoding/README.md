@@ -303,13 +303,20 @@ import { proto, Transaction, TXContract, ContractType } from '@klever/connect-en
 
 // Create a transaction. Each contract is a TXContract whose Parameter is a
 // google.protobuf.Any holding the encoded contract message.
+//
+// Leave out every field whose value is 0 or empty, here and inside the
+// contract message. protobuf.js writes any field that is set, while the node
+// re-encodes RawData with Go's proto3 rules, which leave those fields out, so
+// a field set to 0 changes the hash and the node rejects the signature. A
+// transfer's Type is 0, so it is not set below. TransactionBuilder.buildProto()
+// from @klever/connect-transactions does this for you.
 const tx = proto.Transaction.create({
   RawData: {
     Nonce: 1,
     Sender: senderBytes,
     Contract: [
       {
-        Type: ContractType.TransferContractType,
+        // Type: ContractType.TransferContractType is 0, so it is left out
         Parameter: {
           type_url: 'type.googleapis.com/proto.TransferContract',
           value: proto.TransferContract.encode({

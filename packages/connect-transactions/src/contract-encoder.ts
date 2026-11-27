@@ -137,11 +137,8 @@ export function encodeContract(contract: ContractRequestData): ITXContract {
 
 /** Wrap an encoded contract in a `TXContract` with the type URL klever-go checks. */
 function pack(type: number, cls: MessageClass, fields: { [k: string]: unknown }): ITXContract {
-  const name = ContractType[type]
-  if (typeof name !== 'string') {
-    throw new ValidationError(`Unknown contract type: ${String(type)}`, { contractType: type })
-  }
-
+  // Every caller passes a ContractType member from the encodeContract switch
+  const name = ContractType[type] as string
   const value = cls.encode(withoutDefaults(fields)).finish()
   const txContract: ITXContract = {
     Parameter: {
@@ -156,8 +153,14 @@ function pack(type: number, cls: MessageClass, fields: { [k: string]: unknown })
   return txContract
 }
 
-/** Drop the fields proto3 would not write: undefined, 0, empty bytes or strings. */
-function withoutDefaults(fields: { [k: string]: unknown }): { [k: string]: unknown } {
+/**
+ * Drop the fields proto3 would not write: undefined, null, 0, empty bytes or
+ * strings, and empty objects or arrays. Used for contract messages and for
+ * RawData, whose signed bytes must match the node's Go encoding.
+ */
+export function withoutDefaults<T extends object>(
+  fields: T,
+): { [K in keyof T]?: Exclude<T[K], undefined> } {
   const out: { [k: string]: unknown } = {}
   for (const [key, value] of Object.entries(fields)) {
     if (value === undefined || value === null || value === 0 || value === '') continue
@@ -167,7 +170,7 @@ function withoutDefaults(fields: { [k: string]: unknown }): { [k: string]: unkno
     }
     out[key] = value
   }
-  return out
+  return out as { [K in keyof T]?: Exclude<T[K], undefined> }
 }
 
 /** A required request field. */

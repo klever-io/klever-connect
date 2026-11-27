@@ -426,6 +426,7 @@ export class Contract {
       'chainId',
       'permissionId',
       'data',
+      'version',
     ]
     const objKeys = Object.keys(obj)
 

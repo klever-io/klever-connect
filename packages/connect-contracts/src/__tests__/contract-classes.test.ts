@@ -212,6 +212,27 @@ describe('Contract', () => {
       )
     })
 
+    it('should read an options object with only a version as call options', async () => {
+      const offlineSigner = {
+        address: signerAddress,
+        signTransaction: async (tx: Transaction) => tx,
+      }
+      const contract = new Contract(contractAddress, abi, offlineSigner as unknown as Signer)
+
+      // Taken as an ABI argument, { version: 2 } would not reach the nonce check
+      await expect(contract.populateTransaction['bet']!(0, 50, { version: 2 })).rejects.toThrow(
+        'Nonce is required for offline transaction building',
+      )
+
+      const tx = await contract.populateTransaction['bet']!(0, 50, {
+        nonce: 1,
+        chainId: '108',
+        version: 2,
+      })
+      expect(tx.RawData!.Version).toBe(2)
+      expect(tx.RawData!.Data?.map((d) => new TextDecoder().decode(d))).toEqual(['bet@00@32'])
+    })
+
     it('should create contract with signer', () => {
       const mockSigner = createMockSigner()
 
