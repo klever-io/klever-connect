@@ -303,6 +303,7 @@ describe('buildProto() encoding', () => {
     ['nonce', { nonce: -1 }],
     ['fees', { fees: { kAppFee: 1.5, bandwidthFee: 0 } }],
     ['version', { version: -1 }],
+    ['version 0', { version: 0 }],
     ['version above uint32', { version: 2 ** 32 }],
     ['fractional permissionId', { permissionId: 1.5 }],
     ['permissionId above int32', { permissionId: 2 ** 31 }],
@@ -311,5 +312,27 @@ describe('buildProto() encoding', () => {
     const builder = TransactionBuilder.create().transfer({ receiver: RECEIVER, amount: 1 })
 
     expect(() => builder.buildProto({ ...base, ...options })).toThrow(ValidationError)
+  })
+
+  it('should reject version 0, which the node refuses', () => {
+    const builder = TransactionBuilder.create().transfer({ receiver: RECEIVER, amount: 1 })
+
+    expect(() => builder.buildProto({ ...base, version: 0 })).toThrow(
+      'version must be a uint32 of at least 1',
+    )
+    expect(() => builder.callOptions({ version: 0 }).buildProto(base)).toThrow(
+      'version must be a uint32 of at least 1',
+    )
+  })
+
+  it('should name the field when a string field is not a string', () => {
+    const builder = TransactionBuilder.create().addContract({
+      contractType: 0,
+      receiver: RECEIVER,
+      amount: 1,
+      kda: 42,
+    } as unknown as ContractRequestData)
+
+    expect(() => builder.buildProto(base)).toThrow('kda must be a string')
   })
 })

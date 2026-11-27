@@ -27,8 +27,9 @@ no node capture yet.
 - A smart contract `scType` other than 0 (invoke) or 1 (deploy) throws; the
   node rejects it with "invalid smart contract type".
 - Amounts, fees, the nonce and `kdaFee.amount` must be non-negative safe
-  integers, `version` a uint32 and `permissionId` a non-negative int32;
-  anything else throws instead of being rounded or misread.
+  integers, `version` a uint32 of at least 1 and `permissionId` a non-negative
+  int32; anything else throws instead of being rounded or misread. The node
+  rejects version 0 (its minimum is 1 on testnet and mainnet).
 - `transfer()`, `freeze()` and `kdaFee()` take amount strings only as decimal
   digits, in every build mode. `BigInt()` used to read '0x10' as 16 and ' 10 '
   as 10, and threw a `RangeError` for 1.5; these now throw `ValidationError`.

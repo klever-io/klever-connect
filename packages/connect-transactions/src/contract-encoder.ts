@@ -63,20 +63,20 @@ export function encodeContract(contract: ContractRequestData): ITXContract {
     case 0: // Transfer: addTransfer
       return pack(type, TransferContract, {
         ToAddress: address(c['receiver'], 'receiver'),
-        AssetID: text(c['kda']),
+        AssetID: text(c['kda'], 'kda'),
         Amount: int64(c['amount'], 'amount'),
         KDARoyalties: int64(c['kdaRoyalties'], 'kdaRoyalties'),
         KLVRoyalties: int64(c['klvRoyalties'], 'klvRoyalties'),
       })
     case 4: // Freeze: addFreeze
       return pack(type, FreezeContract, {
-        AssetID: text(c['kda']),
+        AssetID: text(c['kda'], 'kda'),
         Amount: int64(c['amount'], 'amount'),
       })
     case 5: // Unfreeze: addUnfreeze takes hex, or else the raw bytes
       return pack(type, UnfreezeContract, {
-        AssetID: text(c['kda']),
-        BucketID: hexOrText(required(c['bucketId'], 'bucketId')),
+        AssetID: text(c['kda'], 'kda'),
+        BucketID: hexOrText(required(c['bucketId'], 'bucketId'), 'bucketId'),
       })
     case 6: // Delegate: addDelegate
       return pack(type, DelegateContract, {
@@ -89,11 +89,11 @@ export function encodeContract(contract: ContractRequestData): ITXContract {
       })
     case 8: // Withdraw: addWithdraw
       return pack(type, WithdrawContract, {
-        AssetID: text(c['kda']),
+        AssetID: text(c['kda'], 'kda'),
         WithdrawType: int32(c['withdrawType'], 'withdrawType'),
         // lowercase in klever-go's proto (`int64 amount = 3`)
         amount: int64(c['amount'], 'amount'),
-        CurrencyID: text(c['currencyID']),
+        CurrencyID: text(c['currencyID'], 'currencyID'),
       })
     case 9: {
       // Claim: addClaim hex-decodes the ID of a market claim only
@@ -101,7 +101,7 @@ export function encodeContract(contract: ContractRequestData): ITXContract {
       const id = c['id']
       return pack(type, ClaimContract, {
         ClaimType: claimType,
-        ID: claimType === ClaimType.MarketClaim ? hex(id, 'id') : text(id),
+        ID: claimType === ClaimType.MarketClaim ? hex(id, 'id') : text(id, 'id'),
       })
     }
     case 14: // Vote: addVote
@@ -185,10 +185,9 @@ function required(value: unknown, field: string): unknown {
 function int64(value: unknown, field: string): number | undefined {
   if (value === undefined || value === null) return undefined
   let n: number
+  // A bigint outside the safe range converts to an unsafe number, which the
+  // check below rejects
   if (typeof value === 'bigint') {
-    if (value < 0n || value > BigInt(Number.MAX_SAFE_INTEGER)) {
-      throw new ValidationError(`${field} must be a non-negative safe integer`)
-    }
     n = Number(value)
   } else if (typeof value === 'number') {
     n = value
@@ -213,10 +212,10 @@ function int32(value: unknown, field: string): number | undefined {
 }
 
 /** A string sent as its UTF-8 bytes (asset IDs, as `[]byte(request.KDA)` in Go). */
-function text(value: unknown): Uint8Array | undefined {
+function text(value: unknown, field: string): Uint8Array | undefined {
   if (value === undefined || value === null) return undefined
   if (typeof value !== 'string') {
-    throw new ValidationError('Expected a string value')
+    throw new ValidationError(`${field} must be a string`)
   }
   return encoder.encode(value)
 }
@@ -231,9 +230,9 @@ function hex(value: unknown, field: string): Uint8Array | undefined {
 }
 
 /** Hex decoded when it is valid hex, else the string's bytes, as addUnfreeze does. */
-function hexOrText(value: unknown): Uint8Array | undefined {
+function hexOrText(value: unknown, field: string): Uint8Array | undefined {
   if (typeof value === 'string' && isHex(value)) return hexDecode(value)
-  return text(value)
+  return text(value, field)
 }
 
 /** Hex as Go's `hex.DecodeString` accepts it: even length, no prefix. */

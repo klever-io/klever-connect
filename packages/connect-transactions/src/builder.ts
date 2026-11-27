@@ -1216,14 +1216,7 @@ export class TransactionBuilder {
     const nonce = options.nonce ?? this._nonce
     const kdaFee = options.kdaFee ?? this._kdaFee
     const fees = options.fees ?? this._fees
-    const permissionId = options.permissionId ?? this._permissionId ?? null
-    // PermissionID is an int32; protobuf.js would truncate 1.5 or wrap 2^31
-    if (
-      permissionId !== null &&
-      (!Number.isInteger(permissionId) || permissionId < 0 || permissionId > 0x7fffffff)
-    ) {
-      throw new ValidationError('permissionId must be a non-negative int32', { permissionId })
-    }
+    const permissionId = validatePermissionId(options.permissionId ?? this._permissionId ?? null)
     const data = options.data ?? this._data
 
     if (options.value) {
@@ -1250,29 +1243,8 @@ export class TransactionBuilder {
     // TODO: compute kAppFee and bandwidthFee if not provided (KLC-1867)
     const kAppFee = nonNegativeInt(fees?.kAppFee ?? 0, 'fees.kAppFee')
     const bandwidthFee = nonNegativeInt(fees?.bandwidthFee ?? 0, 'fees.bandwidthFee')
-    const version = nonNegativeInt(options.version ?? this._version ?? 1, 'version')
-    // Version is a uint32; 2^32 would be written as 0 and change the hash
-    if (version > 0xffffffff) {
-      throw new ValidationError('version must be a uint32', { version })
-    }
-
-    let kdaFeeProto: IKDAFee | null = null
-    if (kdaFee && kdaFee.kda) {
-      // The node never writes a KDAFee for KLV, and for any other asset it
-      // writes the amount the fee pool computes, which is always above 0
-      if (kdaFee.kda === 'KLV') {
-        throw new ValidationError('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead', {
-          assetId: kdaFee.kda,
-        })
-      }
-      const amount = nonNegativeInt(kdaFee.amount, 'kdaFee.amount')
-      if (amount === 0) {
-        throw new ValidationError('kdaFee.amount must be greater than 0 for offline building', {
-          kdaFee,
-        })
-      }
-      kdaFeeProto = { KDA: encoder.encode(kdaFee.kda), Amount: amount }
-    }
+    const version = validateVersion(options.version ?? this._version ?? 1)
+    const kdaFeeProto = buildKdaFee(kdaFee, encoder)
 
     // The node re-encodes RawData before checking the signature, and Go's
     // proto3 encoding leaves out fields with their default value. protobuf.js
@@ -1459,6 +1431,54 @@ function nonNegativeInt(value: AmountLike, field: string): number {
     throw new ValidationError(`${field} must be a non-negative safe integer`)
   }
   return n
+}
+
+/** PermissionID is an int32; protobuf.js would truncate 1.5 or wrap 2^31. */
+function validatePermissionId(permissionId: number | null): number | null {
+  if (
+    permissionId !== null &&
+    (!Number.isInteger(permissionId) || permissionId < 0 || permissionId > 0x7fffffff)
+  ) {
+    throw new ValidationError('permissionId must be a non-negative int32', { permissionId })
+  }
+  return permissionId
+}
+
+/**
+ * Version is a uint32 (2^32 would be written as 0 and change the hash). It
+ * must also be at least 1: the node rejects a version below its minimum,
+ * which can't be 0 (testnet and mainnet use 1), and a 0 would be left out
+ * of RawData anyway.
+ */
+function validateVersion(value: number): number {
+  const version = nonNegativeInt(value, 'version')
+  if (version < 1 || version > 0xffffffff) {
+    throw new ValidationError('version must be a uint32 of at least 1', { version })
+  }
+  return version
+}
+
+/**
+ * The node never writes a KDAFee for KLV, and for any other asset it writes
+ * the amount the fee pool computes, which is always above 0.
+ */
+function buildKdaFee(
+  kdaFee: { kda: string; amount: AmountLike } | undefined,
+  encoder: TextEncoder,
+): IKDAFee | null {
+  if (!kdaFee || !kdaFee.kda) return null
+  if (kdaFee.kda === 'KLV') {
+    throw new ValidationError('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead', {
+      assetId: kdaFee.kda,
+    })
+  }
+  const amount = nonNegativeInt(kdaFee.amount, 'kdaFee.amount')
+  if (amount === 0) {
+    throw new ValidationError('kdaFee.amount must be greater than 0 for offline building', {
+      kdaFee,
+    })
+  }
+  return { KDA: encoder.encode(kdaFee.kda), Amount: amount }
 }
 
 /** Copy an object without the fields that are null, undefined or 0. */
