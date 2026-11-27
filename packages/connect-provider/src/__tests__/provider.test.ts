@@ -1157,6 +1157,26 @@ describe('KleverProvider', () => {
       expect(mockPost).toHaveBeenCalledWith('/transaction/send', mockRequest)
     })
 
+    it("should send the permission ID as the node's permID", async () => {
+      const mockPost = vi.fn().mockResolvedValue({
+        error: null,
+        data: { result: { RawData: {} }, txHash: 'hash' },
+      })
+      // @ts-expect-error - accessing private property for testing
+      provider.nodeClient.post = mockPost
+
+      await provider.buildTransaction({
+        sender: 'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5',
+        nonce: 1,
+        permissionId: 2,
+        contracts: [{ contractType: 0, receiver: 'klv1abc', amount: 1 }],
+      } as unknown as BuildTransactionRequest)
+
+      const body = mockPost.mock.calls[0]?.[1] as Record<string, unknown>
+      expect(body['permID']).toBe(2)
+      expect(body).not.toHaveProperty('permissionId')
+    })
+
     it('should throw error when no contracts provided', async () => {
       await expect(
         provider.buildTransaction({

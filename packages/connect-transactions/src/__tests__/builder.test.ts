@@ -430,16 +430,15 @@ describe('TransactionBuilder', () => {
       ).toThrow('Invalid smart contract address')
     })
 
-    it('should throw error when upgrading a valid address that is not a smart contract address', () => {
+    it('should reject scType 2 (upgrade), which the node does not define', () => {
       const builder = new TransactionBuilder()
 
       expect(() =>
         builder.smartContract({
           scType: 2,
-          address: validAddress,
-          callValue: {},
-        }),
-      ).toThrow('Invalid smart contract address')
+          address: validSmartContractAddress,
+        } as unknown as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Smart contract type 2 is not supported by the node')
     })
 
     it('should throw error for unsupported smart contract type', () => {
@@ -449,7 +448,7 @@ describe('TransactionBuilder', () => {
         builder.smartContract({
           scType: 99,
         } as Parameters<TransactionBuilder['smartContract']>[0]),
-      ).toThrow('Unsupported smart contract type')
+      ).toThrow('Smart contract type 99 is not supported by the node')
     })
 
     it('should throw error when invoke is missing contract address', () => {
@@ -458,16 +457,6 @@ describe('TransactionBuilder', () => {
       expect(() =>
         builder.smartContract({
           scType: 0,
-        } as Parameters<TransactionBuilder['smartContract']>[0]),
-      ).toThrow('Contract address is required')
-    })
-
-    it('should throw error when upgrade is missing contract address', () => {
-      const builder = new TransactionBuilder()
-
-      expect(() =>
-        builder.smartContract({
-          scType: 2,
         } as Parameters<TransactionBuilder['smartContract']>[0]),
       ).toThrow('Contract address is required')
     })
@@ -548,6 +537,102 @@ describe('TransactionBuilder', () => {
 
       expect(request.sender).toBeUndefined()
       expect(request.nonce).toBeUndefined()
+    })
+
+    it('should base64-encode data on a transfer, as the node decodes it for every type', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: 1n })
+        .data(['memo', 'olá'])
+        .buildRequest()
+
+      expect(request.data?.map((d) => Buffer.from(d, 'base64').toString('utf8'))).toEqual([
+        'memo',
+        'olá',
+      ])
+    })
+
+    it('should send string callValue amounts as numbers, as the node reads int64', () => {
+      const request = new TransactionBuilder()
+        .smartContract({
+          scType: 0,
+          address: validSmartContractAddress,
+          callValue: { KLV: '1000000', 'KFI-1A2B': 5n },
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({
+        callValue: { KLV: 1000000, 'KFI-1A2B': 5 },
+      })
+    })
+
+    it.each([
+      ['hex', '0x10'],
+      ['negative', '-1'],
+    ])('should reject a %s callValue amount', (_, amount) => {
+      expect(() =>
+        new TransactionBuilder().smartContract({
+          scType: 0,
+          address: validSmartContractAddress,
+          callValue: { KLV: amount },
+        }),
+      ).toThrow('callValue.KLV')
+    })
+
+    it('should accept a contract address as a transfer receiver', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validSmartContractAddress, amount: 1n })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ receiver: validSmartContractAddress })
+    })
+
+    it('should keep amounts within the safe integer range exact', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: BigInt(Number.MAX_SAFE_INTEGER) })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ amount: Number.MAX_SAFE_INTEGER })
+    })
+
+    it('should keep a large amount that a JSON number carries exactly', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: 10n ** 17n })
+        .buildRequest()
+
+      expect(JSON.stringify(request.contracts[0])).toContain('"amount":100000000000000000')
+    })
+
+    it('should throw for amounts a JSON number would round', () => {
+      const transfer = new TransactionBuilder().transfer({
+        receiver: validAddress,
+        amount: 9007199254740993n,
+      })
+      expect(() => transfer.buildRequest()).toThrow(
+        "contracts[0].amount (9007199254740993) can't be sent to the node exactly",
+      )
+
+      const call = new TransactionBuilder().smartContract({
+        scType: 0,
+        address: validSmartContractAddress,
+        callValue: { KLV: '9007199254740993' },
+      })
+      expect(() => call.buildRequest()).toThrow(
+        "contracts[0].callValue.KLV (9007199254740993) can't be sent to the node exactly",
+      )
+
+      const overInt64 = new TransactionBuilder().transfer({
+        receiver: validAddress,
+        amount: 2n ** 63n,
+      })
+      expect(() => overInt64.buildRequest()).toThrow("can't be sent to the node exactly")
+    })
+
+    it('should reject an invalid permission ID', () => {
+      const builder = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: 1n })
+        .permissionId(1.5)
+
+      expect(() => builder.buildRequest()).toThrow('permissionId must be a non-negative int32')
     })
   })
 
@@ -738,7 +823,7 @@ describe('TransactionBuilder', () => {
       expect(request.sender).toBe(sender)
       expect(request.nonce).toBe(123)
       expect(request.permissionId).toBe(1)
-      expect(request.data).toEqual(['metadata'])
+      expect(request.data).toEqual([Buffer.from('metadata').toString('base64')])
       expect(request.kdaFee).toBe('USDT')
     })
   })

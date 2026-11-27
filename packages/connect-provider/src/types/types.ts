@@ -105,7 +105,9 @@ export interface BuildTransactionRequest {
   nonce?: number
   contracts: ContractRequestData[]
   kdaFee?: string
+  /** Permission ID; `buildTransaction()` sends it as the node's `permID` */
   permissionId?: number
+  /** Transaction data, each entry base64-encoded (the node base64-decodes it) */
   data?: string[]
 }
 

@@ -216,11 +216,17 @@ describe('buildProto() encoding', () => {
   })
 
   it('should reject smart contract types the node does not define', () => {
-    const builder = TransactionBuilder.create()
-      .smartContract({ scType: 2, address: SC_ADDRESS as never })
-      .data(['upgrade'])
-
-    expect(() => builder.buildProto(base)).toThrow(/Smart contract type 2 is not supported/)
+    // smartContract() (and addContract(), which routes to it) rejects it before buildProto()
+    expect(() =>
+      TransactionBuilder.create().smartContract({ scType: 2, address: SC_ADDRESS } as never),
+    ).toThrow(/Smart contract type 2 is not supported/)
+    expect(() =>
+      TransactionBuilder.create().addContract({
+        contractType: 63,
+        scType: 2,
+        address: SC_ADDRESS,
+      } as never),
+    ).toThrow(/Smart contract type 2 is not supported/)
   })
 
   it.each([
