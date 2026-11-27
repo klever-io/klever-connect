@@ -34,6 +34,13 @@ no node capture yet.
   as 10, and threw a `RangeError` for 1.5; these now throw `ValidationError`.
   A number amount must be a safe integer (for example 1e18 now throws); pass a
   bigint or a decimal string for larger values.
+- `callOptions()` now keeps `chainId`, `fees` and `version` for `buildProto()`;
+  it used to drop them, so a transaction built that way had no fees and the
+  wrong chain ID or version. Options passed to `buildProto()` still win.
+- A `kdaFee` passed to `buildProto()` is checked like `.kdaFee()`: `KLV` throws,
+  and so does an amount of 0, since the node only writes a KDA fee for another
+  asset, with the amount its fee pool computes. The KLV `fees` are still
+  required alongside a KDA fee, as the node sets both.
 - Royalties: the node reads a KDA's royalties from chain state. Offline, pass
   both `kdaRoyalties` and `klvRoyalties` to `transfer()`. A smart-contract call
   value is encoded without royalties, so a call in an asset with transfer

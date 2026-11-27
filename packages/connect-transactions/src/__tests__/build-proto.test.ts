@@ -135,6 +135,56 @@ describe('buildProto() encoding', () => {
     })
   })
 
+  it('should use the version and fees set through callOptions()', () => {
+    const tx = TransactionBuilder.create()
+      .transfer({ receiver: RECEIVER, amount: 1 })
+      .callOptions({ ...base, version: 2, fees: { kAppFee: 1000000, bandwidthFee: 2000000 } })
+      .buildProto()
+
+    expect(tx.RawData).toMatchObject({ Version: 2, KAppFee: 1000000, BandwidthFee: 2000000 })
+  })
+
+  it('should let buildProto() options override the callOptions() fees and version', () => {
+    const tx = TransactionBuilder.create()
+      .transfer({ receiver: RECEIVER, amount: 1 })
+      .callOptions({ ...base, version: 2, fees: { kAppFee: 1, bandwidthFee: 1 } })
+      .buildProto({ version: 3, fees: { kAppFee: 5, bandwidthFee: 6 } })
+
+    expect(tx.RawData).toMatchObject({ Version: 3, KAppFee: 5, BandwidthFee: 6 })
+  })
+
+  it('should forget the callOptions() fees and version on reset()', () => {
+    const builder = TransactionBuilder.create()
+      .callOptions({ version: 2, fees: { kAppFee: 1, bandwidthFee: 1 } })
+      .reset()
+      .transfer({ receiver: RECEIVER, amount: 1 })
+    const raw = builder.buildProto(base).toJSON()['RawData'] as { [k: string]: unknown }
+
+    expect(raw['Version']).toBe(1)
+    expect(raw).not.toHaveProperty('KAppFee')
+  })
+
+  it('should encode a KDA fee passed to buildProto()', () => {
+    const tx = TransactionBuilder.create()
+      .transfer({ receiver: RECEIVER, amount: 1 })
+      .buildProto({ ...base, kdaFee: { kda: 'KFI', amount: '98765' } })
+
+    expect(tx.toJSON()['RawData']).toMatchObject({ KDAFee: { KDA: 'S0ZJ', Amount: 98765 } })
+  })
+
+  it.each([
+    ['KLV', { kda: 'KLV', amount: 7 }, /cannot be KLV/],
+    ['a zero amount', { kda: 'KFI', amount: 0 }, /greater than 0/],
+  ])(
+    'should reject a KDA fee in %s passed to buildProto(), as the node never builds one',
+    (_, kdaFee, message) => {
+      const builder = TransactionBuilder.create().transfer({ receiver: RECEIVER, amount: 1 })
+
+      expect(() => builder.buildProto({ ...base, kdaFee })).toThrow(ValidationError)
+      expect(() => builder.buildProto({ ...base, kdaFee })).toThrow(message)
+    },
+  )
+
   it('should keep every contract, in order', () => {
     const tx = TransactionBuilder.create()
       .transfer({ receiver: RECEIVER, amount: 1 })

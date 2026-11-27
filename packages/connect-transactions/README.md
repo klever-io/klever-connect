@@ -161,7 +161,13 @@ throws a `ValidationError`; build it with `build()`.
   those calls with `build()`.
 - **Version.** Defaults to 1, the version the node sets. Override with
   `buildProto({ version })` if the network requires another.
-- **Fees.** Default to 0 when not given.
+- **Fees.** The SDK can't compute them offline. A fee you leave out is encoded
+  as 0, and the node rejects a transaction whose fees are below what it
+  charges, so always pass `fees`, either to `buildProto()` or through
+  `callOptions()`.
+- **KDA fee.** To pay the fees in a KDA, pass the KLV `fees` as usual plus
+  `kdaFee: { kda, amount }`, where `amount` is what the asset's fee pool charges
+  for those fees. It must be above 0, and `kda` can't be `KLV`.
 
 **Fee Estimation:**
 
@@ -1078,7 +1084,9 @@ const tx = TransactionBuilder.create()
   .transfer({ receiver: 'klv1...', amount: '1000000' })
   .buildProto({
     chainId: '108',
-    fees: { kAppFee: 0, bandwidthFee: 0 }, // Zeros because using KDA fee
+    // The KLV fees are still set; kdaFee.amount is what the asset's fee pool
+    // charges for them
+    fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
   })
 ```
 

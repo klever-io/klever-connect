@@ -36,12 +36,21 @@ export interface BuildCallOptions {
   sender?: string
   /** Nonce for offline transaction building */
   nonce?: number
-  /** Fees for offline transaction building */
+  /**
+   * Fees for offline transaction building, in KLV. The SDK cannot compute them
+   * offline: a fee left out is encoded as 0, and the node rejects a
+   * transaction whose fees are below what it charges. Ignored by `build()`,
+   * where the node computes the fees.
+   */
   fees?: {
     kAppFee: number
     bandwidthFee: number
   }
-  /** KDA fee for offline transaction building */
+  /**
+   * Pay the fees in a KDA instead of KLV. Offline, `amount` must be the KDA
+   * amount the asset's fee pool charges for `fees` (greater than 0); the
+   * KLV `fees` are still required. `build()` sends only the asset ID.
+   */
   kdaFee?: { kda: string; amount: AmountLike }
   /** Permission ID for the transaction */
   permissionId?: number
@@ -99,6 +108,8 @@ export class TransactionBuilder {
   private _kdaFee?: { kda: string; amount: AmountLike }
   private _permissionId?: number
   private _data?: string[]
+  private _fees?: { kAppFee: number; bandwidthFee: number }
+  private _version?: number
 
   constructor(private provider?: IProvider) {}
 
@@ -367,6 +378,9 @@ export class TransactionBuilder {
    * ```
    */
   callOptions(options: BuildCallOptions): this {
+    if (options.chainId) {
+      this._chainId = options.chainId
+    }
     if (options.sender) {
       this.sender(options.sender)
     }
@@ -383,7 +397,10 @@ export class TransactionBuilder {
       this.data(options.data)
     }
     if (options.fees) {
-      // TODO: implement fees setting
+      this._fees = { ...options.fees }
+    }
+    if (options.version !== undefined) {
+      this._version = options.version
     }
     if (options.value) {
       // should be set in smart contract directly -- ignore --
@@ -1166,7 +1183,9 @@ export class TransactionBuilder {
    *   .transfer({ receiver: 'klv1abc...', amount: '1000000' })
    *   .buildProto({
    *     chainId: '108',
-   *     fees: { kAppFee: 0, bandwidthFee: 0 },
+   *     // The KLV fees are still required; kdaFee.amount is what the
+   *     // asset's fee pool charges for them
+   *     fees: { kAppFee: 1000000, bandwidthFee: 2000000 },
    *     kdaFee: { kda: 'MYTOKEN-ABCD', amount: '1000000' }
    *   })
    * ```
@@ -1196,6 +1215,7 @@ export class TransactionBuilder {
     const sender = options.sender ?? this._sender
     const nonce = options.nonce ?? this._nonce
     const kdaFee = options.kdaFee ?? this._kdaFee
+    const fees = options.fees ?? this._fees
     const permissionId = options.permissionId ?? this._permissionId ?? null
     // PermissionID is an int32; protobuf.js would truncate 1.5 or wrap 2^31
     if (
@@ -1228,21 +1248,31 @@ export class TransactionBuilder {
     const dataBytes = data ? data.map((d) => encoder.encode(d)) : null
 
     // TODO: compute kAppFee and bandwidthFee if not provided (KLC-1867)
-    const kAppFee = nonNegativeInt(options.fees?.kAppFee ?? 0, 'fees.kAppFee')
-    const bandwidthFee = nonNegativeInt(options.fees?.bandwidthFee ?? 0, 'fees.bandwidthFee')
-    const version = nonNegativeInt(options.version ?? 1, 'version')
+    const kAppFee = nonNegativeInt(fees?.kAppFee ?? 0, 'fees.kAppFee')
+    const bandwidthFee = nonNegativeInt(fees?.bandwidthFee ?? 0, 'fees.bandwidthFee')
+    const version = nonNegativeInt(options.version ?? this._version ?? 1, 'version')
     // Version is a uint32; 2^32 would be written as 0 and change the hash
     if (version > 0xffffffff) {
       throw new ValidationError('version must be a uint32', { version })
     }
 
-    const kdaFeeProto: IKDAFee | null =
-      kdaFee && kdaFee.kda
-        ? withoutZero({
-            KDA: encoder.encode(kdaFee.kda),
-            Amount: nonNegativeInt(kdaFee.amount, 'kdaFee.amount'),
-          })
-        : null
+    let kdaFeeProto: IKDAFee | null = null
+    if (kdaFee && kdaFee.kda) {
+      // The node never writes a KDAFee for KLV, and for any other asset it
+      // writes the amount the fee pool computes, which is always above 0
+      if (kdaFee.kda === 'KLV') {
+        throw new ValidationError('KDA fee cannot be KLV - use KAppFee and BandwidthFee instead', {
+          assetId: kdaFee.kda,
+        })
+      }
+      const amount = nonNegativeInt(kdaFee.amount, 'kdaFee.amount')
+      if (amount === 0) {
+        throw new ValidationError('kdaFee.amount must be greater than 0 for offline building', {
+          kdaFee,
+        })
+      }
+      kdaFeeProto = { KDA: encoder.encode(kdaFee.kda), Amount: amount }
+    }
 
     // The node re-encodes RawData before checking the signature, and Go's
     // proto3 encoding leaves out fields with their default value. protobuf.js
@@ -1388,6 +1418,8 @@ export class TransactionBuilder {
     delete this._kdaFee
     delete this._permissionId
     delete this._data
+    delete this._fees
+    delete this._version
     return this
   }
 }
