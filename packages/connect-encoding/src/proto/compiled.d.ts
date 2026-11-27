@@ -13,7 +13,7 @@ export namespace proto {
         Parameter?: (google.protobuf.IAny|null);
     }
 
-    /** Represents a TXContract. */
+    /** TXContract available */
     class TXContract implements ITXContract {
 
         /**
@@ -167,7 +167,7 @@ export namespace proto {
         GasMultiplier?: (number|null);
     }
 
-    /** Represents a Transaction. */
+    /** Transaction holds all the data needed for a value transfer */
     class Transaction implements ITransaction {
 
         /**
@@ -715,14 +715,20 @@ export namespace proto {
         /** TransferContract ToAddress */
         ToAddress?: (Uint8Array|null);
 
+        /** TransferContract AssetID */
+        AssetID?: (Uint8Array|null);
+
         /** TransferContract Amount */
         Amount?: (number|null);
 
-        /** TransferContract AssetID */
-        AssetID?: (Uint8Array|null);
+        /** TransferContract KDARoyalties */
+        KDARoyalties?: (number|null);
+
+        /** TransferContract KLVRoyalties */
+        KLVRoyalties?: (number|null);
     }
 
-    /** Represents a TransferContract. */
+    /** TXContract available */
     class TransferContract implements ITransferContract {
 
         /**
@@ -734,11 +740,17 @@ export namespace proto {
         /** TransferContract ToAddress. */
         public ToAddress: Uint8Array;
 
+        /** TransferContract AssetID. */
+        public AssetID: Uint8Array;
+
         /** TransferContract Amount. */
         public Amount: number;
 
-        /** TransferContract AssetID. */
-        public AssetID: Uint8Array;
+        /** TransferContract KDARoyalties. */
+        public KDARoyalties: number;
+
+        /** TransferContract KLVRoyalties. */
+        public KLVRoyalties: number;
 
         /**
          * Creates a new TransferContract instance using the specified properties.
@@ -818,17 +830,1082 @@ export namespace proto {
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
+    /** Properties of a CreateAssetContract. */
+    interface ICreateAssetContract {
+
+        /** CreateAssetContract Type */
+        Type?: (proto.CreateAssetContract.EnumAssetType|null);
+
+        /** CreateAssetContract Name */
+        Name?: (Uint8Array|null);
+
+        /** CreateAssetContract Ticker */
+        Ticker?: (Uint8Array|null);
+
+        /** CreateAssetContract OwnerAddress */
+        OwnerAddress?: (Uint8Array|null);
+
+        /** CreateAssetContract Logo */
+        Logo?: (string|null);
+
+        /** CreateAssetContract URIs */
+        URIs?: ({ [k: string]: string }|null);
+
+        /** CreateAssetContract Precision */
+        Precision?: (number|null);
+
+        /** CreateAssetContract InitialSupply */
+        InitialSupply?: (number|null);
+
+        /** CreateAssetContract MaxSupply */
+        MaxSupply?: (number|null);
+
+        /** CreateAssetContract Royalties */
+        Royalties?: (proto.IRoyaltiesInfo|null);
+
+        /** CreateAssetContract Properties */
+        Properties?: (proto.IPropertiesInfo|null);
+
+        /** CreateAssetContract Attributes */
+        Attributes?: (proto.IAttributesInfo|null);
+
+        /** CreateAssetContract Staking */
+        Staking?: (proto.IStakingInfo|null);
+
+        /** CreateAssetContract Roles */
+        Roles?: (proto.IRolesInfo[]|null);
+
+        /** CreateAssetContract AdminAddress */
+        AdminAddress?: (Uint8Array|null);
+    }
+
+    /** CreateAssetContract holds the data for a Klever digital asset */
+    class CreateAssetContract implements ICreateAssetContract {
+
+        /**
+         * Constructs a new CreateAssetContract.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.ICreateAssetContract);
+
+        /** CreateAssetContract Type. */
+        public Type: proto.CreateAssetContract.EnumAssetType;
+
+        /** CreateAssetContract Name. */
+        public Name: Uint8Array;
+
+        /** CreateAssetContract Ticker. */
+        public Ticker: Uint8Array;
+
+        /** CreateAssetContract OwnerAddress. */
+        public OwnerAddress: Uint8Array;
+
+        /** CreateAssetContract Logo. */
+        public Logo: string;
+
+        /** CreateAssetContract URIs. */
+        public URIs: { [k: string]: string };
+
+        /** CreateAssetContract Precision. */
+        public Precision: number;
+
+        /** CreateAssetContract InitialSupply. */
+        public InitialSupply: number;
+
+        /** CreateAssetContract MaxSupply. */
+        public MaxSupply: number;
+
+        /** CreateAssetContract Royalties. */
+        public Royalties?: (proto.IRoyaltiesInfo|null);
+
+        /** CreateAssetContract Properties. */
+        public Properties?: (proto.IPropertiesInfo|null);
+
+        /** CreateAssetContract Attributes. */
+        public Attributes?: (proto.IAttributesInfo|null);
+
+        /** CreateAssetContract Staking. */
+        public Staking?: (proto.IStakingInfo|null);
+
+        /** CreateAssetContract Roles. */
+        public Roles: proto.IRolesInfo[];
+
+        /** CreateAssetContract AdminAddress. */
+        public AdminAddress: Uint8Array;
+
+        /**
+         * Creates a new CreateAssetContract instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns CreateAssetContract instance
+         */
+        public static create(properties?: proto.ICreateAssetContract): proto.CreateAssetContract;
+
+        /**
+         * Encodes the specified CreateAssetContract message. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
+         * @param message CreateAssetContract message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.ICreateAssetContract, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified CreateAssetContract message, length delimited. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
+         * @param message CreateAssetContract message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.ICreateAssetContract, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a CreateAssetContract message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns CreateAssetContract
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.CreateAssetContract;
+
+        /**
+         * Decodes a CreateAssetContract message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns CreateAssetContract
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.CreateAssetContract;
+
+        /**
+         * Verifies a CreateAssetContract message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a CreateAssetContract message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns CreateAssetContract
+         */
+        public static fromObject(object: { [k: string]: any }): proto.CreateAssetContract;
+
+        /**
+         * Creates a plain object from a CreateAssetContract message. Also converts values to other types if specified.
+         * @param message CreateAssetContract
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.CreateAssetContract, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this CreateAssetContract to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CreateAssetContract
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace CreateAssetContract {
+
+        /** EnumAssetType enum. */
+        enum EnumAssetType {
+            Fungible = 0,
+            NonFungible = 1,
+            SemiFungible = 2
+        }
+    }
+
+    /** Properties of a PropertiesInfo. */
+    interface IPropertiesInfo {
+
+        /** PropertiesInfo CanFreeze */
+        CanFreeze?: (boolean|null);
+
+        /** PropertiesInfo CanWipe */
+        CanWipe?: (boolean|null);
+
+        /** PropertiesInfo CanPause */
+        CanPause?: (boolean|null);
+
+        /** PropertiesInfo CanMint */
+        CanMint?: (boolean|null);
+
+        /** PropertiesInfo CanBurn */
+        CanBurn?: (boolean|null);
+
+        /** PropertiesInfo CanChangeOwner */
+        CanChangeOwner?: (boolean|null);
+
+        /** PropertiesInfo CanAddRoles */
+        CanAddRoles?: (boolean|null);
+
+        /** PropertiesInfo LimitTransfer */
+        LimitTransfer?: (boolean|null);
+    }
+
+    /** PropertiesInfo hold the properties structure for the KDA asset */
+    class PropertiesInfo implements IPropertiesInfo {
+
+        /**
+         * Constructs a new PropertiesInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.IPropertiesInfo);
+
+        /** PropertiesInfo CanFreeze. */
+        public CanFreeze: boolean;
+
+        /** PropertiesInfo CanWipe. */
+        public CanWipe: boolean;
+
+        /** PropertiesInfo CanPause. */
+        public CanPause: boolean;
+
+        /** PropertiesInfo CanMint. */
+        public CanMint: boolean;
+
+        /** PropertiesInfo CanBurn. */
+        public CanBurn: boolean;
+
+        /** PropertiesInfo CanChangeOwner. */
+        public CanChangeOwner: boolean;
+
+        /** PropertiesInfo CanAddRoles. */
+        public CanAddRoles: boolean;
+
+        /** PropertiesInfo LimitTransfer. */
+        public LimitTransfer: boolean;
+
+        /**
+         * Creates a new PropertiesInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns PropertiesInfo instance
+         */
+        public static create(properties?: proto.IPropertiesInfo): proto.PropertiesInfo;
+
+        /**
+         * Encodes the specified PropertiesInfo message. Does not implicitly {@link proto.PropertiesInfo.verify|verify} messages.
+         * @param message PropertiesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.IPropertiesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified PropertiesInfo message, length delimited. Does not implicitly {@link proto.PropertiesInfo.verify|verify} messages.
+         * @param message PropertiesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.IPropertiesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a PropertiesInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns PropertiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.PropertiesInfo;
+
+        /**
+         * Decodes a PropertiesInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns PropertiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.PropertiesInfo;
+
+        /**
+         * Verifies a PropertiesInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a PropertiesInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns PropertiesInfo
+         */
+        public static fromObject(object: { [k: string]: any }): proto.PropertiesInfo;
+
+        /**
+         * Creates a plain object from a PropertiesInfo message. Also converts values to other types if specified.
+         * @param message PropertiesInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.PropertiesInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this PropertiesInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PropertiesInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an AttributesInfo. */
+    interface IAttributesInfo {
+
+        /** AttributesInfo IsPaused */
+        IsPaused?: (boolean|null);
+
+        /** AttributesInfo IsNFTMintStopped */
+        IsNFTMintStopped?: (boolean|null);
+
+        /** AttributesInfo IsRoyaltiesChangeStopped */
+        IsRoyaltiesChangeStopped?: (boolean|null);
+
+        /** AttributesInfo IsNFTMetadataChangeStopped */
+        IsNFTMetadataChangeStopped?: (boolean|null);
+    }
+
+    /** AttributesInfo hold the attributes structure for the KDA asset */
+    class AttributesInfo implements IAttributesInfo {
+
+        /**
+         * Constructs a new AttributesInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.IAttributesInfo);
+
+        /** AttributesInfo IsPaused. */
+        public IsPaused: boolean;
+
+        /** AttributesInfo IsNFTMintStopped. */
+        public IsNFTMintStopped: boolean;
+
+        /** AttributesInfo IsRoyaltiesChangeStopped. */
+        public IsRoyaltiesChangeStopped: boolean;
+
+        /** AttributesInfo IsNFTMetadataChangeStopped. */
+        public IsNFTMetadataChangeStopped: boolean;
+
+        /**
+         * Creates a new AttributesInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns AttributesInfo instance
+         */
+        public static create(properties?: proto.IAttributesInfo): proto.AttributesInfo;
+
+        /**
+         * Encodes the specified AttributesInfo message. Does not implicitly {@link proto.AttributesInfo.verify|verify} messages.
+         * @param message AttributesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.IAttributesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified AttributesInfo message, length delimited. Does not implicitly {@link proto.AttributesInfo.verify|verify} messages.
+         * @param message AttributesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.IAttributesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an AttributesInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns AttributesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.AttributesInfo;
+
+        /**
+         * Decodes an AttributesInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns AttributesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.AttributesInfo;
+
+        /**
+         * Verifies an AttributesInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an AttributesInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns AttributesInfo
+         */
+        public static fromObject(object: { [k: string]: any }): proto.AttributesInfo;
+
+        /**
+         * Creates a plain object from an AttributesInfo message. Also converts values to other types if specified.
+         * @param message AttributesInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.AttributesInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this AttributesInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for AttributesInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a StakingInfo. */
+    interface IStakingInfo {
+
+        /** StakingInfo Type */
+        Type?: (proto.StakingInfo.InterestType|null);
+
+        /** StakingInfo APR */
+        APR?: (number|null);
+
+        /** StakingInfo MinEpochsToClaim */
+        MinEpochsToClaim?: (number|null);
+
+        /** StakingInfo MinEpochsToUnstake */
+        MinEpochsToUnstake?: (number|null);
+
+        /** StakingInfo MinEpochsToWithdraw */
+        MinEpochsToWithdraw?: (number|null);
+    }
+
+    /** StakingInfo hold the staking structure for the KDA asset */
+    class StakingInfo implements IStakingInfo {
+
+        /**
+         * Constructs a new StakingInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.IStakingInfo);
+
+        /** StakingInfo Type. */
+        public Type: proto.StakingInfo.InterestType;
+
+        /** StakingInfo APR. */
+        public APR: number;
+
+        /** StakingInfo MinEpochsToClaim. */
+        public MinEpochsToClaim: number;
+
+        /** StakingInfo MinEpochsToUnstake. */
+        public MinEpochsToUnstake: number;
+
+        /** StakingInfo MinEpochsToWithdraw. */
+        public MinEpochsToWithdraw: number;
+
+        /**
+         * Creates a new StakingInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns StakingInfo instance
+         */
+        public static create(properties?: proto.IStakingInfo): proto.StakingInfo;
+
+        /**
+         * Encodes the specified StakingInfo message. Does not implicitly {@link proto.StakingInfo.verify|verify} messages.
+         * @param message StakingInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.IStakingInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified StakingInfo message, length delimited. Does not implicitly {@link proto.StakingInfo.verify|verify} messages.
+         * @param message StakingInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.IStakingInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a StakingInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns StakingInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.StakingInfo;
+
+        /**
+         * Decodes a StakingInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns StakingInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.StakingInfo;
+
+        /**
+         * Verifies a StakingInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a StakingInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns StakingInfo
+         */
+        public static fromObject(object: { [k: string]: any }): proto.StakingInfo;
+
+        /**
+         * Creates a plain object from a StakingInfo message. Also converts values to other types if specified.
+         * @param message StakingInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.StakingInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this StakingInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StakingInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace StakingInfo {
+
+        /** InterestType enum. */
+        enum InterestType {
+            APRI = 0,
+            FPRI = 1
+        }
+    }
+
+    /** Properties of a RolesInfo. */
+    interface IRolesInfo {
+
+        /** RolesInfo Address */
+        Address?: (Uint8Array|null);
+
+        /** RolesInfo HasRoleMint */
+        HasRoleMint?: (boolean|null);
+
+        /** RolesInfo HasRoleSetITOPrices */
+        HasRoleSetITOPrices?: (boolean|null);
+
+        /** RolesInfo HasRoleDeposit */
+        HasRoleDeposit?: (boolean|null);
+
+        /** RolesInfo HasRoleTransfer */
+        HasRoleTransfer?: (boolean|null);
+    }
+
+    /** RolesInfo holds the roles for a given asset and the given address */
+    class RolesInfo implements IRolesInfo {
+
+        /**
+         * Constructs a new RolesInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.IRolesInfo);
+
+        /** RolesInfo Address. */
+        public Address: Uint8Array;
+
+        /** RolesInfo HasRoleMint. */
+        public HasRoleMint: boolean;
+
+        /** RolesInfo HasRoleSetITOPrices. */
+        public HasRoleSetITOPrices: boolean;
+
+        /** RolesInfo HasRoleDeposit. */
+        public HasRoleDeposit: boolean;
+
+        /** RolesInfo HasRoleTransfer. */
+        public HasRoleTransfer: boolean;
+
+        /**
+         * Creates a new RolesInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns RolesInfo instance
+         */
+        public static create(properties?: proto.IRolesInfo): proto.RolesInfo;
+
+        /**
+         * Encodes the specified RolesInfo message. Does not implicitly {@link proto.RolesInfo.verify|verify} messages.
+         * @param message RolesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.IRolesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified RolesInfo message, length delimited. Does not implicitly {@link proto.RolesInfo.verify|verify} messages.
+         * @param message RolesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.IRolesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a RolesInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns RolesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.RolesInfo;
+
+        /**
+         * Decodes a RolesInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns RolesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.RolesInfo;
+
+        /**
+         * Verifies a RolesInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a RolesInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns RolesInfo
+         */
+        public static fromObject(object: { [k: string]: any }): proto.RolesInfo;
+
+        /**
+         * Creates a plain object from a RolesInfo message. Also converts values to other types if specified.
+         * @param message RolesInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.RolesInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this RolesInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RolesInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a RoyaltiesInfo. */
+    interface IRoyaltiesInfo {
+
+        /** RoyaltiesInfo Address */
+        Address?: (Uint8Array|null);
+
+        /** RoyaltiesInfo TransferPercentage */
+        TransferPercentage?: (proto.IRoyaltyInfo[]|null);
+
+        /** RoyaltiesInfo TransferFixed */
+        TransferFixed?: (number|null);
+
+        /** RoyaltiesInfo MarketPercentage */
+        MarketPercentage?: (number|null);
+
+        /** RoyaltiesInfo MarketFixed */
+        MarketFixed?: (number|null);
+
+        /** RoyaltiesInfo SplitRoyalties */
+        SplitRoyalties?: ({ [k: string]: proto.IRoyaltySplitInfo }|null);
+
+        /** RoyaltiesInfo ITOFixed */
+        ITOFixed?: (number|null);
+
+        /** RoyaltiesInfo ITOPercentage */
+        ITOPercentage?: (number|null);
+    }
+
+    /** RoyaltiesInfo holds the royalties for a given asset */
+    class RoyaltiesInfo implements IRoyaltiesInfo {
+
+        /**
+         * Constructs a new RoyaltiesInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.IRoyaltiesInfo);
+
+        /** RoyaltiesInfo Address. */
+        public Address: Uint8Array;
+
+        /** RoyaltiesInfo TransferPercentage. */
+        public TransferPercentage: proto.IRoyaltyInfo[];
+
+        /** RoyaltiesInfo TransferFixed. */
+        public TransferFixed: number;
+
+        /** RoyaltiesInfo MarketPercentage. */
+        public MarketPercentage: number;
+
+        /** RoyaltiesInfo MarketFixed. */
+        public MarketFixed: number;
+
+        /** RoyaltiesInfo SplitRoyalties. */
+        public SplitRoyalties: { [k: string]: proto.IRoyaltySplitInfo };
+
+        /** RoyaltiesInfo ITOFixed. */
+        public ITOFixed: number;
+
+        /** RoyaltiesInfo ITOPercentage. */
+        public ITOPercentage: number;
+
+        /**
+         * Creates a new RoyaltiesInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns RoyaltiesInfo instance
+         */
+        public static create(properties?: proto.IRoyaltiesInfo): proto.RoyaltiesInfo;
+
+        /**
+         * Encodes the specified RoyaltiesInfo message. Does not implicitly {@link proto.RoyaltiesInfo.verify|verify} messages.
+         * @param message RoyaltiesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.IRoyaltiesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified RoyaltiesInfo message, length delimited. Does not implicitly {@link proto.RoyaltiesInfo.verify|verify} messages.
+         * @param message RoyaltiesInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.IRoyaltiesInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a RoyaltiesInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns RoyaltiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.RoyaltiesInfo;
+
+        /**
+         * Decodes a RoyaltiesInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns RoyaltiesInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.RoyaltiesInfo;
+
+        /**
+         * Verifies a RoyaltiesInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a RoyaltiesInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns RoyaltiesInfo
+         */
+        public static fromObject(object: { [k: string]: any }): proto.RoyaltiesInfo;
+
+        /**
+         * Creates a plain object from a RoyaltiesInfo message. Also converts values to other types if specified.
+         * @param message RoyaltiesInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.RoyaltiesInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this RoyaltiesInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RoyaltiesInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a RoyaltySplitInfo. */
+    interface IRoyaltySplitInfo {
+
+        /** RoyaltySplitInfo PercentTransferPercentage */
+        PercentTransferPercentage?: (number|null);
+
+        /** RoyaltySplitInfo PercentTransferFixed */
+        PercentTransferFixed?: (number|null);
+
+        /** RoyaltySplitInfo PercentMarketPercentage */
+        PercentMarketPercentage?: (number|null);
+
+        /** RoyaltySplitInfo PercentMarketFixed */
+        PercentMarketFixed?: (number|null);
+
+        /** RoyaltySplitInfo PercentITOPercentage */
+        PercentITOPercentage?: (number|null);
+
+        /** RoyaltySplitInfo PercentITOFixed */
+        PercentITOFixed?: (number|null);
+    }
+
+    /** RoyaltySplitInfo holds the royalty split */
+    class RoyaltySplitInfo implements IRoyaltySplitInfo {
+
+        /**
+         * Constructs a new RoyaltySplitInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.IRoyaltySplitInfo);
+
+        /** RoyaltySplitInfo PercentTransferPercentage. */
+        public PercentTransferPercentage: number;
+
+        /** RoyaltySplitInfo PercentTransferFixed. */
+        public PercentTransferFixed: number;
+
+        /** RoyaltySplitInfo PercentMarketPercentage. */
+        public PercentMarketPercentage: number;
+
+        /** RoyaltySplitInfo PercentMarketFixed. */
+        public PercentMarketFixed: number;
+
+        /** RoyaltySplitInfo PercentITOPercentage. */
+        public PercentITOPercentage: number;
+
+        /** RoyaltySplitInfo PercentITOFixed. */
+        public PercentITOFixed: number;
+
+        /**
+         * Creates a new RoyaltySplitInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns RoyaltySplitInfo instance
+         */
+        public static create(properties?: proto.IRoyaltySplitInfo): proto.RoyaltySplitInfo;
+
+        /**
+         * Encodes the specified RoyaltySplitInfo message. Does not implicitly {@link proto.RoyaltySplitInfo.verify|verify} messages.
+         * @param message RoyaltySplitInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.IRoyaltySplitInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified RoyaltySplitInfo message, length delimited. Does not implicitly {@link proto.RoyaltySplitInfo.verify|verify} messages.
+         * @param message RoyaltySplitInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.IRoyaltySplitInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a RoyaltySplitInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns RoyaltySplitInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.RoyaltySplitInfo;
+
+        /**
+         * Decodes a RoyaltySplitInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns RoyaltySplitInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.RoyaltySplitInfo;
+
+        /**
+         * Verifies a RoyaltySplitInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a RoyaltySplitInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns RoyaltySplitInfo
+         */
+        public static fromObject(object: { [k: string]: any }): proto.RoyaltySplitInfo;
+
+        /**
+         * Creates a plain object from a RoyaltySplitInfo message. Also converts values to other types if specified.
+         * @param message RoyaltySplitInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.RoyaltySplitInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this RoyaltySplitInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RoyaltySplitInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a RoyaltyInfo. */
+    interface IRoyaltyInfo {
+
+        /** RoyaltyInfo Amount */
+        Amount?: (number|null);
+
+        /** RoyaltyInfo Percentage */
+        Percentage?: (number|null);
+    }
+
+    /** RoyaltyInfo holds the royalty threshold */
+    class RoyaltyInfo implements IRoyaltyInfo {
+
+        /**
+         * Constructs a new RoyaltyInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: proto.IRoyaltyInfo);
+
+        /** RoyaltyInfo Amount. */
+        public Amount: number;
+
+        /** RoyaltyInfo Percentage. */
+        public Percentage: number;
+
+        /**
+         * Creates a new RoyaltyInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns RoyaltyInfo instance
+         */
+        public static create(properties?: proto.IRoyaltyInfo): proto.RoyaltyInfo;
+
+        /**
+         * Encodes the specified RoyaltyInfo message. Does not implicitly {@link proto.RoyaltyInfo.verify|verify} messages.
+         * @param message RoyaltyInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: proto.IRoyaltyInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified RoyaltyInfo message, length delimited. Does not implicitly {@link proto.RoyaltyInfo.verify|verify} messages.
+         * @param message RoyaltyInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: proto.IRoyaltyInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a RoyaltyInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns RoyaltyInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.RoyaltyInfo;
+
+        /**
+         * Decodes a RoyaltyInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns RoyaltyInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.RoyaltyInfo;
+
+        /**
+         * Verifies a RoyaltyInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a RoyaltyInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns RoyaltyInfo
+         */
+        public static fromObject(object: { [k: string]: any }): proto.RoyaltyInfo;
+
+        /**
+         * Creates a plain object from a RoyaltyInfo message. Also converts values to other types if specified.
+         * @param message RoyaltyInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: proto.RoyaltyInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this RoyaltyInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RoyaltyInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
     /** Properties of a FreezeContract. */
     interface IFreezeContract {
 
-        /** FreezeContract Amount */
-        Amount?: (number|null);
-
         /** FreezeContract AssetID */
         AssetID?: (Uint8Array|null);
+
+        /** FreezeContract Amount */
+        Amount?: (number|null);
     }
 
-    /** Represents a FreezeContract. */
+    /** FreezeContract holds the data for a freeze transaction */
     class FreezeContract implements IFreezeContract {
 
         /**
@@ -837,11 +1914,11 @@ export namespace proto {
          */
         constructor(properties?: proto.IFreezeContract);
 
-        /** FreezeContract Amount. */
-        public Amount: number;
-
         /** FreezeContract AssetID. */
         public AssetID: Uint8Array;
+
+        /** FreezeContract Amount. */
+        public Amount: number;
 
         /**
          * Creates a new FreezeContract instance using the specified properties.
@@ -931,7 +2008,7 @@ export namespace proto {
         BucketID?: (Uint8Array|null);
     }
 
-    /** Represents an UnfreezeContract. */
+    /** UnfreezeContract holds the data for a unfreeze transaction */
     class UnfreezeContract implements IUnfreezeContract {
 
         /**
@@ -1034,7 +2111,7 @@ export namespace proto {
         BucketID?: (Uint8Array|null);
     }
 
-    /** Represents a DelegateContract. */
+    /** DelegateContract holds the data for a delegate transaction */
     class DelegateContract implements IDelegateContract {
 
         /**
@@ -1134,7 +2211,7 @@ export namespace proto {
         BucketID?: (Uint8Array|null);
     }
 
-    /** Represents an UndelegateContract. */
+    /** UndelegateContract holds the data for a undelegate transaction */
     class UndelegateContract implements IUndelegateContract {
 
         /**
@@ -1227,20 +2304,20 @@ export namespace proto {
     /** Properties of a WithdrawContract. */
     interface IWithdrawContract {
 
-        /** WithdrawContract Type */
-        Type?: (proto.WithdrawContract.WithdrawType|null);
-
         /** WithdrawContract AssetID */
         AssetID?: (Uint8Array|null);
 
-        /** WithdrawContract Amount */
-        Amount?: (number|null);
+        /** WithdrawContract WithdrawType */
+        WithdrawType?: (proto.WithdrawContract.EnumWithdrawType|null);
+
+        /** WithdrawContract amount */
+        amount?: (number|null);
 
         /** WithdrawContract CurrencyID */
         CurrencyID?: (Uint8Array|null);
     }
 
-    /** Represents a WithdrawContract. */
+    /** WithdrawContract holds the data for a withdraw transaction */
     class WithdrawContract implements IWithdrawContract {
 
         /**
@@ -1249,14 +2326,14 @@ export namespace proto {
          */
         constructor(properties?: proto.IWithdrawContract);
 
-        /** WithdrawContract Type. */
-        public Type: proto.WithdrawContract.WithdrawType;
-
         /** WithdrawContract AssetID. */
         public AssetID: Uint8Array;
 
-        /** WithdrawContract Amount. */
-        public Amount: number;
+        /** WithdrawContract WithdrawType. */
+        public WithdrawType: proto.WithdrawContract.EnumWithdrawType;
+
+        /** WithdrawContract amount. */
+        public amount: number;
 
         /** WithdrawContract CurrencyID. */
         public CurrencyID: Uint8Array;
@@ -1341,27 +2418,24 @@ export namespace proto {
 
     namespace WithdrawContract {
 
-        /** WithdrawType enum. */
-        enum WithdrawType {
-            StakingReward = 0,
-            KDAPool = 1,
-            KDAFeePool = 2,
-            MarketOrderIDXIN = 3,
-            MarketOrderIDXOUT = 4
+        /** EnumWithdrawType enum. */
+        enum EnumWithdrawType {
+            Staking = 0,
+            KDAPool = 1
         }
     }
 
     /** Properties of a ClaimContract. */
     interface IClaimContract {
 
-        /** ClaimContract Type */
-        Type?: (proto.ClaimContract.ClaimType|null);
+        /** ClaimContract ClaimType */
+        ClaimType?: (proto.ClaimContract.EnumClaimType|null);
 
         /** ClaimContract ID */
         ID?: (Uint8Array|null);
     }
 
-    /** Represents a ClaimContract. */
+    /** ClaimContract holds the data for a claim transaction */
     class ClaimContract implements IClaimContract {
 
         /**
@@ -1370,8 +2444,8 @@ export namespace proto {
          */
         constructor(properties?: proto.IClaimContract);
 
-        /** ClaimContract Type. */
-        public Type: proto.ClaimContract.ClaimType;
+        /** ClaimContract ClaimType. */
+        public ClaimType: proto.ClaimContract.EnumClaimType;
 
         /** ClaimContract ID. */
         public ID: Uint8Array;
@@ -1456,8 +2530,8 @@ export namespace proto {
 
     namespace ClaimContract {
 
-        /** ClaimType enum. */
-        enum ClaimType {
+        /** EnumClaimType enum. */
+        enum EnumClaimType {
             StakingClaim = 0,
             AllowanceClaim = 1,
             MarketClaim = 2
@@ -1470,14 +2544,14 @@ export namespace proto {
         /** VoteContract ProposalID */
         ProposalID?: (number|null);
 
-        /** VoteContract Type */
-        Type?: (proto.VoteContract.VoteType|null);
-
         /** VoteContract Amount */
         Amount?: (number|null);
+
+        /** VoteContract Type */
+        Type?: (proto.VoteContract.EnumVoteType|null);
     }
 
-    /** Represents a VoteContract. */
+    /** VoteContract holds the data for a vote transaction */
     class VoteContract implements IVoteContract {
 
         /**
@@ -1489,11 +2563,11 @@ export namespace proto {
         /** VoteContract ProposalID. */
         public ProposalID: number;
 
-        /** VoteContract Type. */
-        public Type: proto.VoteContract.VoteType;
-
         /** VoteContract Amount. */
         public Amount: number;
+
+        /** VoteContract Type. */
+        public Type: proto.VoteContract.EnumVoteType;
 
         /**
          * Creates a new VoteContract instance using the specified properties.
@@ -1575,415 +2649,120 @@ export namespace proto {
 
     namespace VoteContract {
 
-        /** VoteType enum. */
-        enum VoteType {
+        /** EnumVoteType enum. */
+        enum EnumVoteType {
             Yes = 0,
-            No = 1,
-            Abstain = 2
+            No = 1
         }
     }
 
-    /** Properties of a CreateAssetContract. */
-    interface ICreateAssetContract {
+    /** Properties of a CallValue. */
+    interface ICallValue {
 
-        /** CreateAssetContract Type */
-        Type?: (proto.CreateAssetContract.AssetType|null);
+        /** CallValue Amount */
+        Amount?: (number|null);
 
-        /** CreateAssetContract Name */
-        Name?: (string|null);
+        /** CallValue KDARoyalties */
+        KDARoyalties?: (number|null);
 
-        /** CreateAssetContract Ticker */
-        Ticker?: (string|null);
-
-        /** CreateAssetContract OwnerAddress */
-        OwnerAddress?: (Uint8Array|null);
-
-        /** CreateAssetContract Logo */
-        Logo?: (string|null);
-
-        /** CreateAssetContract URIs */
-        URIs?: (string[]|null);
-
-        /** CreateAssetContract Precision */
-        Precision?: (number|null);
-
-        /** CreateAssetContract InitialSupply */
-        InitialSupply?: (number|null);
-
-        /** CreateAssetContract MaxSupply */
-        MaxSupply?: (number|null);
-
-        /** CreateAssetContract Properties */
-        Properties?: (proto.CreateAssetContract.IAssetProperties|null);
-
-        /** CreateAssetContract Attributes */
-        Attributes?: (proto.CreateAssetContract.IAssetAttributes|null);
+        /** CallValue KLVRoyalties */
+        KLVRoyalties?: (number|null);
     }
 
-    /** Represents a CreateAssetContract. */
-    class CreateAssetContract implements ICreateAssetContract {
+    /** Represents a CallValue. */
+    class CallValue implements ICallValue {
 
         /**
-         * Constructs a new CreateAssetContract.
+         * Constructs a new CallValue.
          * @param [properties] Properties to set
          */
-        constructor(properties?: proto.ICreateAssetContract);
+        constructor(properties?: proto.ICallValue);
 
-        /** CreateAssetContract Type. */
-        public Type: proto.CreateAssetContract.AssetType;
+        /** CallValue Amount. */
+        public Amount: number;
 
-        /** CreateAssetContract Name. */
-        public Name: string;
+        /** CallValue KDARoyalties. */
+        public KDARoyalties: number;
 
-        /** CreateAssetContract Ticker. */
-        public Ticker: string;
-
-        /** CreateAssetContract OwnerAddress. */
-        public OwnerAddress: Uint8Array;
-
-        /** CreateAssetContract Logo. */
-        public Logo: string;
-
-        /** CreateAssetContract URIs. */
-        public URIs: string[];
-
-        /** CreateAssetContract Precision. */
-        public Precision: number;
-
-        /** CreateAssetContract InitialSupply. */
-        public InitialSupply: number;
-
-        /** CreateAssetContract MaxSupply. */
-        public MaxSupply: number;
-
-        /** CreateAssetContract Properties. */
-        public Properties?: (proto.CreateAssetContract.IAssetProperties|null);
-
-        /** CreateAssetContract Attributes. */
-        public Attributes?: (proto.CreateAssetContract.IAssetAttributes|null);
+        /** CallValue KLVRoyalties. */
+        public KLVRoyalties: number;
 
         /**
-         * Creates a new CreateAssetContract instance using the specified properties.
+         * Creates a new CallValue instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns CreateAssetContract instance
+         * @returns CallValue instance
          */
-        public static create(properties?: proto.ICreateAssetContract): proto.CreateAssetContract;
+        public static create(properties?: proto.ICallValue): proto.CallValue;
 
         /**
-         * Encodes the specified CreateAssetContract message. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
-         * @param message CreateAssetContract message or plain object to encode
+         * Encodes the specified CallValue message. Does not implicitly {@link proto.CallValue.verify|verify} messages.
+         * @param message CallValue message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: proto.ICreateAssetContract, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: proto.ICallValue, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified CreateAssetContract message, length delimited. Does not implicitly {@link proto.CreateAssetContract.verify|verify} messages.
-         * @param message CreateAssetContract message or plain object to encode
+         * Encodes the specified CallValue message, length delimited. Does not implicitly {@link proto.CallValue.verify|verify} messages.
+         * @param message CallValue message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: proto.ICreateAssetContract, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: proto.ICallValue, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a CreateAssetContract message from the specified reader or buffer.
+         * Decodes a CallValue message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns CreateAssetContract
+         * @returns CallValue
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.CreateAssetContract;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.CallValue;
 
         /**
-         * Decodes a CreateAssetContract message from the specified reader or buffer, length delimited.
+         * Decodes a CallValue message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns CreateAssetContract
+         * @returns CallValue
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.CreateAssetContract;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.CallValue;
 
         /**
-         * Verifies a CreateAssetContract message.
+         * Verifies a CallValue message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a CreateAssetContract message from a plain object. Also converts values to their respective internal types.
+         * Creates a CallValue message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns CreateAssetContract
+         * @returns CallValue
          */
-        public static fromObject(object: { [k: string]: any }): proto.CreateAssetContract;
+        public static fromObject(object: { [k: string]: any }): proto.CallValue;
 
         /**
-         * Creates a plain object from a CreateAssetContract message. Also converts values to other types if specified.
-         * @param message CreateAssetContract
+         * Creates a plain object from a CallValue message. Also converts values to other types if specified.
+         * @param message CallValue
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: proto.CreateAssetContract, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: proto.CallValue, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this CreateAssetContract to JSON.
+         * Converts this CallValue to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
 
         /**
-         * Gets the default type url for CreateAssetContract
+         * Gets the default type url for CallValue
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */
         public static getTypeUrl(typeUrlPrefix?: string): string;
-    }
-
-    namespace CreateAssetContract {
-
-        /** AssetType enum. */
-        enum AssetType {
-            Fungible = 0,
-            NonFungible = 1,
-            SemiFungible = 2
-        }
-
-        /** Properties of an AssetProperties. */
-        interface IAssetProperties {
-
-            /** AssetProperties CanFreeze */
-            CanFreeze?: (boolean|null);
-
-            /** AssetProperties CanWipe */
-            CanWipe?: (boolean|null);
-
-            /** AssetProperties CanPause */
-            CanPause?: (boolean|null);
-
-            /** AssetProperties CanMint */
-            CanMint?: (boolean|null);
-
-            /** AssetProperties CanBurn */
-            CanBurn?: (boolean|null);
-
-            /** AssetProperties CanChangeOwner */
-            CanChangeOwner?: (boolean|null);
-
-            /** AssetProperties CanAddRoles */
-            CanAddRoles?: (boolean|null);
-        }
-
-        /** Represents an AssetProperties. */
-        class AssetProperties implements IAssetProperties {
-
-            /**
-             * Constructs a new AssetProperties.
-             * @param [properties] Properties to set
-             */
-            constructor(properties?: proto.CreateAssetContract.IAssetProperties);
-
-            /** AssetProperties CanFreeze. */
-            public CanFreeze: boolean;
-
-            /** AssetProperties CanWipe. */
-            public CanWipe: boolean;
-
-            /** AssetProperties CanPause. */
-            public CanPause: boolean;
-
-            /** AssetProperties CanMint. */
-            public CanMint: boolean;
-
-            /** AssetProperties CanBurn. */
-            public CanBurn: boolean;
-
-            /** AssetProperties CanChangeOwner. */
-            public CanChangeOwner: boolean;
-
-            /** AssetProperties CanAddRoles. */
-            public CanAddRoles: boolean;
-
-            /**
-             * Creates a new AssetProperties instance using the specified properties.
-             * @param [properties] Properties to set
-             * @returns AssetProperties instance
-             */
-            public static create(properties?: proto.CreateAssetContract.IAssetProperties): proto.CreateAssetContract.AssetProperties;
-
-            /**
-             * Encodes the specified AssetProperties message. Does not implicitly {@link proto.CreateAssetContract.AssetProperties.verify|verify} messages.
-             * @param message AssetProperties message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            public static encode(message: proto.CreateAssetContract.IAssetProperties, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Encodes the specified AssetProperties message, length delimited. Does not implicitly {@link proto.CreateAssetContract.AssetProperties.verify|verify} messages.
-             * @param message AssetProperties message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            public static encodeDelimited(message: proto.CreateAssetContract.IAssetProperties, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Decodes an AssetProperties message from the specified reader or buffer.
-             * @param reader Reader or buffer to decode from
-             * @param [length] Message length if known beforehand
-             * @returns AssetProperties
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.CreateAssetContract.AssetProperties;
-
-            /**
-             * Decodes an AssetProperties message from the specified reader or buffer, length delimited.
-             * @param reader Reader or buffer to decode from
-             * @returns AssetProperties
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.CreateAssetContract.AssetProperties;
-
-            /**
-             * Verifies an AssetProperties message.
-             * @param message Plain object to verify
-             * @returns `null` if valid, otherwise the reason why it is not
-             */
-            public static verify(message: { [k: string]: any }): (string|null);
-
-            /**
-             * Creates an AssetProperties message from a plain object. Also converts values to their respective internal types.
-             * @param object Plain object
-             * @returns AssetProperties
-             */
-            public static fromObject(object: { [k: string]: any }): proto.CreateAssetContract.AssetProperties;
-
-            /**
-             * Creates a plain object from an AssetProperties message. Also converts values to other types if specified.
-             * @param message AssetProperties
-             * @param [options] Conversion options
-             * @returns Plain object
-             */
-            public static toObject(message: proto.CreateAssetContract.AssetProperties, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-            /**
-             * Converts this AssetProperties to JSON.
-             * @returns JSON object
-             */
-            public toJSON(): { [k: string]: any };
-
-            /**
-             * Gets the default type url for AssetProperties
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
-             */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
-        }
-
-        /** Properties of an AssetAttributes. */
-        interface IAssetAttributes {
-
-            /** AssetAttributes IsPaused */
-            IsPaused?: (boolean|null);
-
-            /** AssetAttributes IsNFTMintStopped */
-            IsNFTMintStopped?: (boolean|null);
-        }
-
-        /** Represents an AssetAttributes. */
-        class AssetAttributes implements IAssetAttributes {
-
-            /**
-             * Constructs a new AssetAttributes.
-             * @param [properties] Properties to set
-             */
-            constructor(properties?: proto.CreateAssetContract.IAssetAttributes);
-
-            /** AssetAttributes IsPaused. */
-            public IsPaused: boolean;
-
-            /** AssetAttributes IsNFTMintStopped. */
-            public IsNFTMintStopped: boolean;
-
-            /**
-             * Creates a new AssetAttributes instance using the specified properties.
-             * @param [properties] Properties to set
-             * @returns AssetAttributes instance
-             */
-            public static create(properties?: proto.CreateAssetContract.IAssetAttributes): proto.CreateAssetContract.AssetAttributes;
-
-            /**
-             * Encodes the specified AssetAttributes message. Does not implicitly {@link proto.CreateAssetContract.AssetAttributes.verify|verify} messages.
-             * @param message AssetAttributes message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            public static encode(message: proto.CreateAssetContract.IAssetAttributes, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Encodes the specified AssetAttributes message, length delimited. Does not implicitly {@link proto.CreateAssetContract.AssetAttributes.verify|verify} messages.
-             * @param message AssetAttributes message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            public static encodeDelimited(message: proto.CreateAssetContract.IAssetAttributes, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Decodes an AssetAttributes message from the specified reader or buffer.
-             * @param reader Reader or buffer to decode from
-             * @param [length] Message length if known beforehand
-             * @returns AssetAttributes
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.CreateAssetContract.AssetAttributes;
-
-            /**
-             * Decodes an AssetAttributes message from the specified reader or buffer, length delimited.
-             * @param reader Reader or buffer to decode from
-             * @returns AssetAttributes
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.CreateAssetContract.AssetAttributes;
-
-            /**
-             * Verifies an AssetAttributes message.
-             * @param message Plain object to verify
-             * @returns `null` if valid, otherwise the reason why it is not
-             */
-            public static verify(message: { [k: string]: any }): (string|null);
-
-            /**
-             * Creates an AssetAttributes message from a plain object. Also converts values to their respective internal types.
-             * @param object Plain object
-             * @returns AssetAttributes
-             */
-            public static fromObject(object: { [k: string]: any }): proto.CreateAssetContract.AssetAttributes;
-
-            /**
-             * Creates a plain object from an AssetAttributes message. Also converts values to other types if specified.
-             * @param message AssetAttributes
-             * @param [options] Conversion options
-             * @returns Plain object
-             */
-            public static toObject(message: proto.CreateAssetContract.AssetAttributes, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-            /**
-             * Converts this AssetAttributes to JSON.
-             * @returns JSON object
-             */
-            public toJSON(): { [k: string]: any };
-
-            /**
-             * Gets the default type url for AssetAttributes
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
-             */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
-        }
     }
 
     /** Properties of a SmartContract. */
@@ -1995,14 +2774,11 @@ export namespace proto {
         /** SmartContract Address */
         Address?: (Uint8Array|null);
 
-        /** SmartContract CallValue */
-        CallValue?: (proto.SmartContract.ICallValueData[]|null);
-
-        /** SmartContract Input */
-        Input?: (Uint8Array|null);
-
-        /** SmartContract VirtualMachine */
-        VirtualMachine?: (string|null);
+        /**
+         * SmartContract CallValue is represented by a map of currencyID and amount
+         * should be limited to 50 currencies
+         */
+        CallValue?: ({ [k: string]: proto.ICallValue }|null);
     }
 
     /** Represents a SmartContract. */
@@ -2020,14 +2796,11 @@ export namespace proto {
         /** SmartContract Address. */
         public Address: Uint8Array;
 
-        /** SmartContract CallValue. */
-        public CallValue: proto.SmartContract.ICallValueData[];
-
-        /** SmartContract Input. */
-        public Input: Uint8Array;
-
-        /** SmartContract VirtualMachine. */
-        public VirtualMachine: string;
+        /**
+         * SmartContract CallValue is represented by a map of currencyID and amount
+         * should be limited to 50 currencies
+         */
+        public CallValue: { [k: string]: proto.ICallValue };
 
         /**
          * Creates a new SmartContract instance using the specified properties.
@@ -2111,112 +2884,8 @@ export namespace proto {
 
         /** SCType enum. */
         enum SCType {
-            SCInvokeType = 0,
-            SCDeployType = 1,
-            SCUpgradeType = 2
-        }
-
-        /** Properties of a CallValueData. */
-        interface ICallValueData {
-
-            /** CallValueData AssetID */
-            AssetID?: (Uint8Array|null);
-
-            /** CallValueData Amount */
-            Amount?: (number|null);
-        }
-
-        /** Represents a CallValueData. */
-        class CallValueData implements ICallValueData {
-
-            /**
-             * Constructs a new CallValueData.
-             * @param [properties] Properties to set
-             */
-            constructor(properties?: proto.SmartContract.ICallValueData);
-
-            /** CallValueData AssetID. */
-            public AssetID: Uint8Array;
-
-            /** CallValueData Amount. */
-            public Amount: number;
-
-            /**
-             * Creates a new CallValueData instance using the specified properties.
-             * @param [properties] Properties to set
-             * @returns CallValueData instance
-             */
-            public static create(properties?: proto.SmartContract.ICallValueData): proto.SmartContract.CallValueData;
-
-            /**
-             * Encodes the specified CallValueData message. Does not implicitly {@link proto.SmartContract.CallValueData.verify|verify} messages.
-             * @param message CallValueData message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            public static encode(message: proto.SmartContract.ICallValueData, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Encodes the specified CallValueData message, length delimited. Does not implicitly {@link proto.SmartContract.CallValueData.verify|verify} messages.
-             * @param message CallValueData message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            public static encodeDelimited(message: proto.SmartContract.ICallValueData, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Decodes a CallValueData message from the specified reader or buffer.
-             * @param reader Reader or buffer to decode from
-             * @param [length] Message length if known beforehand
-             * @returns CallValueData
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): proto.SmartContract.CallValueData;
-
-            /**
-             * Decodes a CallValueData message from the specified reader or buffer, length delimited.
-             * @param reader Reader or buffer to decode from
-             * @returns CallValueData
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): proto.SmartContract.CallValueData;
-
-            /**
-             * Verifies a CallValueData message.
-             * @param message Plain object to verify
-             * @returns `null` if valid, otherwise the reason why it is not
-             */
-            public static verify(message: { [k: string]: any }): (string|null);
-
-            /**
-             * Creates a CallValueData message from a plain object. Also converts values to their respective internal types.
-             * @param object Plain object
-             * @returns CallValueData
-             */
-            public static fromObject(object: { [k: string]: any }): proto.SmartContract.CallValueData;
-
-            /**
-             * Creates a plain object from a CallValueData message. Also converts values to other types if specified.
-             * @param message CallValueData
-             * @param [options] Conversion options
-             * @returns Plain object
-             */
-            public static toObject(message: proto.SmartContract.CallValueData, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-            /**
-             * Converts this CallValueData to JSON.
-             * @returns JSON object
-             */
-            public toJSON(): { [k: string]: any };
-
-            /**
-             * Gets the default type url for CallValueData
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
-             */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            SCInvoke = 0,
+            SCDeploy = 1
         }
     }
 }

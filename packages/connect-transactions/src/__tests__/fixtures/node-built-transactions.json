@@ -1,0 +1,725 @@
+{
+  "source": "Built by node.testnet.klever.org /transaction/send from each request; nodeHash is what /transaction/decode returned for that transaction. The sender is an unfunded throwaway address, so nothing was broadcast.",
+  "capturedAt": "2026-11-26",
+  "cases": [
+    {
+      "name": "transfer KLV",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 0,
+            "receiver": "klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5",
+            "amount": 1000000,
+            "kda": "KLV"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.TransferContract",
+              "value": "CiBIXSEqNUEP3vcxQZ+TgKmimE2IU4ioB8KX08LLLEZ83hIDS0xWGMCEPQ=="
+            }
+          }
+        ],
+        "KAppFee": 1,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "5c4984f16876ea7c1a00d100e8e1c210bfef3d29cb4bdaa1555839a4275b9a6f"
+    },
+    {
+      "name": "transfer without kda",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 0,
+            "receiver": "klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5",
+            "amount": 5
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.TransferContract",
+              "value": "CiBIXSEqNUEP3vcxQZ+TgKmimE2IU4ioB8KX08LLLEZ83hgF"
+            }
+          }
+        ],
+        "KAppFee": 1,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "271e3eb900e2cb265578a6be11aef5b650d910975b5131052b3f4633886c1ae5"
+    },
+    {
+      "name": "transfer KFI",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 0,
+            "receiver": "klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5",
+            "amount": 123456789,
+            "kda": "KFI"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.TransferContract",
+              "value": "CiBIXSEqNUEP3vcxQZ+TgKmimE2IU4ioB8KX08LLLEZ83hIDS0ZJGJWa7zo="
+            }
+          }
+        ],
+        "KAppFee": 1,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "01564d99b709c63eb2b2a1392910a2d05df12d9f342dc1e1492389a92c5265eb"
+    },
+    {
+      "name": "two transfers",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 0,
+            "receiver": "klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5",
+            "amount": 1
+          },
+          {
+            "contractType": 0,
+            "receiver": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+            "amount": 2,
+            "kda": "KFI"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.TransferContract",
+              "value": "CiBIXSEqNUEP3vcxQZ+TgKmimE2IU4ioB8KX08LLLEZ83hgB"
+            }
+          },
+          {
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.TransferContract",
+              "value": "CiABwck33dikBHxK2PB87vRkgOxbwN9Div+qPN28gXKE0hIDS0ZJGAI="
+            }
+          }
+        ],
+        "KAppFee": 2,
+        "BandwidthFee": 500,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "996f9fdeaa33031819c41d27be72701a4a7da38fc403d93faa9493adae39ecac"
+    },
+    {
+      "name": "freeze KLV",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 4,
+            "amount": 1000000000,
+            "kda": "KLV"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 4,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.FreezeContract",
+              "value": "CgNLTFYQgJTr3AM="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "3225dffa86948df518d4942130d7d579cbece6e9c1227f7c581eaf1f823b4c3f"
+    },
+    {
+      "name": "unfreeze hex bucket",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 5,
+            "kda": "KLV",
+            "bucketId": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 5,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.UnfreezeContract",
+              "value": "CgNLTFYSIKGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGh"
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "2ed35d025269027cb226ac9dd823cc65d42a9c150059bb0eb405a33b1c6ac56c"
+    },
+    {
+      "name": "unfreeze text bucket",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 5,
+            "kda": "KFI",
+            "bucketId": "not-hex"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 5,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.UnfreezeContract",
+              "value": "CgNLRkkSB25vdC1oZXg="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "6591efe334ac14b9c402d76fab6a4d326deafde7cb2fea78fd7497fd567bc468"
+    },
+    {
+      "name": "delegate",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 6,
+            "receiver": "klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5",
+            "bucketId": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 6,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.DelegateContract",
+              "value": "CiBIXSEqNUEP3vcxQZ+TgKmimE2IU4ioB8KX08LLLEZ83hIgoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaE="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "0d43dd7cc60d706f665178b9f5dac7bdeb27ac3b865d8a3260303cb70930e174"
+    },
+    {
+      "name": "undelegate",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 7,
+            "bucketId": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 7,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.UndelegateContract",
+              "value": "CiChoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoQ=="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "3f6861f5fba27ac9a05a44f8af404e2f46c358b2beb2e230e7ff93c8efb37e75"
+    },
+    {
+      "name": "withdraw staking",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 8,
+            "withdrawType": 0,
+            "kda": "KLV"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 8,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.WithdrawContract",
+              "value": "CgNLTFY="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "1a1797577579b36803f1a0fd2aa4843fd75cbdcccba4b2273ede4bd60f7f0b25"
+    },
+    {
+      "name": "withdraw kda pool",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 8,
+            "withdrawType": 1,
+            "kda": "KFI",
+            "amount": 10,
+            "currencyID": "KLV"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 8,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.WithdrawContract",
+              "value": "CgNLRkkQARgKIgNLTFY="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "ace3ed2fecc16166f4d1f26b44190ce36090a7fe2f95645623b0d4f21d3ad973"
+    },
+    {
+      "name": "claim staking",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 9,
+            "claimType": 0,
+            "id": "KFI"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 9,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.ClaimContract",
+              "value": "EgNLRkk="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "0c92fc4680336c7ccb4458e9eb1b9d2e00f096e1af1cd96f87d8b40ec459d41f"
+    },
+    {
+      "name": "claim market",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 9,
+            "claimType": 2,
+            "id": "ab12cd34"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 9,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.ClaimContract",
+              "value": "CAISBKsSzTQ="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "1e76b0d3d93ef47ebfd0256408446b5357d7322c1b5de747a458333fc6fcd97b"
+    },
+    {
+      "name": "vote yes",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 14,
+            "proposalId": 3,
+            "type": 0,
+            "amount": 1000
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 14,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.VoteContract",
+              "value": "CAMQ6Ac="
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "c662b2f794bbe82495005ebd37909fab7af535cc7c67799324006386c8d2ff6e"
+    },
+    {
+      "name": "vote no",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 14,
+            "proposalId": 4,
+            "type": 1,
+            "amount": 50
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 14,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.VoteContract",
+              "value": "CAQQMhgB"
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "5e5cfa3292a79b550b6983fbef23acf1d7aa748d87cd78e6648c5120c5fe4eab"
+    },
+    {
+      "name": "sc invoke",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 63,
+            "scType": 0,
+            "address": "klv1qqqqqqqqqqqqqpgqga892hrrdfchslux3k2fhg4fkzmma3wv60dq77ccga"
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7,
+        "data": ["cGluZ0AwMQ=="]
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 63,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.SmartContract",
+              "value": "EiAAAAAAAAAAAAUAR05VXGNqcXh/ho2Um6KpsLe+xczT2g=="
+            }
+          }
+        ],
+        "Data": ["cGluZ0AwMQ=="],
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "57a26d41f5165793d95736c0c957ebdc2234612046cfc60964bcaa4c546edc72"
+    },
+    {
+      "name": "sc invoke with call value",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 63,
+            "scType": 0,
+            "address": "klv1qqqqqqqqqqqqqpgqga892hrrdfchslux3k2fhg4fkzmma3wv60dq77ccga",
+            "callValue": {
+              "KLV": 1000000,
+              "KFI": 7
+            }
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7,
+        "data": ["ZGVwb3NpdA=="]
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 63,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.SmartContract",
+              "value": "EiAAAAAAAAAAAAUAR05VXGNqcXh/ho2Um6KpsLe+xczT2hoLCgNLTFYSBAjAhD0aCQoDS0ZJEgIIBw=="
+            }
+          }
+        ],
+        "Data": ["ZGVwb3NpdA=="],
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "428a49b9562a1872bf31519d4809d143dbb449d4da3b30d14befb0c1f86c713b",
+      "mapOrder": "differs"
+    },
+    {
+      "name": "sc deploy",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 63,
+            "scType": 1
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7,
+        "data": ["MDA2MTczNmQwMTAwMDAwMEAwNTAwQDA1MDQ="]
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 63,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.SmartContract",
+              "value": "CAE="
+            }
+          }
+        ],
+        "Data": ["MDA2MTczNmQwMTAwMDAwMEAwNTAwQDA1MDQ="],
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "b4862dbcc7312138d11788999692e252f7699b5bf0793c0ad3438f439db7f60b"
+    },
+    {
+      "name": "claim without id",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 9,
+            "claimType": 0
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 9,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.ClaimContract"
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "a929711d45bde2ac2583b38bf3890de74d1cca8332a1dee9505167be5ef7bda1"
+    },
+    {
+      "name": "withdraw without kda",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 8,
+            "withdrawType": 0
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Type": 8,
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.WithdrawContract"
+            }
+          }
+        ],
+        "KAppFee": 1000000,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "50e8f501c7203270ee985e4960bacaae7281b3b60c5b44dfba13f864ca41c8d3"
+    },
+    {
+      "name": "permission id",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 0,
+            "receiver": "klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5",
+            "amount": 9
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7,
+        "permID": 2
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.TransferContract",
+              "value": "CiBIXSEqNUEP3vcxQZ+TgKmimE2IU4ioB8KX08LLLEZ83hgJ"
+            }
+          }
+        ],
+        "PermissionID": 2,
+        "KAppFee": 1,
+        "BandwidthFee": 250,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "89c57c565c077a4936c6ebc93b33919610cc8a8d430bbd83c5dc9f2d5cefea7d"
+    },
+    {
+      "name": "data on a transfer",
+      "request": {
+        "contracts": [
+          {
+            "contractType": 0,
+            "receiver": "klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5",
+            "amount": 9
+          }
+        ],
+        "sender": "klv1q8qujd7amzjqglz2mrc8emh5vjqwck7qmapc4la28nwmeqtjsnfq7pemdj",
+        "nonce": 7,
+        "data": ["bWVtbw=="]
+      },
+      "rawData": {
+        "Nonce": 7,
+        "Sender": "AcHJN93YpAR8StjwfO70ZIDsW8DfQ4r/qjzdvIFyhNI=",
+        "Contract": [
+          {
+            "Parameter": {
+              "type_url": "type.googleapis.com/proto.TransferContract",
+              "value": "CiBIXSEqNUEP3vcxQZ+TgKmimE2IU4ioB8KX08LLLEZ83hgJ"
+            }
+          }
+        ],
+        "Data": ["bWVtbw=="],
+        "KAppFee": 1,
+        "BandwidthFee": 254,
+        "Version": 1,
+        "ChainID": "MTA5"
+      },
+      "nodeHash": "9f57a356cfb5ab5eac98c152cee46495a6ac16cee7920c87539251f6fc45e4c5"
+    }
+  ]
+}

@@ -32,13 +32,18 @@ Access to all Klever blockchain proto definitions:
 ```typescript
 import { proto, Transaction, TXContract, ContractType } from '@klever/connect-encoding'
 
-// Create a transfer contract
+// Create a transfer contract (fields as in klever-go's contracts.proto)
 const transfer = proto.TransferContract.create({
-  receiver: receiverBytes,
-  amount: 1000000n,
-  kda: 'KLV',
+  ToAddress: receiverBytes, // 32-byte public key, e.g. bech32Decode(address).data
+  AssetID: new TextEncoder().encode('KLV'),
+  Amount: 1000000,
 })
 ```
+
+The proto files are copied from klever-go (`data/transaction/proto`), so a
+message encoded here decodes the same way on the node. To build whole
+transactions, use `TransactionBuilder` from `@klever/connect-transactions`,
+which also wraps each contract in the `Any` parameter the node expects.
 
 ### 🔐 Address Encoding
 
@@ -283,9 +288,9 @@ import type {
 import { ContractType } from '@klever/connect-encoding'
 
 ContractType.TransferContractType // 0
-ContractType.FreezeContractType // 3
-ContractType.DelegateContractType // 5
-ContractType.SmartContractType // 19
+ContractType.FreezeContractType // 4
+ContractType.DelegateContractType // 6
+ContractType.SmartContractType // 63
 // ... and more
 ```
 
@@ -296,23 +301,38 @@ ContractType.SmartContractType // 19
 ```typescript
 import { proto, Transaction, TXContract, ContractType } from '@klever/connect-encoding'
 
-// Create a transaction
+// Create a transaction. Each contract is a TXContract whose Parameter is a
+// google.protobuf.Any holding the encoded contract message.
+//
+// Leave out every field whose value is 0 or empty, here and inside the
+// contract message. protobuf.js writes any field that is set, while the node
+// re-encodes RawData with Go's proto3 rules, which leave those fields out, so
+// a field set to 0 changes the hash and the node rejects the signature. A
+// transfer's Type is 0, so it is not set below. TransactionBuilder.buildProto()
+// from @klever/connect-transactions does this for you.
 const tx = proto.Transaction.create({
-  raw: {
-    nonce: 1,
-    sender: senderBytes,
-    contracts: [
+  RawData: {
+    Nonce: 1,
+    Sender: senderBytes,
+    Contract: [
       {
-        type: ContractType.TransferContractType,
-        payload: proto.TransferContract.encode({
-          receiver: receiverBytes,
-          amount: 1000000n,
-          kda: 'KLV',
-        }).finish(),
+        // Type: ContractType.TransferContractType is 0, so it is left out
+        Parameter: {
+          type_url: 'type.googleapis.com/proto.TransferContract',
+          value: proto.TransferContract.encode({
+            ToAddress: receiverBytes,
+            AssetID: new TextEncoder().encode('KLV'),
+            Amount: 1000000,
+          }).finish(),
+        },
       },
     ],
+    KAppFee: 1000000,
+    BandwidthFee: 2000000,
+    Version: 1,
+    ChainID: new TextEncoder().encode('108'),
   },
-  signature: signatureBytes,
+  Signature: [signatureBytes],
 })
 
 // Encode to bytes
@@ -327,30 +347,33 @@ const decoded = proto.Transaction.decode(bytes)
 ```typescript
 import { proto, ContractType } from '@klever/connect-encoding'
 
+const utf8 = (text: string) => new TextEncoder().encode(text)
+
 // Transfer contract
 const transfer = proto.TransferContract.create({
-  receiver: new Uint8Array(32),
-  amount: 1000000n,
-  kda: 'KLV',
+  ToAddress: receiverBytes,
+  AssetID: utf8('KLV'),
+  Amount: 1000000,
 })
 
 // Freeze contract
 const freeze = proto.FreezeContract.create({
-  amount: 100000000n,
-  kda: 'KLV',
+  AssetID: utf8('KLV'),
+  Amount: 100000000,
 })
 
 // Delegate contract
 const delegate = proto.DelegateContract.create({
-  receiver: validatorBytes,
-  bucketId: bucketIdBytes,
+  ToAddress: validatorBytes,
+  BucketID: bucketIdBytes,
 })
 
-// Smart contract call
+// Smart contract call. The function and its arguments go in the
+// transaction's Data field, not in the contract.
 const smartContract = proto.SmartContract.create({
-  address: contractBytes,
-  callValue: 0n,
-  callData: callDataBytes,
+  Type: proto.SmartContract.SCType.SCInvoke,
+  Address: contractBytes,
+  CallValue: { KLV: { Amount: 1000000 } },
 })
 ```
 

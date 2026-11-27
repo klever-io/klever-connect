@@ -576,15 +576,14 @@ export function createProposal(params: {
  * Vote on a governance proposal
  * Allows token holders to vote on active proposals
  *
- * **Vote Types:**
- * - 0: Abstain (don't vote)
- * - 1: Yes (approve proposal)
- * - 2: No (reject proposal)
+ * **Vote Types** (klever-go `VoteContract.EnumVoteType`):
+ * - 0: Yes (approve proposal)
+ * - 1: No (reject proposal)
  *
  * @param params - Vote parameters
  * @param params.proposalId - ID of the proposal to vote on
- * @param params.type - Vote type (0 = abstain, 1 = yes, 2 = no)
- * @param params.amount - Optional stake amount to weight the vote
+ * @param params.type - Vote type (0 = yes, 1 = no)
+ * @param params.amount - Voting weight; the node rejects a vote without it
  * @returns VoteRequest object ready to use with builder.vote()
  *
  * @example
@@ -592,8 +591,8 @@ export function createProposal(params: {
  * // Vote yes on proposal
  * const vote = createVote({
  *   proposalId: 5,
- *   type: 1, // Yes
- *   amount: '1000000' // Optional voting weight
+ *   type: 0, // Yes
+ *   amount: '1000000' // Voting weight
  * })
  *
  * const tx = await TransactionBuilder.create(provider)
