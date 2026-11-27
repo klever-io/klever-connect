@@ -159,6 +159,10 @@ throws a `ValidationError`; build it with `build()`.
   without royalties. If one of its assets has transfer royalties, the call is
   accepted into a block and then fails on chain, and the fees are spent. Build
   those calls with `build()`.
+- **Amounts above 2^53.** Amounts, fees and the nonce must be safe integers,
+  at most `Number.MAX_SAFE_INTEGER` (about 9 × 10^15 base units; for a KDA
+  with precision 8, about 90 million tokens). A larger value throws a
+  `ValidationError` instead of being rounded.
 - **Version.** Defaults to 1, the version the node sets. Override with
   `buildProto({ version })` if the network requires another.
 - **Fees.** The SDK can't compute them offline. A fee you leave out is encoded
@@ -835,16 +839,6 @@ const tx = await TransactionBuilder.create(provider)
     scType: 0,
   })
   .data(['getBalance', 'klv1address...'])
-  .build()
-
-// Upgrade contract
-const tx = await TransactionBuilder.create(provider)
-  .sender('klv1...')
-  .smartContract({
-    address: 'klv1contract...',
-    scType: 2, // 2 = Upgrade
-  })
-  .data(['newContractCode'])
   .build()
 ```
 

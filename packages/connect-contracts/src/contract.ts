@@ -307,7 +307,10 @@ export class Contract {
     let options: CallOptions = {}
     let functionArgs = args
 
-    if (args.length > 0 && this._isCallOptions(args[args.length - 1])) {
+    // Only one argument past the endpoint's inputs can be the options, so a
+    // struct argument with a field such as `version` or `value` stays an argument
+    const inputCount = this.interface.getEndpoint(functionName).inputs.length
+    if (args.length === inputCount + 1 && this._isCallOptions(args[args.length - 1])) {
       options = args[args.length - 1] as CallOptions
       functionArgs = args.slice(0, -1)
     }
@@ -410,7 +413,8 @@ export class Contract {
 
   /**
    * Check if argument is CallOptions
-   * CallOptions has specific keys: value, gasLimit, nonce, fees, chainId
+   * (an object with at least one of the keys in `validKeys`). The caller also
+   * checks that it is the one argument past the endpoint's inputs.
    */
   private _isCallOptions(arg: unknown): boolean {
     if (!arg || typeof arg !== 'object') return false

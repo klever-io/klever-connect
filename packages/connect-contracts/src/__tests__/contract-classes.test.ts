@@ -233,6 +233,49 @@ describe('Contract', () => {
       expect(tx.RawData!.Data?.map((d) => new TextDecoder().decode(d))).toEqual(['bet@00@32'])
     })
 
+    it('should encode a last struct argument with call-option keys as an argument', async () => {
+      const structAbi: ContractABI = {
+        ...abi,
+        endpoints: [
+          {
+            name: 'setConfig',
+            mutability: 'mutable',
+            inputs: [{ name: 'config', type: 'Config' }],
+            outputs: [],
+          },
+        ],
+        types: {
+          Config: {
+            type: 'struct',
+            fields: [
+              { name: 'version', type: 'u8' },
+              { name: 'value', type: 'u8' },
+            ],
+          },
+        },
+      }
+      const offlineSigner = {
+        address: signerAddress,
+        signTransaction: async (tx: Transaction) => tx,
+      }
+      const contract = new Contract(contractAddress, structAbi, offlineSigner as unknown as Signer)
+      const decode = (tx: Transaction): string[] | undefined =>
+        tx.RawData!.Data?.map((d) => new TextDecoder().decode(d))
+
+      // The struct is the endpoint's only input, so it is encoded, not read as options
+      await expect(
+        contract.populateTransaction['setConfig']!({ version: 2, value: 3 }),
+      ).rejects.toThrow('Nonce is required for offline transaction building')
+
+      // One argument past the inputs is read as the options
+      const tx = await contract.populateTransaction['setConfig']!(
+        { version: 2, value: 3 },
+        { nonce: 1, chainId: '108', version: 2 },
+      )
+      expect(decode(tx)).toEqual(['setConfig@0203'])
+      expect(tx.RawData!.Version).toBe(2)
+    })
+
     it('should create contract with signer', () => {
       const mockSigner = createMockSigner()
 

@@ -950,7 +950,8 @@ export class TransactionBuilder {
    * **Contract Call Types (scType):**
    * - 0: Invoke contract function
    * - 1: Deploy contract
-   * - 2: Upgrade contract
+   * - 2 (upgrade): rejected by the node ("invalid smart contract type");
+   *   `buildProto()` throws
    *
    * **Important:**
    * - Use `.data()` to specify function name and arguments
@@ -960,7 +961,7 @@ export class TransactionBuilder {
    *
    * @param params - Smart contract parameters
    * @param params.address - Required contract bech32 address for invoke/upgrade; forbidden for deploy
-   * @param params.scType - Contract call type (0 = invoke, 1 = deploy, 2 = upgrade)
+   * @param params.scType - Contract call type (0 = invoke, 1 = deploy)
    * @param params.callValue - Optional amounts to send (e.g., { KLV: '1000000' })
    * @returns This builder instance for chaining
    * @throws {ValidationError} If scType is unsupported

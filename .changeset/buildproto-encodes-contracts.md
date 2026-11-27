@@ -84,7 +84,9 @@ Breaking for code that builds proto messages directly:
 `@klever/connect-contracts`: an offline call with `nonce: 0`, the first
 transaction of a new account, no longer fails with "Nonce is required".
 A trailing options object with only `version` is now read as call options
-instead of an ABI argument.
+instead of an ABI argument. The last argument is read as call options only when
+it is one past the endpoint's inputs, so a struct argument with a field named
+like a call option (`version`, `value`, `data`…) is encoded as an argument.
 
 The vote docs said 0 = abstain, 1 = yes and 2 = no; klever-go defines
 0 = yes and 1 = no.
