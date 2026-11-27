@@ -1034,7 +1034,8 @@ export class TransactionBuilder {
     // The node reads callValue as map[string]int64 and refuses a string amount,
     // so amounts are kept as bigints and sent as JSON numbers
     let callValue: Record<string, bigint> | undefined
-    if (params.callValue !== undefined) {
+    // A JavaScript caller's null is sent as is; the node reads it as an empty map
+    if (params.callValue != null) {
       callValue = {}
       for (const [assetId, amount] of Object.entries(params.callValue)) {
         const value = toAmount(amount, `callValue.${assetId}`)
@@ -1067,7 +1068,13 @@ export class TransactionBuilder {
       // exact value (2n ** 60n is written as 1152921504606847000), and the
       // node parses those digits, so the decimal text itself must match
       const n = Number(obj)
-      if (String(n) !== obj.toString() || obj > INT64_MAX || obj < INT64_MIN) {
+      if (obj > INT64_MAX || obj < INT64_MIN) {
+        throw new ValidationError(
+          `${path} (${obj.toString()}) is outside the int64 range the node accepts`,
+          { path, value: obj.toString() },
+        )
+      }
+      if (String(n) !== obj.toString()) {
         throw new ValidationError(
           `${path} (${obj.toString()}) can't be sent to the node exactly by build(); a JSON number would round it`,
           { path, value: obj.toString() },
@@ -1444,12 +1451,12 @@ export class TransactionBuilder {
 }
 
 /**
- * Read an amount as a bigint. Strings must be plain decimal digits: `BigInt()`
- * alone would also read '0x10', '0b1' or ' 10 ', and throw a RangeError for 1.5.
+ * Every AmountLike field of the contract request types. The node reads each as
+ * an integer, so buildRequest() sends a decimal-string value as a JSON number.
+ * Exported only for the test that keeps it in step with contract-requests.ts.
+ * @internal
  */
-// Every AmountLike field of the contract request types. The node reads each as
-// an integer, so buildRequest() sends a decimal-string value as a JSON number.
-const AMOUNT_FIELDS: ReadonlySet<string> = new Set([
+export const AMOUNT_FIELDS: ReadonlySet<string> = new Set([
   'amount',
   'currencyAmount',
   'defaultLimitPerAddress',
@@ -1479,6 +1486,10 @@ const AMOUNT_FIELDS: ReadonlySet<string> = new Set([
 const INT64_MAX = 9223372036854775807n
 const INT64_MIN = -9223372036854775808n
 
+/**
+ * Read an amount as a bigint. Strings must be plain decimal digits: `BigInt()`
+ * alone would also read '0x10', '0b1' or ' 10 ', and throw a RangeError for 1.5.
+ */
 function toAmount(value: AmountLike, field: string): bigint {
   if (typeof value === 'bigint') return value
   if (typeof value === 'number') {

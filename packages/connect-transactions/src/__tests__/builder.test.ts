@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { TransactionBuilder } from '../builder'
+import { AMOUNT_FIELDS, TransactionBuilder } from '../builder'
 import { Transaction } from '../transaction'
 import type { IProvider } from '@klever/connect-provider'
 import { TXType, ValidationError, type KleverAddress } from '@klever/connect-core'
@@ -624,7 +625,7 @@ describe('TransactionBuilder', () => {
         receiver: validAddress,
         amount: 2n ** 63n,
       })
-      expect(() => overInt64.buildRequest()).toThrow("can't be sent to the node exactly")
+      expect(() => overInt64.buildRequest()).toThrow('is outside the int64 range the node accepts')
     })
 
     it('should send decimal-string amounts as numbers on every contract type', () => {
@@ -710,6 +711,37 @@ describe('TransactionBuilder', () => {
         .buildRequest()
 
       expect(request.contracts[0]).toMatchObject({ uris: { value: '007', amount: 'ipfs://abc' } })
+    })
+
+    it('should throw a range error for an exact value outside int64', () => {
+      const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount: 10n ** 19n })
+
+      expect(() => builder.buildRequest()).toThrow(
+        'contracts[0].amount (10000000000000000000) is outside the int64 range the node accepts',
+      )
+    })
+
+    it('should send a null callValue as is', () => {
+      const request = new TransactionBuilder()
+        .smartContract({
+          scType: 0,
+          address: validSmartContractAddress,
+          callValue: null as unknown as Record<string, string>,
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ callValue: null })
+    })
+
+    it('should list every AmountLike field of the contract request types', () => {
+      const source = readFileSync(
+        new URL('../../../connect-provider/src/types/contract-requests.ts', import.meta.url),
+        'utf8',
+      )
+      const fields = [...source.matchAll(/^\s+(\w+)\??: AmountLike\b/gm)].map((m) => m[1])
+
+      expect(fields.length).toBeGreaterThan(0)
+      expect(fields.filter((field) => !AMOUNT_FIELDS.has(field))).toEqual([])
     })
 
     it('should reject an invalid permission ID', () => {
