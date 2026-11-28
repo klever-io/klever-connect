@@ -1,8 +1,9 @@
+import { readFileSync } from 'node:fs'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { TransactionBuilder } from '../builder'
+import { AMOUNT_FIELDS, TransactionBuilder } from '../builder'
 import { Transaction } from '../transaction'
 import type { IProvider } from '@klever/connect-provider'
-import { TXType, type KleverAddress } from '@klever/connect-core'
+import { TXType, ValidationError, type KleverAddress } from '@klever/connect-core'
 
 const validAddress =
   'klv1fpwjz234gy8aaae3gx0e8q9f52vymzzn3z5q0s5h60pvktzx0n0qwvtux5' as KleverAddress
@@ -430,16 +431,15 @@ describe('TransactionBuilder', () => {
       ).toThrow('Invalid smart contract address')
     })
 
-    it('should throw error when upgrading a valid address that is not a smart contract address', () => {
+    it('should reject scType 2 (upgrade), which the node does not define', () => {
       const builder = new TransactionBuilder()
 
       expect(() =>
         builder.smartContract({
           scType: 2,
-          address: validAddress,
-          callValue: {},
-        }),
-      ).toThrow('Invalid smart contract address')
+          address: validSmartContractAddress,
+        } as unknown as Parameters<TransactionBuilder['smartContract']>[0]),
+      ).toThrow('Smart contract type 2 is not supported by the node')
     })
 
     it('should throw error for unsupported smart contract type', () => {
@@ -449,7 +449,7 @@ describe('TransactionBuilder', () => {
         builder.smartContract({
           scType: 99,
         } as Parameters<TransactionBuilder['smartContract']>[0]),
-      ).toThrow('Unsupported smart contract type')
+      ).toThrow('Smart contract type 99 is not supported by the node')
     })
 
     it('should throw error when invoke is missing contract address', () => {
@@ -458,16 +458,6 @@ describe('TransactionBuilder', () => {
       expect(() =>
         builder.smartContract({
           scType: 0,
-        } as Parameters<TransactionBuilder['smartContract']>[0]),
-      ).toThrow('Contract address is required')
-    })
-
-    it('should throw error when upgrade is missing contract address', () => {
-      const builder = new TransactionBuilder()
-
-      expect(() =>
-        builder.smartContract({
-          scType: 2,
         } as Parameters<TransactionBuilder['smartContract']>[0]),
       ).toThrow('Contract address is required')
     })
@@ -548,6 +538,218 @@ describe('TransactionBuilder', () => {
 
       expect(request.sender).toBeUndefined()
       expect(request.nonce).toBeUndefined()
+    })
+
+    it('should base64-encode data on a transfer, as the node decodes it for every type', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: 1n })
+        .data(['memo', 'olá'])
+        .buildRequest()
+
+      expect(request.data?.map((d) => Buffer.from(d, 'base64').toString('utf8'))).toEqual([
+        'memo',
+        'olá',
+      ])
+    })
+
+    it('should send string callValue amounts as numbers, as the node reads int64', () => {
+      const request = new TransactionBuilder()
+        .smartContract({
+          scType: 0,
+          address: validSmartContractAddress,
+          callValue: { KLV: '1000000', 'KFI-1A2B': 5n },
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({
+        callValue: { KLV: 1000000, 'KFI-1A2B': 5 },
+      })
+    })
+
+    it.each([
+      ['hex', '0x10'],
+      ['negative', '-1'],
+    ])('should reject a %s callValue amount', (_, amount) => {
+      expect(() =>
+        new TransactionBuilder().smartContract({
+          scType: 0,
+          address: validSmartContractAddress,
+          callValue: { KLV: amount },
+        }),
+      ).toThrow('callValue.KLV')
+    })
+
+    it('should accept a contract address as a transfer receiver', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validSmartContractAddress, amount: 1n })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ receiver: validSmartContractAddress })
+    })
+
+    it('should keep amounts within the safe integer range exact', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: BigInt(Number.MAX_SAFE_INTEGER) })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ amount: Number.MAX_SAFE_INTEGER })
+    })
+
+    it('should keep a large amount that a JSON number carries exactly', () => {
+      const request = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: 10n ** 17n })
+        .buildRequest()
+
+      expect(JSON.stringify(request.contracts[0])).toContain('"amount":100000000000000000')
+    })
+
+    it('should throw for amounts a JSON number would round', () => {
+      const transfer = new TransactionBuilder().transfer({
+        receiver: validAddress,
+        amount: 9007199254740993n,
+      })
+      expect(() => transfer.buildRequest()).toThrow(
+        "contracts[0].amount (9007199254740993) can't be sent to the node exactly",
+      )
+
+      const call = new TransactionBuilder().smartContract({
+        scType: 0,
+        address: validSmartContractAddress,
+        callValue: { KLV: '9007199254740993' },
+      })
+      expect(() => call.buildRequest()).toThrow(
+        "contracts[0].callValue.KLV (9007199254740993) can't be sent to the node exactly",
+      )
+
+      const overInt64 = new TransactionBuilder().transfer({
+        receiver: validAddress,
+        amount: 2n ** 63n,
+      })
+      expect(() => overInt64.buildRequest()).toThrow('is outside the int64 range the node accepts')
+    })
+
+    it('should send decimal-string amounts as numbers on every contract type', () => {
+      const request = new TransactionBuilder()
+        .createAsset({
+          type: 0,
+          name: 'MyToken',
+          ticker: 'MTK',
+          ownerAddress: validAddress,
+          precision: 6,
+          maxSupply: '1000000000000',
+          initialSupply: '100000000000',
+          royalties: {
+            address: validAddress,
+            transferFixed: '5',
+            transferPercentage: [{ amount: '10', percentage: 1 }],
+          },
+        })
+        .vote({ proposalId: 5, type: 0, amount: '1000000' })
+        .withdraw({ withdrawType: 0, amount: '42' })
+        .addContract({
+          contractType: 17,
+          buyType: 0,
+          id: 'ITO-ABCD',
+          currencyId: 'KLV',
+          amount: '7',
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({
+        maxSupply: 1000000000000,
+        initialSupply: 100000000000,
+        royalties: { transferFixed: 5, transferPercentage: [{ amount: 10, percentage: 1 }] },
+      })
+      expect(request.contracts[1]).toMatchObject({ amount: 1000000 })
+      expect(request.contracts[2]).toMatchObject({ amount: 42 })
+      expect(request.contracts[3]).toMatchObject({ id: 'ITO-ABCD', currencyId: 'KLV', amount: 7 })
+    })
+
+    it('should reject a string amount that is not a decimal integer', () => {
+      const builder = new TransactionBuilder().vote({ proposalId: 5, type: 0, amount: '0x10' })
+
+      expect(() => builder.buildRequest()).toThrow(
+        'contracts[0].amount must be a bigint, a safe integer or a decimal string',
+      )
+    })
+
+    it('should throw for an amount whose JSON digits differ from its value', () => {
+      // A double holds 2^60 exactly, but JSON.stringify writes 1152921504606847000
+      const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount: 2n ** 60n })
+
+      expect(() => builder.buildRequest()).toThrow(
+        "contracts[0].amount (1152921504606846976) can't be sent to the node exactly",
+      )
+    })
+
+    it('should throw a ValidationError for an amount beyond the double range', () => {
+      const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount: 10n ** 400n })
+
+      expect(() => builder.buildRequest()).toThrow(ValidationError)
+    })
+
+    it('should reject a number amount that is not a safe integer', () => {
+      for (const amount of [NaN, Infinity, 1.5, 2 ** 60]) {
+        const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount })
+        expect(() => builder.buildRequest()).toThrow(
+          'contracts[0].amount: a number amount must be a safe integer',
+        )
+      }
+    })
+
+    it('should leave uris untouched even when a key matches an amount field', () => {
+      const request = new TransactionBuilder()
+        .createAsset({
+          type: 0,
+          name: 'MyToken',
+          ticker: 'MTK',
+          ownerAddress: validAddress,
+          precision: 6,
+          maxSupply: 1000n,
+          uris: { value: '007', amount: 'ipfs://abc' },
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ uris: { value: '007', amount: 'ipfs://abc' } })
+    })
+
+    it('should throw a range error for an exact value outside int64', () => {
+      const builder = new TransactionBuilder().vote({ proposalId: 1, type: 0, amount: 10n ** 19n })
+
+      expect(() => builder.buildRequest()).toThrow(
+        'contracts[0].amount (10000000000000000000) is outside the int64 range the node accepts',
+      )
+    })
+
+    it('should send a null callValue as is', () => {
+      const request = new TransactionBuilder()
+        .smartContract({
+          scType: 0,
+          address: validSmartContractAddress,
+          callValue: null as unknown as Record<string, string>,
+        })
+        .buildRequest()
+
+      expect(request.contracts[0]).toMatchObject({ callValue: null })
+    })
+
+    it('should list every AmountLike field of the contract request types', () => {
+      const source = readFileSync(
+        new URL('../../../connect-provider/src/types/contract-requests.ts', import.meta.url),
+        'utf8',
+      )
+      const fields = [...source.matchAll(/^\s+(\w+)\??: AmountLike\b/gm)].map((m) => m[1])
+
+      expect(fields.length).toBeGreaterThan(0)
+      expect(fields.filter((field) => !AMOUNT_FIELDS.has(field))).toEqual([])
+    })
+
+    it('should reject an invalid permission ID', () => {
+      const builder = new TransactionBuilder()
+        .transfer({ receiver: validAddress, amount: 1n })
+        .permissionId(1.5)
+
+      expect(() => builder.buildRequest()).toThrow('permissionId must be a non-negative int32')
     })
   })
 
@@ -738,7 +940,7 @@ describe('TransactionBuilder', () => {
       expect(request.sender).toBe(sender)
       expect(request.nonce).toBe(123)
       expect(request.permissionId).toBe(1)
-      expect(request.data).toEqual(['metadata'])
+      expect(request.data).toEqual([Buffer.from('metadata').toString('base64')])
       expect(request.kdaFee).toBe('USDT')
     })
   })

@@ -321,7 +321,7 @@ export class TransactionBuilder {
    * - Function arguments (remaining elements)
    *
    * **Important:**
-   * - Data is automatically base64 encoded when building with buildRequest()
+   * - Data is automatically base64 encoded when building with buildRequest() or build()
    * - For offline building with buildProto(), provide UTF-8 strings
    *
    * @param data - Array of strings containing function name and arguments
@@ -950,22 +950,22 @@ export class TransactionBuilder {
    * **Contract Call Types (scType):**
    * - 0: Invoke contract function
    * - 1: Deploy contract
-   * - 2 (upgrade): rejected by the node ("invalid smart contract type");
-   *   `buildProto()` throws
+   * - 2 (upgrade) is not supported: the node rejects it ("invalid smart
+   *   contract type"), so it throws
    *
    * **Important:**
    * - Use `.data()` to specify function name and arguments
    * - callValue allows sending KLV or KDA tokens with the call
-   * - Invoke and upgrade require a valid contract address
+   * - Invoke requires a valid contract address
    * - Deploy must not include an address
    *
    * @param params - Smart contract parameters
-   * @param params.address - Required contract bech32 address for invoke/upgrade; forbidden for deploy
+   * @param params.address - Required contract bech32 address for invoke; forbidden for deploy
    * @param params.scType - Contract call type (0 = invoke, 1 = deploy)
    * @param params.callValue - Optional amounts to send (e.g., { KLV: '1000000' })
    * @returns This builder instance for chaining
-   * @throws {ValidationError} If scType is unsupported
-   * @throws {ValidationError} If invoke/upgrade is missing a contract address
+   * @throws {ValidationError} If scType is not 0 or 1
+   * @throws {ValidationError} If invoke is missing a contract address
    * @throws {ValidationError} If deploy includes a contract address
    * @throws {ValidationError} If contract address format is invalid
    *
@@ -995,8 +995,13 @@ export class TransactionBuilder {
    */
   smartContract(params: SmartContractRequest): this {
     const scType = (params as { scType?: unknown }).scType
-    if (scType !== 0 && scType !== 1 && scType !== 2) {
-      throw new ValidationError(`Unsupported smart contract type: ${String(scType)}`, { scType })
+    if (scType !== 0 && scType !== 1) {
+      // klever-go defines only SCInvoke (0) and SCDeploy (1); it rejects 2 (upgrade)
+      // with "invalid smart contract type"
+      throw new ValidationError(
+        `Smart contract type ${String(scType)} is not supported by the node; use 0 (invoke) or 1 (deploy)`,
+        { scType },
+      )
     }
 
     if (params.scType === 1 && 'address' in params) {
@@ -1005,8 +1010,8 @@ export class TransactionBuilder {
       })
     }
 
-    if ((params.scType === 0 || params.scType === 2) && !params.address) {
-      throw new ValidationError('Contract address is required for smart contract invoke/upgrade', {
+    if (params.scType === 0 && !params.address) {
+      throw new ValidationError('Contract address is required for smart contract invoke', {
         scType: params.scType,
       })
     }
@@ -1017,7 +1022,7 @@ export class TransactionBuilder {
       })
     }
 
-    if ((params.scType === 0 || params.scType === 2) && params.address) {
+    if (params.scType === 0 && params.address) {
       if (!isValidContractAddress(params.address)) {
         throw new ValidationError(`Invalid smart contract address: ${params.address}`, {
           address: params.address,
@@ -1026,39 +1031,81 @@ export class TransactionBuilder {
       }
     }
 
-    if (params.scType === 1) {
-      this.contracts.push({
-        contractType: 63,
-        ...params,
-      })
-
-      return this
+    // The node reads callValue as map[string]int64 and refuses a string amount,
+    // so amounts are kept as bigints and sent as JSON numbers
+    let callValue: Record<string, bigint> | undefined
+    // A JavaScript caller's null is sent as is; the node reads it as an empty map
+    if (params.callValue != null) {
+      callValue = {}
+      for (const [assetId, amount] of Object.entries(params.callValue)) {
+        const value = toAmount(amount, `callValue.${assetId}`)
+        if (value < 0n) {
+          throw new ValidationError(`callValue.${assetId} must not be negative`, { assetId })
+        }
+        callValue[assetId] = value
+      }
     }
 
     this.contracts.push({
       contractType: 63,
       ...params,
+      ...(callValue !== undefined && { callValue }),
     })
 
     return this
   }
 
   /**
-   * Recursively convert BigInt values to numbers for JSON serialization
+   * Recursively convert BigInt values to numbers for JSON serialization.
+   * Throws for a value the conversion would change, instead of rounding it:
+   * the caller would then sign a transaction with a different amount. A value
+   * above 2^53 is kept only when JSON.stringify writes its exact digits (such as
+   * 10n ** 17n); 2n ** 60n is written as 1152921504606847000, so it throws.
    */
-  private convertBigIntToNumber(obj: unknown): unknown {
+  private convertBigIntToNumber(obj: unknown, path = 'contracts'): unknown {
     if (typeof obj === 'bigint') {
-      return Number(obj)
+      // JSON.stringify writes a number's shortest round-trip digits, not its
+      // exact value (2n ** 60n is written as 1152921504606847000), and the
+      // node parses those digits, so the decimal text itself must match
+      const n = Number(obj)
+      if (obj > INT64_MAX || obj < INT64_MIN) {
+        throw new ValidationError(
+          `${path} (${obj.toString()}) is outside the int64 range the node accepts`,
+          { path, value: obj.toString() },
+        )
+      }
+      if (String(n) !== obj.toString()) {
+        throw new ValidationError(
+          `${path} (${obj.toString()}) can't be sent to the node exactly by build(); a JSON number would round it`,
+          { path, value: obj.toString() },
+        )
+      }
+      return n
     }
 
     if (Array.isArray(obj)) {
-      return obj.map((item) => this.convertBigIntToNumber(item))
+      return obj.map((item, index) => this.convertBigIntToNumber(item, `${path}[${index}]`))
     }
 
     if (obj !== null && typeof obj === 'object') {
       const converted: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(obj)) {
-        converted[key] = this.convertBigIntToNumber(value)
+        const fieldPath = `${path}.${key}`
+        // uris is a map[string]string keyed by the caller, so its keys and
+        // values are never amounts
+        if (key === 'uris') {
+          converted[key] = value
+          continue
+        }
+        // The node reads amount fields as int64 and refuses a JSON string, and
+        // reads null (from NaN or Infinity) as 0, so every amount field is read
+        // like transfer() reads its amount: a decimal string is sent as a
+        // number, and a number that isn't a safe integer is rejected
+        const field =
+          (typeof value === 'string' || typeof value === 'number') && AMOUNT_FIELDS.has(key)
+            ? toAmount(value, fieldPath)
+            : value
+        converted[key] = this.convertBigIntToNumber(field, fieldPath)
       }
       return converted
     }
@@ -1099,13 +1146,15 @@ export class TransactionBuilder {
     if (this._sender !== undefined) request.sender = this._sender
     if (this._nonce !== undefined) request.nonce = this._nonce
     if (this._kdaFee !== undefined) request.kdaFee = this._kdaFee.kda
-    if (this._permissionId !== undefined) request.permissionId = this._permissionId
-    // if smart contract transaction, request data must be converted to base64 if not already
-    if (this.contracts.some((c) => c.contractType === 63) && this._data !== undefined) {
+    if (this._permissionId !== undefined) {
+      validatePermissionId(this._permissionId)
+      request.permissionId = this._permissionId
+    }
+    // The node reads data as [][]byte, which Go base64-decodes for every
+    // transaction type, so it is always sent base64-encoded
+    if (this._data !== undefined) {
       const encoder = new TextEncoder()
       request.data = this._data.map((d) => base64Encode(encoder.encode(d)))
-    } else if (this._data !== undefined) {
-      request.data = this._data
     }
 
     return request
@@ -1400,6 +1449,42 @@ export class TransactionBuilder {
     return this
   }
 }
+
+/**
+ * Every AmountLike field of the contract request types. The node reads each as
+ * an integer, so buildRequest() sends a decimal-string value as a JSON number.
+ * Exported only for the test that keeps it in step with contract-requests.ts.
+ * @internal
+ */
+export const AMOUNT_FIELDS: ReadonlySet<string> = new Set([
+  'amount',
+  'currencyAmount',
+  'defaultLimitPerAddress',
+  'endTime',
+  'fRatioKDA',
+  'fRatioKLV',
+  'initialSupply',
+  'itoFixed',
+  'kdaRoyalties',
+  'klvRoyalties',
+  'limit',
+  'marketFixed',
+  'maxAmount',
+  'maxDelegationAmount',
+  'maxSupply',
+  'price',
+  'reservePrice',
+  'startTime',
+  'threshold',
+  'transferFixed',
+  'value',
+  'weight',
+  'whitelistEndTime',
+  'whitelistStartTime',
+])
+
+const INT64_MAX = 9223372036854775807n
+const INT64_MIN = -9223372036854775808n
 
 /**
  * Read an amount as a bigint. Strings must be plain decimal digits: `BigInt()`

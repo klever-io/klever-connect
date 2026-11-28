@@ -650,7 +650,7 @@ export function createSetAccountName(params: { name: string }): SetAccountNameRe
  *
  * @param params - Smart contract call parameters
  * @param params.address - Optional contract bech32 address
- * @param params.scType - Contract call type (0 = invoke, 1 = deploy, 2 = upgrade)
+ * @param params.scType - Contract call type (0 = invoke, 1 = deploy)
  * @param params.callValue - Optional KLV or KDA amounts to send with the call
  * @returns SmartContractRequest object ready to use with builder.smartContract()
  *

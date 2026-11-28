@@ -378,10 +378,12 @@ export interface SmartContractBaseRequest {
  * Discriminated by `scType`:
  * - `0` invokes an existing contract and requires a branded `KleverAddress`.
  * - `1` deploys a new contract and must not include an address.
- * - `2` upgrades an existing contract and requires a branded `KleverAddress`.
+ *
+ * The node rejects `2` (upgrade) with "invalid smart contract type", so it is
+ * not accepted.
  *
  * Use `createKleverAddress()` from `@klever/connect-core` or another validating
- * path to create the branded address value before building invoke/upgrade calls.
+ * path to create the branded address value before building invoke calls.
  */
 export type SmartContractRequest =
   | (SmartContractBaseRequest & {
@@ -391,10 +393,6 @@ export type SmartContractRequest =
   | (SmartContractBaseRequest & {
       scType: 1
       address?: never
-    })
-  | (SmartContractBaseRequest & {
-      scType: 2
-      address: KleverAddress
     })
 
 // ============================================================================

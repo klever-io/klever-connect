@@ -1558,13 +1558,18 @@ export class KleverProvider implements IProvider {
         req.nonce = fetchedNonce
       }
 
+      // The node's SendTXRequest reads the permission ID as `permID`
+      const { permissionId, ...body } = req
+      const wireBody: Omit<BuildTransactionRequest, 'permissionId'> & { permID?: number } = body
+      if (permissionId !== undefined) wireBody.permID = permissionId
+
       // Call node endpoint to build transaction
       const response = await this.nodeClient.post<
         ApiResponse<{
           result: unknown // Proto transaction object (ITransaction)
           txHash: string
         }>
-      >('/transaction/send', req)
+      >('/transaction/send', wireBody)
 
       if (response.error || !response.data) {
         throw new NetworkError(response.error || 'Failed to build transaction', { request })
