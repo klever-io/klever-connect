@@ -11,9 +11,10 @@ describe('Broadcasting a Transaction in each format', () => {
     RawData: {
       Nonce: 42,
       Sender: new Uint8Array(32).fill(1),
+      // The transfer leaves its Type 0 out, as buildProto() and the node do: an
+      // explicit zero isn't what the node hashes, so hex and bytes are refused
       Contract: [
         {
-          Type: 0,
           Parameter: {
             type_url: 'type.googleapis.com/proto.TransferContract',
             value: new Uint8Array([10, 3, 75, 76, 86]),
@@ -77,6 +78,9 @@ describe('Broadcasting a Transaction in each format', () => {
     expect(rawData['Nonce']).toBe(42)
     expect(rawData['KAppFee']).toBe(500000)
     expect((rawData['KDAFee'] as { [k: string]: unknown })['Amount']).toBe(1234567)
-    expect((rawData['Contract'] as { Type: unknown }[]).map((c) => c.Type)).toEqual([0, 63])
+    expect((rawData['Contract'] as { Type?: unknown }[]).map((c) => c.Type)).toEqual([
+      undefined,
+      63,
+    ])
   })
 })

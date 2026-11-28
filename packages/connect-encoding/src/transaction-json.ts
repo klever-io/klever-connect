@@ -64,7 +64,9 @@ export function normalizeTransactionJSON(json: { [k: string]: unknown }): {
  *
  * @param bytes - A protobuf-encoded transaction, as `Transaction.toBytes()` returns
  * @returns The transaction as the JSON object `/transaction/broadcast` accepts
- * @throws {Error} If the bytes are not a protobuf transaction, or have no `RawData`
+ * @throws {Error} If the bytes are not a protobuf transaction, have no `RawData`, or
+ *   have a `RawData` that re-encodes to different bytes (such as a field this SDK's
+ *   proto doesn't know), since the node would then not receive what was signed
  */
 export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknown } {
   let decoded: protoTypes.proto.Transaction
@@ -77,7 +79,152 @@ export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknow
   if (!decoded.RawData) {
     throw new Error('Encoded transaction has no RawData')
   }
+  // The node rebuilds RawData from the JSON and checks the signature against
+  // the hash of those bytes, so they must be the bytes that were signed. Two
+  // things change them: decode drops a field this SDK's proto doesn't know,
+  // and Go leaves out a zero value that the signer wrote explicitly. Either
+  // way the node would refuse the transaction with a signature error that
+  // doesn't say why, so rebuild RawData the way the node does and compare.
+  const signed = rawDataBytes(bytes)
+  const canonical = signed === undefined ? undefined : canonicalRawData(signed)
+  if (signed === undefined || canonical === undefined || !bytesEqual(signed, canonical)) {
+    throw new Error(
+      "Encoded transaction's RawData would not reach the node as it was signed: it has fields " +
+        'this SDK does not know, or values the node encodes differently; update ' +
+        '@klever/connect-encoding, or re-sign it',
+    )
+  }
+  // Send the RawData decoded from exactly the bytes checked above, so a
+  // malformed envelope that the full decode reads differently can't swap in
+  // another one
+  decoded.RawData = ProtoTransaction.Raw.decode(signed)
   return normalizeTransactionJSON(decoded.toJSON())
+}
+
+/**
+ * The bytes of a transaction's RawData field (field 1), exactly as encoded.
+ * Returns undefined when the field appears more than once (decode merges the
+ * copies, so the rebuilt RawData can't match the signed bytes either way), when
+ * field 1 isn't length-delimited, when a length runs past the end of the input,
+ * or when a group's end tag doesn't match its start.
+ */
+function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
+  let found: Uint8Array | undefined
+  let count = 0
+  // Field numbers of the unknown groups being skipped, innermost last
+  const groups: number[] = []
+  let pos = 0
+  const readVarint = (): number => {
+    let value = 0
+    let shift = 0
+    for (;;) {
+      const byte = bytes[pos++] ?? 0
+      value += (byte & 0x7f) * 2 ** shift
+      if (byte < 0x80) return value
+      shift += 7
+    }
+  }
+  while (pos < bytes.length) {
+    const tag = readVarint()
+    const field = Math.floor(tag / 8)
+    const wireType = tag % 8
+    // RawData is length-delimited: field 1 with another wire type is malformed,
+    // and the generated decoder would still read it as RawData
+    if (field === 1 && groups.length === 0 && wireType !== 2) return undefined
+    switch (wireType) {
+      case 0:
+        readVarint()
+        break
+      case 1:
+        pos += 8
+        break
+      case 2: {
+        const length = readVarint()
+        if (pos + length > bytes.length) return undefined
+        if (field === 1 && groups.length === 0) {
+          found = bytes.subarray(pos, pos + length)
+          count++
+        }
+        pos += length
+        break
+      }
+      case 3:
+        // An unknown group outside RawData: skip to its matching end tag
+        groups.push(field)
+        break
+      case 4:
+        if (groups.pop() !== field) return undefined
+        break
+      case 5:
+        pos += 4
+        break
+      default:
+        return undefined
+    }
+  }
+  return count === 1 && groups.length === 0 && pos === bytes.length ? found : undefined
+}
+
+/**
+ * RawData encoded the way the node encodes it after reading the JSON: Go's
+ * proto3 marshaling leaves out zero values, while protobuf.js keeps a zero
+ * that was decoded from the input. Unknown fields are already dropped by decode.
+ */
+function canonicalRawData(signed: Uint8Array): Uint8Array | undefined {
+  let raw: protoTypes.proto.Transaction.Raw
+  try {
+    raw = ProtoTransaction.Raw.decode(signed)
+  } catch {
+    // The full decode can read past RawData's declared length; on its own the
+    // RawData is malformed. Omit the decoder's message, as above.
+    return undefined
+  }
+  dropZeroValues(raw)
+  return ProtoTransaction.Raw.encode(raw).finish()
+}
+
+/**
+ * Remove scalar fields that hold their proto3 default (0, false, '', empty
+ * bytes) from a decoded message and the messages inside it. Repeated entries
+ * and nested messages stay: Go writes those even when they are empty.
+ */
+function dropZeroValues(message: object): void {
+  const fields = message as Record<string, unknown>
+  for (const key of Object.keys(fields)) {
+    const value = fields[key]
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'object' && item !== null && !(item instanceof Uint8Array)) {
+          dropZeroValues(item)
+        }
+      }
+    } else if (value instanceof Uint8Array) {
+      if (value.length === 0) delete fields[key]
+    } else if (isLong(value)) {
+      if (value.low === 0 && value.high === 0) delete fields[key]
+    } else if (typeof value === 'object' && value !== null) {
+      dropZeroValues(value)
+    } else if (value === 0 || value === false || value === '') {
+      delete fields[key]
+    }
+  }
+}
+
+function isLong(value: unknown): value is { low: number; high: number } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { low?: unknown }).low === 'number' &&
+    typeof (value as { high?: unknown }).high === 'number'
+  )
+}
+
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }
 
 /**
