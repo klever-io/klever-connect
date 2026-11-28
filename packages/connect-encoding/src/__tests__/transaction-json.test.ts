@@ -96,7 +96,7 @@ describe('transactionBytesToJSON', () => {
     RawData: {
       Nonce: 7,
       Sender: new Uint8Array([1, 2, 3]),
-      Contract: [{ Type: 0, Parameter: { type_url: 't', value: new Uint8Array([1]) } }],
+      Contract: [{ Type: 4, Parameter: { type_url: 't', value: new Uint8Array([1]) } }],
     },
   })
 
@@ -105,7 +105,7 @@ describe('transactionBytesToJSON', () => {
       RawData: {
         Nonce: 7,
         Sender: 'AQID',
-        Contract: [{ Type: 0, Parameter: { type_url: 't', value: 'AQ==' } }],
+        Contract: [{ Type: 4, Parameter: { type_url: 't', value: 'AQ==' } }],
       },
     })
   })
@@ -160,9 +160,7 @@ describe('transactionBytesToJSON', () => {
   it('should reject RawData with a field this SDK does not know', () => {
     const bytes = concat(lengthDelimited(1, concat(rawBytes, unknownField)), signature)
 
-    expect(() => transactionBytesToJSON(bytes)).toThrow(
-      'Encoded transaction contains RawData fields this SDK does not know',
-    )
+    expect(() => transactionBytesToJSON(bytes)).toThrow('would not reach the node as it was signed')
   })
 
   it('should reject an unknown field nested inside RawData', () => {
@@ -173,7 +171,7 @@ describe('transactionBytesToJSON', () => {
 
     expect(() => transactionBytesToJSON(lengthDelimited(1, known))).not.toThrow()
     expect(() => transactionBytesToJSON(lengthDelimited(1, unknown))).toThrow(
-      'Encoded transaction contains RawData fields this SDK does not know',
+      'would not reach the node as it was signed',
     )
   })
 
@@ -183,16 +181,47 @@ describe('transactionBytesToJSON', () => {
     expect(transactionBytesToJSON(bytes)['RawData']).toEqual({
       Nonce: 7,
       Sender: 'AQID',
-      Contract: [{ Type: 0, Parameter: { type_url: 't', value: 'AQ==' } }],
+      Contract: [{ Type: 4, Parameter: { type_url: 't', value: 'AQ==' } }],
     })
+  })
+
+  it('should reject a zero value written explicitly, which the node leaves out', () => {
+    // Contract Type 0 (Transfer) encoded as field 1 = 0: Go's encoding omits it,
+    // so the node would hash different bytes than were signed
+    const explicitZero = Transaction.Raw.encode(
+      Transaction.Raw.fromObject({
+        Nonce: 7,
+        Contract: [{ Type: 0, Parameter: { type_url: 't' } }],
+      }),
+    ).finish()
+    const implicitZero = Transaction.Raw.encode(
+      Transaction.Raw.fromObject({ Nonce: 7, Contract: [{ Parameter: { type_url: 't' } }] }),
+    ).finish()
+
+    expect(() => transactionBytesToJSON(lengthDelimited(1, explicitZero))).toThrow(
+      'would not reach the node as it was signed',
+    )
+    expect(() => transactionBytesToJSON(lengthDelimited(1, implicitZero))).not.toThrow()
+  })
+
+  it('should accept an unknown group outside RawData', () => {
+    // Field 99 as an empty group: start tag 99/3, end tag 99/4
+    const group = new Uint8Array([...varint(99 * 8 + 3), ...varint(99 * 8 + 4)])
+
+    expect(() => transactionBytesToJSON(concat(lengthDelimited(1, rawBytes), group))).not.toThrow()
+  })
+
+  it('should reject a RawData length past the end of the input', () => {
+    // Field 1 declaring 2^32 bytes with none following
+    expect(() =>
+      transactionBytesToJSON(new Uint8Array([0x0a, 0x80, 0x80, 0x80, 0x80, 0x10])),
+    ).toThrow()
   })
 
   it('should reject RawData that appears twice', () => {
     const bytes = concat(lengthDelimited(1, rawBytes), lengthDelimited(1, rawBytes))
 
-    expect(() => transactionBytesToJSON(bytes)).toThrow(
-      'Encoded transaction contains RawData fields this SDK does not know',
-    )
+    expect(() => transactionBytesToJSON(bytes)).toThrow('would not reach the node as it was signed')
   })
 
   it('should reject a transaction without RawData', () => {

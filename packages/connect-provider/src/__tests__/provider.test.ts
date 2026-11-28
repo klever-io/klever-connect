@@ -783,14 +783,15 @@ describe('KleverProvider', () => {
 
   describe('sendRawTransaction', () => {
     // A real signed transaction with every converted field set: int64 fields,
-    // a nested KDAFee.Amount, contracts (including Type 0) and a signature.
+    // a nested KDAFee.Amount, contracts and a signature. The transfer leaves its
+    // Type 0 out, as the node and every signer encode it: an explicit zero
+    // isn't what the node hashes, so the hex and bytes paths refuse it.
     const fixture = ProtoTransaction.fromObject({
       RawData: {
         Nonce: 42,
         Sender: new Uint8Array(32).fill(1),
         Contract: [
           {
-            Type: 0,
             Parameter: {
               type_url: 'type.googleapis.com/proto.TransferContract',
               value: new Uint8Array([10, 3, 75, 76, 86]),
@@ -822,7 +823,6 @@ describe('KleverProvider', () => {
         Sender: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
         Contract: [
           {
-            Type: 0,
             Parameter: {
               type_url: 'type.googleapis.com/proto.TransferContract',
               value: 'CgNLTFY=',
@@ -1036,7 +1036,7 @@ describe('KleverProvider', () => {
 
       for (const input of [bytes, hex, `0x${hex}`]) {
         await expect(provider.sendRawTransaction(input)).rejects.toThrow(
-          'Invalid transaction data: Encoded transaction contains RawData fields this SDK does not know',
+          "Invalid transaction data: Encoded transaction's RawData would not reach the node as it was signed",
         )
       }
       expect(mockPost).not.toHaveBeenCalled()

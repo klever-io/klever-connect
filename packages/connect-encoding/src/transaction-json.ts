@@ -80,15 +80,17 @@ export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknow
     throw new Error('Encoded transaction has no RawData')
   }
   // The node rebuilds RawData from the JSON and checks the signature against
-  // the hash of those bytes. A field this SDK's proto doesn't know is dropped
-  // by decode, so the node would hash different bytes than were signed and
-  // refuse the transaction with a signature error that doesn't say why.
+  // the hash of those bytes, so they must be the bytes that were signed. Two
+  // things change them: decode drops a field this SDK's proto doesn't know,
+  // and Go leaves out a zero value that the signer wrote explicitly. Either
+  // way the node would refuse the transaction with a signature error that
+  // doesn't say why, so rebuild RawData the way the node does and compare.
   const signed = rawDataBytes(bytes)
-  const rebuilt = ProtoTransaction.Raw.encode(decoded.RawData).finish()
-  if (signed === undefined || !bytesEqual(signed, rebuilt)) {
+  if (signed === undefined || !bytesEqual(signed, canonicalRawData(signed))) {
     throw new Error(
-      'Encoded transaction contains RawData fields this SDK does not know, so the node would not ' +
-        'receive what was signed; update @klever/connect-encoding',
+      "Encoded transaction's RawData would not reach the node as it was signed: it has fields " +
+        'this SDK does not know, or values the node encodes differently; update ' +
+        '@klever/connect-encoding, or re-sign it',
     )
   }
   return normalizeTransactionJSON(decoded.toJSON())
@@ -96,13 +98,14 @@ export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknow
 
 /**
  * The bytes of a transaction's RawData field (field 1), exactly as encoded.
- * Returns undefined when the field appears more than once: decode merges the
- * copies, so the rebuilt RawData can't match the signed bytes either way.
- * The bytes have already decoded as a Transaction, so they are well formed.
+ * Returns undefined when the field appears more than once (decode merges the
+ * copies, so the rebuilt RawData can't match the signed bytes either way), or
+ * when a length runs past the end of the input.
  */
 function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
   let found: Uint8Array | undefined
   let count = 0
+  let depth = 0
   let pos = 0
   const readVarint = (): number => {
     let value = 0
@@ -126,22 +129,77 @@ function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
         break
       case 2: {
         const length = readVarint()
-        if (field === 1) {
+        if (pos + length > bytes.length) return undefined
+        if (field === 1 && depth === 0) {
           found = bytes.subarray(pos, pos + length)
           count++
         }
         pos += length
         break
       }
+      case 3:
+        // An unknown group outside RawData: skip to its end tag
+        depth++
+        break
+      case 4:
+        depth--
+        if (depth < 0) return undefined
+        break
       case 5:
         pos += 4
         break
       default:
-        // Groups (3, 4) are deprecated and never used by the node's proto
         return undefined
     }
   }
-  return count === 1 ? found : undefined
+  return count === 1 && depth === 0 && pos === bytes.length ? found : undefined
+}
+
+/**
+ * RawData encoded the way the node encodes it after reading the JSON: Go's
+ * proto3 marshaling leaves out zero values, while protobuf.js keeps a zero
+ * that was decoded from the input. Unknown fields are already dropped by decode.
+ */
+function canonicalRawData(signed: Uint8Array): Uint8Array {
+  const raw = ProtoTransaction.Raw.decode(signed)
+  dropZeroValues(raw)
+  return ProtoTransaction.Raw.encode(raw).finish()
+}
+
+/**
+ * Remove scalar fields that hold their proto3 default (0, false, '', empty
+ * bytes) from a decoded message and the messages inside it. Repeated entries
+ * and nested messages stay: Go writes those even when they are empty.
+ */
+function dropZeroValues(message: object): void {
+  const fields = message as Record<string, unknown>
+  for (const key of Object.keys(fields)) {
+    const value = fields[key]
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'object' && item !== null && !(item instanceof Uint8Array)) {
+          dropZeroValues(item)
+        }
+      }
+    } else if (value instanceof Uint8Array) {
+      if (value.length === 0) delete fields[key]
+    } else if (isLong(value)) {
+      if (value.low === 0 && value.high === 0) delete fields[key]
+    } else if (typeof value === 'object' && value !== null) {
+      dropZeroValues(value)
+    } else if (value === 0 || value === false || value === '') {
+      delete fields[key]
+    }
+  }
+}
+
+function isLong(value: unknown): value is { low: number; high: number } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { low?: unknown }).low === 'number' &&
+    typeof (value as { high?: unknown }).high === 'number'
+  )
 }
 
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
