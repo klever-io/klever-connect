@@ -1024,6 +1024,24 @@ describe('KleverProvider', () => {
       expect(mockPost).not.toHaveBeenCalled()
     })
 
+    it('should reject a transaction whose RawData has a field this SDK does not know', async () => {
+      // Signed by a tool with a newer proto: decoding would drop field 99, and
+      // the node would hash different bytes than were signed
+      const raw = ProtoTransaction.Raw.encode(
+        ProtoTransaction.Raw.fromObject({ Nonce: 7, Sender: new Uint8Array([1, 2, 3]) }),
+      ).finish()
+      const rawWithUnknown = new Uint8Array([...raw, 0x98, 0x06, 0x01])
+      const bytes = new Uint8Array([0x0a, rawWithUnknown.length, ...rawWithUnknown])
+      const hex = Buffer.from(bytes).toString('hex')
+
+      for (const input of [bytes, hex, `0x${hex}`]) {
+        await expect(provider.sendRawTransaction(input)).rejects.toThrow(
+          'Invalid transaction data: Encoded transaction contains RawData fields this SDK does not know',
+        )
+      }
+      expect(mockPost).not.toHaveBeenCalled()
+    })
+
     it('should throw error for empty hex string', async () => {
       const emptyHex = '0x'
 

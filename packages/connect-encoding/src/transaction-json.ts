@@ -64,7 +64,9 @@ export function normalizeTransactionJSON(json: { [k: string]: unknown }): {
  *
  * @param bytes - A protobuf-encoded transaction, as `Transaction.toBytes()` returns
  * @returns The transaction as the JSON object `/transaction/broadcast` accepts
- * @throws {Error} If the bytes are not a protobuf transaction, or have no `RawData`
+ * @throws {Error} If the bytes are not a protobuf transaction, have no `RawData`, or
+ *   have a `RawData` that re-encodes to different bytes (such as a field this SDK's
+ *   proto doesn't know), since the node would then not receive what was signed
  */
 export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknown } {
   let decoded: protoTypes.proto.Transaction
@@ -77,7 +79,77 @@ export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknow
   if (!decoded.RawData) {
     throw new Error('Encoded transaction has no RawData')
   }
+  // The node rebuilds RawData from the JSON and checks the signature against
+  // the hash of those bytes. A field this SDK's proto doesn't know is dropped
+  // by decode, so the node would hash different bytes than were signed and
+  // refuse the transaction with a signature error that doesn't say why.
+  const signed = rawDataBytes(bytes)
+  const rebuilt = ProtoTransaction.Raw.encode(decoded.RawData).finish()
+  if (signed === undefined || !bytesEqual(signed, rebuilt)) {
+    throw new Error(
+      'Encoded transaction contains RawData fields this SDK does not know, so the node would not ' +
+        'receive what was signed; update @klever/connect-encoding',
+    )
+  }
   return normalizeTransactionJSON(decoded.toJSON())
+}
+
+/**
+ * The bytes of a transaction's RawData field (field 1), exactly as encoded.
+ * Returns undefined when the field appears more than once: decode merges the
+ * copies, so the rebuilt RawData can't match the signed bytes either way.
+ * The bytes have already decoded as a Transaction, so they are well formed.
+ */
+function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
+  let found: Uint8Array | undefined
+  let count = 0
+  let pos = 0
+  const readVarint = (): number => {
+    let value = 0
+    let shift = 0
+    for (;;) {
+      const byte = bytes[pos++] ?? 0
+      value += (byte & 0x7f) * 2 ** shift
+      if (byte < 0x80) return value
+      shift += 7
+    }
+  }
+  while (pos < bytes.length) {
+    const tag = readVarint()
+    const field = Math.floor(tag / 8)
+    switch (tag % 8) {
+      case 0:
+        readVarint()
+        break
+      case 1:
+        pos += 8
+        break
+      case 2: {
+        const length = readVarint()
+        if (field === 1) {
+          found = bytes.subarray(pos, pos + length)
+          count++
+        }
+        pos += length
+        break
+      }
+      case 5:
+        pos += 4
+        break
+      default:
+        // Groups (3, 4) are deprecated and never used by the node's proto
+        return undefined
+    }
+  }
+  return count === 1 ? found : undefined
+}
+
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }
 
 /**
