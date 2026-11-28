@@ -86,26 +86,33 @@ export function transactionBytesToJSON(bytes: Uint8Array): { [k: string]: unknow
   // way the node would refuse the transaction with a signature error that
   // doesn't say why, so rebuild RawData the way the node does and compare.
   const signed = rawDataBytes(bytes)
-  if (signed === undefined || !bytesEqual(signed, canonicalRawData(signed))) {
+  const canonical = signed === undefined ? undefined : canonicalRawData(signed)
+  if (signed === undefined || canonical === undefined || !bytesEqual(signed, canonical)) {
     throw new Error(
       "Encoded transaction's RawData would not reach the node as it was signed: it has fields " +
         'this SDK does not know, or values the node encodes differently; update ' +
         '@klever/connect-encoding, or re-sign it',
     )
   }
+  // Send the RawData decoded from exactly the bytes checked above, so a
+  // malformed envelope that the full decode reads differently can't swap in
+  // another one
+  decoded.RawData = ProtoTransaction.Raw.decode(signed)
   return normalizeTransactionJSON(decoded.toJSON())
 }
 
 /**
  * The bytes of a transaction's RawData field (field 1), exactly as encoded.
  * Returns undefined when the field appears more than once (decode merges the
- * copies, so the rebuilt RawData can't match the signed bytes either way), or
- * when a length runs past the end of the input.
+ * copies, so the rebuilt RawData can't match the signed bytes either way), when
+ * field 1 isn't length-delimited, when a length runs past the end of the input,
+ * or when a group's end tag doesn't match its start.
  */
 function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
   let found: Uint8Array | undefined
   let count = 0
-  let depth = 0
+  // Field numbers of the unknown groups being skipped, innermost last
+  const groups: number[] = []
   let pos = 0
   const readVarint = (): number => {
     let value = 0
@@ -120,7 +127,11 @@ function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
   while (pos < bytes.length) {
     const tag = readVarint()
     const field = Math.floor(tag / 8)
-    switch (tag % 8) {
+    const wireType = tag % 8
+    // RawData is length-delimited: field 1 with another wire type is malformed,
+    // and the generated decoder would still read it as RawData
+    if (field === 1 && groups.length === 0 && wireType !== 2) return undefined
+    switch (wireType) {
       case 0:
         readVarint()
         break
@@ -130,7 +141,7 @@ function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
       case 2: {
         const length = readVarint()
         if (pos + length > bytes.length) return undefined
-        if (field === 1 && depth === 0) {
+        if (field === 1 && groups.length === 0) {
           found = bytes.subarray(pos, pos + length)
           count++
         }
@@ -138,12 +149,11 @@ function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
         break
       }
       case 3:
-        // An unknown group outside RawData: skip to its end tag
-        depth++
+        // An unknown group outside RawData: skip to its matching end tag
+        groups.push(field)
         break
       case 4:
-        depth--
-        if (depth < 0) return undefined
+        if (groups.pop() !== field) return undefined
         break
       case 5:
         pos += 4
@@ -152,7 +162,7 @@ function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
         return undefined
     }
   }
-  return count === 1 && depth === 0 && pos === bytes.length ? found : undefined
+  return count === 1 && groups.length === 0 && pos === bytes.length ? found : undefined
 }
 
 /**
@@ -160,8 +170,15 @@ function rawDataBytes(bytes: Uint8Array): Uint8Array | undefined {
  * proto3 marshaling leaves out zero values, while protobuf.js keeps a zero
  * that was decoded from the input. Unknown fields are already dropped by decode.
  */
-function canonicalRawData(signed: Uint8Array): Uint8Array {
-  const raw = ProtoTransaction.Raw.decode(signed)
+function canonicalRawData(signed: Uint8Array): Uint8Array | undefined {
+  let raw: protoTypes.proto.Transaction.Raw
+  try {
+    raw = ProtoTransaction.Raw.decode(signed)
+  } catch {
+    // The full decode can read past RawData's declared length; on its own the
+    // RawData is malformed. Omit the decoder's message, as above.
+    return undefined
+  }
   dropZeroValues(raw)
   return ProtoTransaction.Raw.encode(raw).finish()
 }

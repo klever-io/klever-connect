@@ -218,6 +218,22 @@ describe('transactionBytesToJSON', () => {
     ).toThrow()
   })
 
+  it.each([
+    // RawData with Nonce 1, then field 1 as varints: the generated decoder would
+    // read the last one as a RawData with Nonce 7
+    ['field 1 with the wrong wire type', '0a02080108020807'],
+    // Group 99 opened and group 100 closed
+    ['a group end tag that does not match its start', '0a009b06a406'],
+    // RawData declares 1 byte, but its Sender reads 17 bytes past it
+    ['RawData whose content runs past its length', '0a011212' + '11' + '00'.repeat(17)],
+  ])('should reject %s', (_, hex) => {
+    const bytes = new Uint8Array(Buffer.from(hex, 'hex'))
+
+    expect(() => transactionBytesToJSON(bytes)).toThrow(
+      /not a valid encoded transaction|would not reach the node/,
+    )
+  })
+
   it('should reject RawData that appears twice', () => {
     const bytes = concat(lengthDelimited(1, rawBytes), lengthDelimited(1, rawBytes))
 
